@@ -1,0 +1,30 @@
+﻿myaddin 插件安装说明
+
+一、文件说明
+1. myaddin.xlam
+   Excel/WPS 加载项主文件。
+2. install_excel_myaddin.bat / uninstall_excel_myaddin.bat
+   只对 Microsoft Excel 写入或移除加载项注册，不影响 WPS 表格。
+3. install_wps_myaddin.bat / uninstall_wps_myaddin.bat
+   只对 WPS 表格写入或移除加载项注册，不影响 Microsoft Excel。
+4. scripts\
+   存放实际执行的 PowerShell 安装/卸载脚本，通常不需要手动打开编辑。
+
+二、安装步骤
+1. 保持 dist 文件夹结构完整，不要单独移动 myaddin.xlam 或 scripts 文件夹。
+2. 如果只是临时使用，可直接双击 myaddin.xlam，或右键选择 Excel/WPS 打开该加载项。
+3. 只想在 Excel 生效时，双击 install_excel_myaddin.bat。
+4. 只想在 WPS 表格生效时，双击 install_wps_myaddin.bat。
+5. 安装前请先关闭对应宿主，安装完成后重新打开。
+
+三、卸载步骤
+1. 关闭对应宿主程序。
+2. Excel 版本运行 uninstall_excel_myaddin.bat。
+3. WPS 版本运行 uninstall_wps_myaddin.bat。
+4. 重新打开对应宿主，确认插件入口已移除。
+
+四、常见说明
+1. 若系统提示脚本权限问题，请优先使用 bat 文件启动，不要直接双击 ps1。
+2. 各安装脚本只修改对应宿主的注册机制，适合同时安装 Microsoft Office 与 WPS Office 的场景。
+3. 如果你要把插件发给别人，请将整个 dist 文件夹一起打包分发。
+4. 已安装后不要随意移动 myaddin.xlam 或 scripts 文件夹；如果换了位置，建议重新运行对应安装脚本。

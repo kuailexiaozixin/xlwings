@@ -1,0 +1,79 @@
+"""
+冒烟测试模板
+- 纯 Python 单元测试：验证业务逻辑
+- COM 集成测试：验证 Excel 集成
+- RunPython 调用验证：验证模块可导入执行
+"""
+import pytest
+import xlwings as xw
+
+
+# ========== 纯 Python 单元测试（快速，2秒内）==========
+
+def test_business_logic():
+    """测试核心业务逻辑（不依赖 Excel）"""
+    from src.my_module import do_something
+    assert do_something(1, 2) == 3
+
+
+# ========== COM 集成测试（需 Excel，17秒左右）==========
+
+@pytest.fixture
+def xw_app():
+    """启动 Excel 实例，测试后清理"""
+    app = xw.App(visible=False)
+    yield app
+    app.quit()
+    # 确认无残留进程
+    import subprocess
+    result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq EXCEL.EXE'],
+                          capture_output=True, text=True)
+    assert 'EXCEL.EXE' not in result.stdout, "Excel 进程残留！"
+
+
+def test_udf_in_excel(xw_app):
+    """测试 UDF 在 Excel 中的行为"""
+    wb = xw_app.books.add()
+    wb.sheets[0]['A1'].value = 'xlwings'
+    wb.sheets[0]['B1'].formula = '=hello(A1)'
+    xw_app.api.Calculate()
+    assert wb.sheets[0]['B1'].value == 'Hello xlwings!'
+    wb.close()
+
+
+def test_runpython_call(xw_app):
+    """测试 RunPython 调用链路"""
+    wb = xw_app.books.open('myproject.xlam')
+    wb.set_mock_caller()
+    import myproject
+    result = myproject.main()
+    assert result is not None
+    wb.close()
+
+
+# ========== xlam 加载项测试（需先禁用标准 xlwings.xlam）==========
+
+@pytest.fixture
+def xlam_app():
+    """启动 Excel，禁用标准加载项，加载白标 xlam"""
+    app = xw.App(visible=False)
+    # 禁用标准 xlwings.xlam 避免冲突
+    for a in app.api.AddIns:
+        if 'xlwings.xlam' in a.Name and 'myproject' not in a.Name:
+            a.Installed = False
+    # 加载被测 xlam
+    wb_xlam = app.books.open('myproject.xlam')
+    yield app, wb_xlam
+    wb_xlam.close()
+    app.quit()
+
+
+def test_xlam_udf(xlam_app):
+    """测试白标 xlam 的 UDF"""
+    app, wb_xlam = xlam_app
+    wb_test = app.books.add()
+    wb_test.sheets[0]['A1'].value = 5
+    wb_test.sheets[0]['B1'].formula = '=my_udf(A1)'
+    app.api.Calculate()
+    assert wb_test.sheets[0]['B1'].value == 10
+    wb_test.close()

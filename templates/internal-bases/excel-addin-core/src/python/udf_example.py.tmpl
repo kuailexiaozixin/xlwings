@@ -1,0 +1,31 @@
+"""
+UDF 示例模板
+- 使用 @xw.func 装饰器标记函数
+- 推荐类型提示写法（v0.32.0+）
+- 导入后可在 Excel 公式中使用
+"""
+import xlwings as xw
+from typing import Annotated
+
+
+@xw.func
+def hello(name: str) -> str:
+    """返回问候语"""
+    return f"Hello {name}!"
+
+
+# 二维数组：用 Annotated 替代 @xw.arg(..., ndim=2)
+List2d = Annotated[list[list[float]], {"ndim": 2}]
+
+
+@xw.func
+def add_one(data: List2d) -> List2d:
+    """给每个单元格加 1"""
+    return [[cell + 1 for cell in row] for row in data]
+
+
+# 备选装饰器写法
+@xw.func
+@xw.arg("data", ndim=2)
+def add_one_legacy(data):
+    return [[cell + 1 for cell in row] for row in data]
