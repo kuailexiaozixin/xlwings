@@ -1,6 +1,6 @@
 ﻿# references 决策索引（先读这个）
 
-本目录共 13 篇知识文档 + 本索引，**文档顺序 = 工作流顺序**（01→10 对应场景 C 6.5.1→6.5.13，11→13 对应场景 A/B/D）。内容源自三个权威源：`xlwings-0.37.0/docs/`（官方 Python/加载项文档）、`../VBA-Docs/`（微软官方 VBA 文档）、`examples/`（xlwings 官方示例）、`MCP-Server/`（4 个社区 xlwings MCP Server 源码）。与 xlwings 无关的内容已全部去除。
+本目录共 13 篇知识文档 + 本索引，**文档顺序 = 工作流顺序**（01→10 对应场景 C 6.5.1→6.5.13，11→13 对应场景 A/B/D）。内容源自三个权威源：`xlwings-0.37.2/docs/`（官方 Python/加载项文档）、`../VBA-Docs/`（微软官方 VBA 文档）、`examples/`（xlwings 官方示例）、`MCP-Server/`（4 个社区 xlwings MCP Server 源码）。与 xlwings 无关的内容已全部去除。
 
 ## 文档地图（顺序 = 工作流）
 
@@ -66,14 +66,14 @@
 
 | 权威源 | 用途 | 关键文件 |
 |--------|------|---------|
-| `xlwings-0.37.0/docs/` | xlwings 官方文档（Python 侧权威） | `udfs.md`（UDF 全参数）、`converters.md`（类型转换）、`datastructures.md`（数据结构）、`customaddin.md`（加载项/Ribbon）、`addin.md`（配置表）、`command_line.md`（CLI）、`connect_to_workbook.md`（连接）、`syntax_overview.md`（语法）、`threading_and_multiprocessing.md`（线程）、`debugging.md`（调试）、`troubleshooting.md`、`deployment.md`（部署）、`quickstart.md`、`vba.md`（VBA 侧）、`installation.md`（安装）、`matplotlib.md`、`jupyternotebooks.md`、`onedrive_sharepoint.md`、`other_office_apps.md`、`missing_features.md` |
+| `xlwings-0.37.2/docs/` | xlwings 官方文档（Python 侧权威） | `udfs.md`（UDF 全参数）、`converters.md`（类型转换）、`datastructures.md`（数据结构）、`customaddin.md`（加载项/Ribbon）、`addin.md`（配置表）、`command_line.md`（CLI）、`connect_to_workbook.md`（连接）、`syntax_overview.md`（语法）、`threading_and_multiprocessing.md`（线程）、`debugging.md`（调试）、`troubleshooting.md`、`deployment.md`（部署）、`quickstart.md`、`vba.md`（VBA 侧）、`installation.md`（安装）、`matplotlib.md`、`jupyternotebooks.md`、`onedrive_sharepoint.md`、`other_office_apps.md`、`missing_features.md` |
 | `../VBA-Docs/` | 微软官方 VBA 文档（VBA 侧权威） | `api/Excel.*.md`（对象模型逐成员）、`excel/Concepts/Cells-and-Ranges/`（单元格引用 9 篇+Formula2）、`excel/Concepts/Controls-DialogBoxes-Forms/`（UserForm+ActiveX）、`excel/Concepts/Events-WorksheetFunctions-Shapes/`（事件+WorksheetFunction）、`excel/Concepts/Excel-Performance/`（性能优化）、`excel/Concepts/Workbooks-and-Worksheets/`（工作簿操作）、`Language/Reference/`（VBA 语言参考） |
 | `examples/` | xlwings 官方/社区示例 | `xlwings-demo-master/`（13 场景）、`Excel_udf_itus-main/`（UDF 教程）、`excel-automated-testing-master/`（自动化测试）、`python-for-excel-course-main/`（课程）、`xlwings-server-main/`（Server）、`xl-pq-handler-master/`、`simulation-demo-master/`、`static-excel-test-master/`、`cross-check-reports-main/`、`xlwings-factsheet-demo-main/`、`xlwings-eikon-master/` |
 
 ## 路由原则
 
 - **先读主干，再看专题**：VBA 主干总纲在 6.5.5，专题细节再 05；Python 先 SKILL.md 6.5.4 模板；UDF 先 07；窗体先 08 选型表。
-- **官方文档是权威**：凡与官方语义冲突处，以 `xlwings-0.37.0/docs/` 与 `../VBA-Docs/` 为准；本目录文档负责"要点提炼 + 导航 + 实战经验"，不复制官方全文。
+- **官方文档是权威**：凡与官方语义冲突处，以 `xlwings-0.37.2/docs/` 与 `../VBA-Docs/` 为准；本目录文档负责"要点提炼 + 导航 + 实战经验"，不复制官方全文。
 - **示例按需消费**：需要完整场景时优先 `examples/` 对应项目，而不是从零拼片段。
 - **文档不重复原则**：SKILL.md 正文承载"规则与铁律"，references 承载"要点与导航"；若发现重复，以 SKILL.md 为准并在 00 记录差异。
 

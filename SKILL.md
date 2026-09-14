@@ -25,7 +25,7 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 | `scripts/` | 可执行脚本（门禁 12 个、构建脚本、配置激活、路由校验、release_tool 分发工具链） | 工作流各步门禁与构建时调用 |
 | `docs/` | 故障排查、术语表、交付清单 | 遇到问题时查阅 |
 | `dist/` | 示例交付物（myaddin.xlam + 安装脚本） | 参考交付文件夹结构 |
-| `xlwings-0.37.0/` | xlwings 官方源码与文档（离线查阅） | API 查证时读取 |
+| `xlwings-0.37.2/` | xlwings 官方源码与文档（离线查阅） | API 查证时读取 |
 | `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
 | `examples/` | 官方示例与演示项目 | 学习与参考时读取 |
 
@@ -68,20 +68,20 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 
 ### 3.1 本地源码注入（开发期）
 
-使用本技能内置的 xlwings-0.37.0 源码而非 pip 安装版，确保版本一致与可调试：
+使用本技能内置的 xlwings-0.37.2 源码而非 pip 安装版，确保版本一致与可调试：
 
 ```python
 import sys
-sys.path.insert(0, r'<技能根目录>\xlwings-0.37.0')
+sys.path.insert(0, r'<技能根目录>\xlwings-0.37.2')
 import xlwings as xw
 ```
 
-注入后 `xw.__version__` 应为 `0.37.0`。
+注入后 `xw.__version__` 应为 `0.37.2`。
 
 ### 3.2 依赖与环境
 
 - Windows 推荐：`scripts/ensure_uv_env.ps1` 创建 uv 虚拟环境
-- 核心依赖：`xlwings==0.37.0`、`pywin32`（Windows COM）
+- 核心依赖：`xlwings==0.37.2`、`pywin32`（Windows COM）
 - 面板依赖：`pywebview`、`python-fasthtml`、`uvicorn`
 - 测试依赖：`pytest`、`pytest-cov`
 
@@ -111,29 +111,13 @@ import xlwings as xw
 连接 Excel → 对象导航 → 读取数据 → 写入数据 → 格式化样式 → 图表/图片/形状/表格 → 清理收尾
 ```
 
-1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings-0.37.0/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
-2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。完整 API 索引见 `xlwings-0.37.0/docs/api/index.md`，语法总览见 `syntax_overview.md`
-3. **读取数据（先选通道）**：活会话/写回用 COM——`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；磁盘文件纯读取用 `python-calamine`（Rust 快通道）或 `duckdb`（SQL 直查）。数据结构与转换器见 `xlwings-0.37.0/docs/datastructures.md`、`converters.md`；三通道对比与决策规则见下节
+1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings-0.37.2/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
+2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。完整 API 索引见 `xlwings-0.37.2/docs/api/index.md`，语法总览见 `syntax_overview.md`
+3. **读取数据**：`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；数据结构与转换器见 `xlwings-0.37.2/docs/datastructures.md`、`converters.md`
 4. **写入数据**：指定左上角自动填充；公式分 `.formula`（普通）、`.formula2`（dynamic array）、`.formula_array`（CSE 数组）三类；写入后需 `app.calculate()` 触发计算
 5. **格式化样式**：`.number_format`/`.color`/`.font`/`.autofit()`；批注用 `.note`（创建须经 COM `api.AddComment`）；超链接用 `.add_hyperlink`；子字符串格式化用 `.characters`（macOS 不支持）
-6. **图表图片形状表格**：`sheet.charts.add()`、`sheet.pictures.add()`（支持文件或 Matplotlib/Plotly 对象，Matplotlib 集成见 `xlwings-0.37.0/docs/matplotlib.md`）、形状通过 COM `sheet.shapes.api.AddShape()`（`sheet.shapes` 无 `add()` 方法）、`sheet.tables.add()`
-7. **清理收尾**：保存退出，`tasklist | findstr EXCEL` 确认无残留进程。多线程/多进程注意事项见 `xlwings-0.37.0/docs/threading_and_multiprocessing.md`，Jupyter 交互见 `jupyternotebooks.md`
-
-**数据通道选型（读取侧）**：读写通道不必全用 COM——按数据来源与去向选：
-
-| 通道 | 能力 | 适用 |
-|------|------|------|
-| COM（内置 pywin32） | 读写活会话 / 写回 / 公式重算 / 宏 | 一切与"活 Excel"交互的场景（唯一选择） |
-| `python-calamine` | 只读，免 Excel，毫秒级 | 磁盘大 xlsx/xlsm/xlsb 纯读取、结构侦察 |
-| `duckdb` | SQL 直查 csv/parquet/json/xlsx，列式聚合 | 多文件/大数据集分析、本地缓存中间层 |
-
-决策规则：
-
-1. 目标是**活会话**（用户正打开、未保存更改、要跑宏）→ COM 唯一
-2. 纯**读磁盘文件**且量大 → `python-calamine`（快速提取）或 `duckdb`（要 SQL 分析）
-3. **无 Office 环境**（CI/服务器/批量 ETL）→ 读取侧 calamine/duckdb，写回另选（openpyxl/生成文件）
-4. **写回 + 公式 + 格式 + 图表** → COM 唯一
-5. 混合模式（推荐）：文件级侦察用 calamine 秒看结构/前 N 行 → 需写/活会话时再 COM
+6. **图表图片形状表格**：`sheet.charts.add()`、`sheet.pictures.add()`（支持文件或 Matplotlib/Plotly 对象，Matplotlib 集成见 `xlwings-0.37.2/docs/matplotlib.md`）、形状通过 COM `sheet.shapes.api.AddShape()`（`sheet.shapes` 无 `add()` 方法）、`sheet.tables.add()`
+7. **清理收尾**：保存退出，`tasklist | findstr EXCEL` 确认无残留进程。多线程/多进程注意事项见 `xlwings-0.37.2/docs/threading_and_multiprocessing.md`，Jupyter 交互见 `jupyternotebooks.md`
 
 ### 4.2 关键规则
 
@@ -160,16 +144,11 @@ import xlwings as xw
 | 静态质检 | `static-excel-test-master/test_refs.py` | openpyxl 扫描坏引用，无需 Excel 实例 |
 | UDF 完整工程 | `Excel_udf_itus-main/` | SQLite → @xw.func → 单元格公式端到端 |
 
-依赖 xlwings PRO 的案例（`xlwings-factsheet-demo-main`、demo 的 `reader`/`restapi`/Reports 四件套、eikon 的 Reports 部分）不属场景 A 实战参考，索引与研读见 13-scenario-d 四章案例总览与 PRO 案例研读。
+依赖 xlwings PRO 的案例不属场景 A 实战参考，索引与研读见 `references/13-scenario-d-source-code.md` 四章案例总览与 PRO 案例研读。
 
-补充两类**文件级通道模式**（无需 Excel 实例，见上节选型）：
+官方 quickstart 迷你示例（`xlwings-0.37.2/examples/`：`database`/`mpl`/`simulation`/`udf`/`fibonacci` + `build_lite.py`，均社区版）的详细展开见 `references/11-scenario-a-python-automation.md` 七章（A 侧：database/mpl/simulation）与 `references/07-udf-guidance.md` 六章（C 侧：udf/fibonacci）。
 
-- **calamine 侦察**：结构快照/前 N 行秒读（与 xlwings PRO `pro/_xlcalamine.py` 只读引擎同设计）
-- **duckdb SQL 分析**：csv/parquet/xlsx 多文件 Join 聚合，结果再经 COM 写回
-
-官方 quickstart 迷你示例（`xlwings-0.37.0/examples/`：`database`/`mpl`/`simulation`/`udf`/`fibonacci` + `build_lite.py`，均社区版）的详细展开见 `references/11-scenario-a-python-automation.md` 七章（A 侧：database/mpl/simulation）与 `references/07-udf-guidance.md` 六章（C 侧：udf/fibonacci）。
-
-`xlwings-demo-master` 社区版部分（basics/correlation/frozen/interactive/performance/simulation/testing）的文件级用途详展见 `references/11-scenario-a-python-automation.md` 七章 7.7（PRO 部分——reader/restapi/Reports 四件套——见 13-scenario-d 四章 PRO 案例研读）。
+`xlwings-demo-master` 社区版部分（basics/correlation/frozen/interactive/performance/simulation/testing）的文件级用途详展见 `references/11-scenario-a-python-automation.md` 七章 7.7（PRO 部分见 13-scenario-d 四章 PRO 案例研读）。
 
 完整案例索引（11 个案例按工作流环节分类）见 `references/11-scenario-a-python-automation.md` 附录。
 
@@ -300,14 +279,14 @@ import xlwings as xw
 
 **操作**：
 1. 创建虚拟环境：`scripts/ensure_uv_env.ps1`（Windows 推荐）
-2. 安装依赖：`xlwings==0.37.0`、`pywin32`、面板/测试按需；只读快通道 `python-calamine`、SQL 分析 `duckdb` 按需
-3. 验证本地源码注入：`python -c "import sys; sys.path.insert(0,'xlwings-0.37.0'); import xlwings; print(xlwings.__version__)"`
+2. 安装依赖：`xlwings==0.37.2`、`pywin32`、面板/测试按需
+3. 验证本地源码注入：`python -c "import sys; sys.path.insert(0,'xlwings-0.37.2'); import xlwings; print(xlwings.__version__)"`
 4. 配置 COM 权限：Excel 信任中心 → 启用「对 VBA 项目对象模型的访问」（AccessVBOM）——白标 xlam UDF 导入必需
 5. 验证 COM 可用：`python -c "import xlwings as xw; app=xw.App(visible=False); print(app.api.Version); app.quit()"`
 
 **环境就绪清单**（6 项全部通过才进入下一步）：
 - [ ] Python 解释器可用（3.10+）
-- [ ] xlwings 0.37.0 源码注入成功
+- [ ] xlwings 0.37.2 源码注入成功
 - [ ] pywin32 安装，COM 可创建 Excel 实例
 - [ ] AccessVBOM 已启用
 - [ ] WPS/Excel 信任中心已配置（宏启用）
@@ -388,7 +367,7 @@ quickstart 已知问题：
 - 面板侧代码修改后须关闭面板窗口并重新从 Ribbon 启动（不热重载）
 - 禁止面板路由直接调用外部 API，必须经业务层
 - 转换器与数据结构：pandas DataFrame 进出、numpy 数组、二维数组语义（`ndim=2`）
-- **数据源通道**：UDF/RunPython 读**调用方工作簿**必须 `xw.Book.caller()` COM（活会话）；读**磁盘上其他文件**做数据源可用 `python-calamine`/`duckdb` 免 Excel 直读；`src/cache/` 数据层可用 duckdb 做本地分析缓存（SQL 聚合，避免大数据进 Excel）
+- **数据源读取**：UDF/RunPython 读**调用方工作簿**必须 `xw.Book.caller()` COM（活会话）
 - **面板进程健康检查（必须实现）**：`open_panel()` 启动子进程后，须在 3 秒内 HTTP 探测 `http://127.0.0.1:<port>/`，失败则弹窗提示"面板启动失败，请检查 Python 环境"，避免用户看到空白窗口或"按钮无响应"假象。探测成功后再显示 pywebview 窗口
 - **pywebview 必须强制 EdgeChromium 后端（高频坑）**：`webview.start(gui="edgechromium")`。MSHTML（IE 内核）不支持 `fetch`/`Promise`，会导致所有 API 调用静默失败，用户看到"按钮无响应"。启动失败时须明确提示安装 WebView2 Runtime。安装脚本须检测 WebView2 Runtime 并告警
 
@@ -510,7 +489,7 @@ Ribbon 官方文档导航与注入结果验证方法见 `references/06-ribbon-gu
 
 **目标**：按规范开发 UDF，注册测试并导入目标产物。UDF 仅 Windows 支持，必须承载于 .xlsm 或 .xlam。
 
-**官方示例**：`xlwings-0.37.0/examples/udf/udf.py`（`@xw.sub`/`@xw.func` 最小集）与 `fibonacci/fibonacci.py`（含 `build_standalone.py` PyInstaller 冻结 → zip 便携分发）——可对照模板与官方 quickstart 实现。
+**官方示例**：`xlwings-0.37.2/examples/udf/udf.py`（`@xw.sub`/`@xw.func` 最小集）与 `fibonacci/fibonacci.py`（含 `build_standalone.py` PyInstaller 冻结 → zip 便携分发）——可对照模板与官方 quickstart 实现。
 
 **UDF 编写规范**：
 - 使用 `@xw.func` 装饰器标记函数，导入后可在 Excel 公式中使用
@@ -774,7 +753,7 @@ release_tool 分发必须执行 `smoke_test.py --install-dir <安装目录>`，5
 
 ### 7.1 源码架构认知
 
-源码研读入口为 `xlwings-0.37.0/`：Python 包 `xlwings/`、原生桥 `xlwingsdll/`、测试 `tests/`、文档 `docs/`。**详细技术研读（xlwingsdll 原生 DLL、xlwings 包架构、构建与测试体系）见 `references/13-scenario-d-source-code.md` 第 2 章**。
+源码研读入口为 `xlwings-0.37.2/`：Python 包 `xlwings/`、原生桥 `xlwingsdll/`、测试 `tests/`、文档 `docs/`。**详细技术研读（xlwingsdll 原生 DLL、xlwings 包架构、构建与测试体系）见 `references/13-scenario-d-source-code.md` 第 2 章**。
 
 - **对象模型**：`main.py` 定义全部公开类（App/Book/Sheet/Range/Chart 等）；`base_classes.py` 为平台无关基类；`constants.py` 为 Excel 常量枚举；`utils.py` 为工具函数
 - **平台适配层**：Windows 用 `_xlwindows.py` + `_win32patch.py`（pywin32 COM + 行为补丁）；macOS 用 `_xlmac.py` + `mac_dict.py` + `xlwings-dev.applescript`
@@ -784,7 +763,9 @@ release_tool 分发必须执行 `smoke_test.py --install-dir <安装目录>`，5
 - **命令行与杂项**：`cli.py`（quickstart/addin install）、`server.py`（REST 服务端）、`reports.py`、`expansion.py`（Range 动态扩展）
 - **PRO 功能模块**（`xlwings/pro/`，需许可）：四引擎、Reports、ObjectHandle、OfficeJS UDF、许可证管理
 
-平台差异汇总见 `xlwings-0.37.0/docs/missing_features.md`。
+平台差异汇总见 `xlwings-0.37.2/docs/missing_features.md`。
+
+Web 加载项（Lite）完整案例 `examples/taxi-duckdb-main/`（一个内嵌 Office.js 加载项与 Python 脚本的自包含 .xlsx，DuckDB 数据应用，不依赖 PRO/Server）——内嵌内容已提取至 `taxi-duckdb-main/taxi-duckdb-main/extracted/`（`extract_webextension.py` 一步到位：解包到 `full/` 且 `main.py` / `requirements.txt` 解码明文就地生成），案例研读见 `references/13-scenario-d-source-code.md` 4.5，条目说明见 `examples/ReadMe.md` 第 10 节。
 
 ### 7.2 入门学习与教学演示
 
@@ -796,7 +777,7 @@ release_tool 分发必须执行 `smoke_test.py --install-dir <安装目录>`，5
 
 ### 7.4 PRO 功能研读（仅源码研读，不部署运行）
 
-xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、xlwings Lite 异步 API、ObjectHandle 自定义对象传递。深度技术分析（许可证机制、引擎原理、Reports 架构、部署机制）见 `references/13-scenario-d-source-code.md`；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）见该文件 1.8 节。
+xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、xlwings Lite 异步 API、ObjectHandle 自定义对象传递。深度技术分析见 `references/13-scenario-d-source-code.md`：引擎原理（含 calamine 只读引擎 `pro/_xlcalamine.py` 的 Python 适配层与 Office.js 转换层）见 1.2 / 1.8 节，许可证机制见 1.1，Reports 架构见 1.3，部署机制见 1.4；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）见该文件 1.8 节。
 
 ### 7.5 服务端工程与部署机制
 
@@ -824,16 +805,34 @@ xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架
 - 只有**核心、主干、非常重要**的内容（必经流程、门禁、铁律、形态判定、关键顺序约束）才沉淀到本 SKILL.md
 - 判断标准：能防止重复踩坑的经验与坑点 → `docs/troubleshooting.md`；决定工作流走向的规则与铁律 → 本 SKILL.md
 
-**通用调试方法**：`xlwings-0.37.0/docs/debugging.md`；性能优化：`xlwings-0.37.0/docs/troubleshooting.md`。
+**通用调试方法**：`xlwings-0.37.2/docs/debugging.md`；性能优化：`xlwings-0.37.2/docs/troubleshooting.md`。
 
 **跨平台差异速查**：
 - UDF 仅 Windows；`Characters` 对象与 `app.interactive` macOS 不支持；macOS 不支持多实例写同一文件
 - Excel 版本 < 15 时 macOS 使用 `mac_latin2` 编码
 - WPS 表格通过 COM 兼容，部分高级功能可能不可用
 
-**其他参考**：缺失功能 `xlwings-0.37.0/docs/missing_features.md`；常见问题 `xlwings-0.37.0/docs/troubleshooting.md`。
+**其他参考**：缺失功能 `xlwings-0.37.2/docs/missing_features.md`；常见问题 `xlwings-0.37.2/docs/troubleshooting.md`。
 
 > docs 目录中 `conf.py`/`Makefile`/`make.bat`/`requirements.txt`/`index_latex.md` 及 `locales/`/`_static/`/`_templates/`/`_ext/`/`images/` 为官方文档站构建产物、翻译与资源文件，非工作流引用对象；`pro/` 为需 PRO 许可的付费文档，本技能不依赖。
+
+---
+
+## 9 上游跟踪与更新机制（技能维护）
+
+本地上游原文目录共 **17 路**，随官方仓库演进，由脚本统一跟踪，**禁止手改上游原文**（zip 快照）：
+
+- `xlwings-<ver>/`：xlwings 核心源码包，tag 锁定（当前 `0.37.2`）
+- `examples/` 与 `MCP-Server/` 下全部开源仓库：`xlwings-server`（tag 锁定 `1.14.0`）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
+
+**组件**：
+- `manifest.json`：上游锁定清单（repo / ref / local_dir / pinned_sha / last_synced，单一事实来源；ref 为 tag 或默认分支）
+- `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源。检测经 gh API（降级 git ls-remote），下载经 codeload tarball，原子替换并追加 SYNCLOG.md
+- `SYNCLOG.md`：同步历史（每次同步留痕）
+
+用法：`python scripts/sync_upstream.py --check` 先看是否有更新；有更新或确认同步则运行 `python scripts/sync_upstream.py`。
+
+同步后注意：`xlwings-<ver>` 目录名随版本变化，若版本更新需人工核对刷新本文档与 `references/13-scenario-d-source-code.md` 等自研文件中的版本引用；其余仓库目录名固定不变。zip 快照无法追溯确切 commit，登记基线取登记日上游 ref 最新 commit，若实际快照更旧，`--check` 会提示漂移，按需 `--force` 重拉。每次同步后向用户汇报变更摘要。
 
 
 

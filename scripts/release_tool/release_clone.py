@@ -37,7 +37,7 @@ sys.path.insert(0, str(TOOL_DIR.parent))
 # 技能根目录（VBA\xlwings\）：TOOL_DIR=scripts/release_tool/ → 上两级
 SKILL_ROOT = TOOL_DIR.parent.parent
 # xlwings 官方源码包（随技能分发）：用于 Dictionary.cls 等 VBA 模块
-XLWINGS_SRC = SKILL_ROOT / "xlwings-0.37.0"
+XLWINGS_SRC = SKILL_ROOT / "xlwings-0.37.2"
 # 安装版 xlwings.bas（含 xlwings.bas 生成产物）：运行时从当前解释器的 site-packages 查找
 def _find_installed_xlwings_bas() -> Path | None:
     """从当前解释器的 xlwings 包中定位 xlwings.bas"""

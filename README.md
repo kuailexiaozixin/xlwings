@@ -19,7 +19,7 @@
 |---|---|
 | `examples/` | 12 个官方/第三方示例仓库（见 `examples/README.md`） |
 | `MCP-Server/` | 4 个 xlwings MCP 服务器实现（见 `MCP-Server/README.md`） |
-| `xlwings-0.37.0/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
+| `xlwings-0.37.2/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
 
 ## 许可
 

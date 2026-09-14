@@ -69,7 +69,7 @@ dist_release/
 
 xlwings 加载项通过 `xlwings.conf`（PROJECT_NAME 常量决定前缀）配置 Python 解释器、模块路径等。配置表是分发后最容易出问题的环节。
 
-**配置表键（权威见 `xlwings-0.37.0/docs/addin.md`）**：
+**配置表键（权威见 `xlwings-0.37.2/docs/addin.md`）**：
 
 | 键 | 作用 | 分发时注意 |
 |----|------|-----------|
@@ -175,8 +175,8 @@ xlwings 加载项通过 `xlwings.conf`（PROJECT_NAME 常量决定前缀）配�
 
 ## 可配套阅读
 
-- `xlwings-0.37.0/docs/addin.md`（配置表全部键权威）
-- `xlwings-0.37.0/docs/deployment.md`（官方部署选项）
+- `xlwings-0.37.2/docs/addin.md`（配置表全部键权威）
+- `xlwings-0.37.2/docs/deployment.md`（官方部署选项）
 - `docs/troubleshooting.md`（坑点沉淀，含配置表/便携运行时相关）
 
 

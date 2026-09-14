@@ -387,4 +387,4 @@ python server.py
 ## 可配套阅读
 
 - `MCP-Server/` 目录下 4 个项目的 README 与源码
-- `xlwings-0.37.0/docs/`（xlwings API 权威文档）
+- `xlwings-0.37.2/docs/`（xlwings API 权威文档）
