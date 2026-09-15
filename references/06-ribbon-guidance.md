@@ -1,4 +1,4 @@
-# Ribbon 构建指南（6.5.6 聚合）
+﻿# Ribbon 构建指南（6.5.6 聚合）
 
 > 本文件聚合 Ribbon 侧全部既有指南（入口规划 / 回调签名速查 / 图标原则），并补充官方 `customaddin.md` Ribbon 节导航。Ribbon 侧编码以本文档为准。
 
@@ -68,7 +68,7 @@
 
 ## 六、官方文档导航
 
-- `xlwings-0.37.2/docs/customaddin.md`：xlwings 加载项打包与 Ribbon 集成官方语义
+- `xlwings-0.37.3/docs/customaddin.md`：xlwings 加载项打包与 Ribbon 集成官方语义
 - `../VBA-Docs/Language/`：VBA 语言参考
 - Ribbon XML 规范完整参考：微软 customUI 文档（2009/07 命名空间）
 

@@ -1,6 +1,6 @@
 ﻿---
 name: xlwings
-description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A）、MCP 自动化（场景 B）、宏/VBA 集成与加载项开发（场景 C）、源码学习与二次开发（场景 D）。场景 C 提供 11 步完整工作流（需求→环境→设计→Python→VBA→Ribbon→UDF→配置→测试→交付→安装），含 12 个质量门禁、便携运行时分发、白标 xlam 构建。触发关键词：xlwings、Excel 自动化、Python 操作 Excel、Excel 加载项、xlam、UDF、RunPython、Ribbon、VBA 桥接、数据回填、面板交互。
+description: xlwings 全场景技能：自动化操作 Excel——Python 脚本与 MCP 两种方式（场景 A）、Web/服务化方案——xlwings Server / Lite / Office.js（场景 B）、开发 VBA 宏或 VBA 加载项（场景 C）、源码学习与二次开发（场景 D）。场景 C 提供 11 步完整工作流（需求→环境→设计→Python→VBA→Ribbon→UDF→配置→测试→交付→安装），含 12 个质量门禁、便携运行时分发、白标 xlam 构建。触发关键词：xlwings、Excel 自动化、Python 操作 Excel、Excel 加载项、xlam、UDF、RunPython、Ribbon、VBA 桥接、数据回填、面板交互、MCP、xlwings Server、xlwings Lite、Office.js。
 ---
 
 # xlwings 全场景技能
@@ -10,8 +10,8 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 本技能覆盖 xlwings 的四类使用场景，按「需求路由 → 场景执行 → 质量门禁 → 交付分发」组织。
 
 **核心原则**：
-- 场景 C（加载项开发）是本技能的主干，提供 11 步完整工作流与 12 个质量门禁
-- 场景 A/B/D 为支线，提供主线步骤与资源导航
+- 场景 C（VBA 宏 / VBA 加载项开发）是本技能的主干，提供 11 步完整工作流与 12 个质量门禁
+- 场景 A/B/D 为支线：A（自动化，含 MCP）、B（Web/服务化：Server/Lite/Office.js）、D（源码研读），提供主线步骤与资源导航
 - 坑点优先沉淀 `docs/troubleshooting.md`，只有核心主干规则才进本 SKILL.md
 - 禁止绝对路径；技能外发后所有路径基于技能根目录相对计算
 - **references 文档为独立扩展参考，内容节点间不做内容级互引**（仅案例详展位置等路由指针例外）；SKILL.md 承载完成工作流所需的全部核心规则
@@ -20,12 +20,12 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 
 | 目录 | 用途 | 加载时机 |
 |------|------|---------|
-| `references/` | 14 篇扩展指南（00 索引 + 01-10 工作流各阶段深度 + 11 场景A + 12 场景B + 13 场景D）。进入 references 前先读 `references/00-index.md` 决策索引 | 进入对应阶段需要深度扩展时按需读取 |
+| `references/` | 16 篇扩展指南（00 索引 + 01-10 工作流各阶段深度 + 11 场景A + 12 MCP 自动化 + 13 场景D + 14 Server + 15 Lite + 16 Office.js）。进入 references 前先读 `references/00-index.md` 决策索引 | 进入对应阶段需要深度扩展时按需读取 |
 | `templates/` | 代码模板（VBA 模块、Ribbon XML、Python 桥接、UDF、面板入口、测试、安装脚本） | 编码阶段直接复制使用 |
 | `scripts/` | 可执行脚本（门禁 12 个、构建脚本、配置激活、路由校验、release_tool 分发工具链） | 工作流各步门禁与构建时调用 |
 | `docs/` | 故障排查、术语表、交付清单 | 遇到问题时查阅 |
 | `dist/` | 示例交付物（myaddin.xlam + 安装脚本） | 参考交付文件夹结构 |
-| `xlwings-0.37.2/` | xlwings 官方源码与文档（离线查阅） | API 查证时读取 |
+| `xlwings-0.37.3/` | xlwings 官方源码与文档（离线查阅） | API 查证时读取 |
 | `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
 | `examples/` | 官方示例与演示项目 | 学习与参考时读取 |
 
@@ -47,9 +47,9 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 
 ```
 用户需求
-├─ 纯 Python 脚本操作 Excel（无 VBA、无加载项）→ 场景 A
-├─ 需要将 Excel 能力暴露给 MCP 客户端 → 场景 B
-├─ 需要 Excel 加载项 / 宏 / UDF / Ribbon / 弹窗 → 场景 C（主干）
+├─ 自动化操作 Excel（Python 脚本 / MCP）→ 场景 A
+├─ Web / 服务化方案（Server / Lite / Office.js 加载项）→ 场景 B（指向 14/15/16 号文档）
+├─ 开发 VBA 宏或 VBA 加载项 → 场景 C（主干）
 └─ 源码研读 / 二次开发 / 教学演示 / 产物质检 → 场景 D
 ```
 
@@ -68,20 +68,20 @@ description: xlwings 全场景技能：Python 脚本自动化 Excel（场景 A�
 
 ### 3.1 本地源码注入（开发期）
 
-使用本技能内置的 xlwings-0.37.2 源码而非 pip 安装版，确保版本一致与可调试：
+使用本技能内置的 xlwings-0.37.3 源码而非 pip 安装版，确保版本一致与可调试：
 
 ```python
 import sys
-sys.path.insert(0, r'<技能根目录>\xlwings-0.37.2')
+sys.path.insert(0, r'<技能根目录>\xlwings-0.37.3')
 import xlwings as xw
 ```
 
-注入后 `xw.__version__` 应为 `0.37.2`。
+注入后 `xw.__version__` 应为 `0.37.3`。
 
 ### 3.2 依赖与环境
 
 - Windows 推荐：`scripts/ensure_uv_env.ps1` 创建 uv 虚拟环境
-- 核心依赖：`xlwings==0.37.2`、`pywin32`（Windows COM）
+- 核心依赖：`xlwings==0.37.3`、`pywin32`（Windows COM）
 - 面板依赖：`pywebview`、`python-fasthtml`、`uvicorn`
 - 测试依赖：`pytest`、`pytest-cov`
 
@@ -101,9 +101,9 @@ import xlwings as xw
 
 ---
 
-## 4 场景 A：Python 脚本自动化操作 Excel
+## 4 场景 A：使用 xlwings 自动化操作 Excel（Python 脚本 + MCP 两种方式）
 
-**适用**：纯 Python 脚本读写 Excel，无需 VBA/加载项/UDF。
+**适用**：自动化操作 Excel 的两条通道——① 纯 Python 脚本读写 Excel（无需 VBA/加载项/UDF）；② MCP 自动化（见 4.4，将 Excel 操作能力暴露给 AI Agent）。
 
 ### 4.1 主线工作流
 
@@ -111,13 +111,13 @@ import xlwings as xw
 连接 Excel → 对象导航 → 读取数据 → 写入数据 → 格式化样式 → 图表/图片/形状/表格 → 清理收尾
 ```
 
-1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings-0.37.2/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
-2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。完整 API 索引见 `xlwings-0.37.2/docs/api/index.md`，语法总览见 `syntax_overview.md`
-3. **读取数据**：`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；数据结构与转换器见 `xlwings-0.37.2/docs/datastructures.md`、`converters.md`
+1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings-0.37.3/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
+2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。完整 API 索引见 `xlwings-0.37.3/docs/api/index.md`，语法总览见 `syntax_overview.md`
+3. **读取数据**：`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；数据结构与转换器见 `xlwings-0.37.3/docs/datastructures.md`、`converters.md`
 4. **写入数据**：指定左上角自动填充；公式分 `.formula`（普通）、`.formula2`（dynamic array）、`.formula_array`（CSE 数组）三类；写入后需 `app.calculate()` 触发计算
 5. **格式化样式**：`.number_format`/`.color`/`.font`/`.autofit()`；批注用 `.note`（创建须经 COM `api.AddComment`）；超链接用 `.add_hyperlink`；子字符串格式化用 `.characters`（macOS 不支持）
-6. **图表图片形状表格**：`sheet.charts.add()`、`sheet.pictures.add()`（支持文件或 Matplotlib/Plotly 对象，Matplotlib 集成见 `xlwings-0.37.2/docs/matplotlib.md`）、形状通过 COM `sheet.shapes.api.AddShape()`（`sheet.shapes` 无 `add()` 方法）、`sheet.tables.add()`
-7. **清理收尾**：保存退出，`tasklist | findstr EXCEL` 确认无残留进程。多线程/多进程注意事项见 `xlwings-0.37.2/docs/threading_and_multiprocessing.md`，Jupyter 交互见 `jupyternotebooks.md`
+6. **图表图片形状表格**：`sheet.charts.add()`、`sheet.pictures.add()`（支持文件或 Matplotlib/Plotly 对象，Matplotlib 集成见 `xlwings-0.37.3/docs/matplotlib.md`）、形状通过 COM `sheet.shapes.api.AddShape()`（`sheet.shapes` 无 `add()` 方法）、`sheet.tables.add()`
+7. **清理收尾**：保存退出，`tasklist | findstr EXCEL` 确认无残留进程。多线程/多进程注意事项见 `xlwings-0.37.3/docs/threading_and_multiprocessing.md`，Jupyter 交互见 `jupyternotebooks.md`
 
 ### 4.2 关键规则
 
@@ -146,54 +146,71 @@ import xlwings as xw
 
 依赖 xlwings PRO 的案例不属场景 A 实战参考，索引与研读见 `references/13-scenario-d-source-code.md` 四章案例总览与 PRO 案例研读。
 
-官方 quickstart 迷你示例（`xlwings-0.37.2/examples/`：`database`/`mpl`/`simulation`/`udf`/`fibonacci` + `build_lite.py`，均社区版）的详细展开见 `references/11-scenario-a-python-automation.md` 七章（A 侧：database/mpl/simulation）与 `references/07-udf-guidance.md` 六章（C 侧：udf/fibonacci）。
+官方 quickstart 迷你示例（`xlwings-0.37.3/examples/`：`database`/`mpl`/`simulation`/`udf`/`fibonacci` + `build_lite.py`，均社区版）的详细展开见 `references/11-scenario-a-python-automation.md` 七章（A 侧：database/mpl/simulation）与 `references/07-udf-guidance.md` 六章（C 侧：udf/fibonacci）。
 
 `xlwings-demo-master` 社区版部分（basics/correlation/frozen/interactive/performance/simulation/testing）的文件级用途详展见 `references/11-scenario-a-python-automation.md` 七章 7.7（PRO 部分见 13-scenario-d 四章 PRO 案例研读）。
 
 完整案例索引（11 个案例按工作流环节分类）见 `references/11-scenario-a-python-automation.md` 附录。
 
----
-## 5 场景 B：MCP 自动化
+### 4.4 MCP 自动化（场景 A 的协议封装通道）
 
 **适用**：需要将 Excel 操作能力暴露给 MCP 客户端（AI Agent、Claude Desktop、Claude Code、Roo Code 等），让 Agent 通过自然语言对话操作 Excel。
 
-### 5.1 工作流
+**工作流**：需求判定 → 环境准备 → 选型安装 → 客户端配置 → 安全加固 → 测试验证 → 故障排查
 
-```
-需求判定 → 环境准备 → 选型安装 → 客户端配置 → 安全加固 → 测试验证 → 故障排查
-```
+1. **需求判定**：如果只是 Python 脚本自动化，走 4.1 主线，避免 MCP 协议额外复杂度。需要 MCP 的典型特征：AI Agent 需通过对话操作 Excel、多个 Agent 共享 Excel 操作能力、需将 Excel 工具接入 MCP 生态。
+2. **环境准备**：Windows + Microsoft Excel（4 个社区 Server 均通过 xlwings COM 驱动 Excel，不支持 headless）；Python 3.10+；非 Windows 仅 vohoailinh90 提供 MockOpenpyxlBackend 用于开发测试。
+3. **选型安装**：根据需求特征选择社区 MCP Server（本技能 `MCP-Server/` 目录内置 4 个，各项目的依赖、入口命令、工具清单与源码模块逐一详解见 `references/12-scenario-a-mcp-automation.md` 第二节）：
+   - **快速验证 / DRM 加密文件** → geniuskey/mcp-server-xlwings（v0.4.1，`uvx mcp-server-xlwings` 一键启动，支持 DRM 保护文件、读取用户当前选区）
+   - **生产环境 / 功能最全** → hyunjae-labs/xlwings-mcp-server（v1.0.4，`pip install xlwings-mcp-server`，会话式架构 + 线程安全 + 图表支持，20 个源码模块）
+   - **VBA 宏为核心** → prabodh-hydexcel/excel-mcp（`python server.py`，连接实时 Excel，支持宏执行与命名区域）
+   - **宏安全 / 跨平台开发** → vohoailinh90/Excel_MCP_Server（`python server.py`，VBA 宏白名单 `EXCEL_MCP_ALLOWED_MACROS`，专用 COM 线程解决 STA，非 Windows 用 Mock backend 开发测试）
+4. **客户端配置**：在 MCP 客户端配置文件中注册 Server（stdio 传输）。Claude Desktop 编辑 `%APPDATA%\Claude\claude_desktop_config.json`；Claude Code 用 `claude mcp add`；Roo Code 用 `.roo/mcp.json`。command 指向 Python 解释器或 `uvx`，args 指向入口模块或脚本。三种客户端的完整配置 JSON 模板见 `references/12-scenario-a-mcp-automation.md` 第五节。
+5. **安全加固**：VBA 宏是任意代码执行，生产环境必须设置 `EXCEL_MCP_ALLOWED_MACROS` 白名单——白名单机制的源码分析（环境变量解析、set 查找、None 语义坑）与专用 COM 线程模型见 `references/12-scenario-a-mcp-automation.md` 第四节；只暴露任务所需的最小工具集；关键操作前提示用户确认。
+6. **测试验证**：重启 MCP 客户端，确认 Server 已连接（`/mcp` 或连接状态）；在对话中调用基础工具（读取单元格、写入数据）验证链路；测试 VBA 宏调用（如使用）确认白名单生效。
+7. **故障排查**：Server 未连接 → 检查 command/args 路径；"Application is busy" → COM STA 冲突，使用带专用 COM 线程的项目；Excel 进程残留 → 任务管理器结束 EXCEL.EXE；宏无反应 → 检查 VBA 项目是否解锁、白名单是否包含该宏。7 种常见故障的排查步骤见 `references/12-scenario-a-mcp-automation.md` 第六节。
 
-**1. 需求判定**：确认是否真的需要 MCP。如果只是 Python 脚本自动化，走场景 A，避免 MCP 协议的额外复杂度。需要 MCP 的典型特征：AI Agent 需通过对话操作 Excel、多个 Agent 共享 Excel 操作能力、需要将 Excel 工具接入 MCP 生态。
-
-**2. 环境准备**：Windows + Microsoft Excel（4 个社区 Server 均通过 xlwings COM 驱动 Excel，不支持 headless）；Python 3.10+；非 Windows 仅 vohoailinh90 提供 MockOpenpyxlBackend 用于开发测试。
-
-**3. 选型安装**：根据需求特征选择社区 MCP Server（本技能 `MCP-Server/` 目录内置 4 个，各项目的依赖、入口命令、工具清单与源码模块逐一详解见 `references/12-scenario-b-mcp-automation.md` 第二节）：
-- **快速验证/DRM 加密文件** → geniuskey/mcp-server-xlwings（v0.4.1，`uvx mcp-server-xlwings` 一键启动，支持 DRM 保护文件、读取用户当前选区）
-- **生产环境/功能最全** → hyunjae-labs/xlwings-mcp-server（v1.0.4，`pip install xlwings-mcp-server`，会话式架构 + 线程安全 + 图表支持，20 个源码模块）
-- **VBA 宏为核心** → prabodh-hydexcel/excel-mcp（`python server.py`，连接实时 Excel，支持宏执行与命名区域）
-- **宏安全/跨平台开发** → vohoailinh90/Excel_MCP_Server（`python server.py`，VBA 宏白名单 `EXCEL_MCP_ALLOWED_MACROS`，专用 COM 线程解决 STA，非 Windows 用 Mock backend 开发测试）
-
-**4. 客户端配置**：在 MCP 客户端配置文件中注册 Server（stdio 传输）。Claude Desktop 编辑 `%APPDATA%\Claude\claude_desktop_config.json`；Claude Code 用 `claude mcp add`；Roo Code 用 `.roo/mcp.json`。command 指向 Python 解释器或 `uvx`，args 指向入口模块或脚本。三种客户端的完整配置 JSON 模板见 `references/12-scenario-b-mcp-automation.md` 第五节。
-
-**5. 安全加固**：VBA 宏是任意代码执行，生产环境必须设置 `EXCEL_MCP_ALLOWED_MACROS` 白名单——白名单机制的源码分析（环境变量解析、set 查找、None 语义坑）与专用 COM 线程模型见 `references/12-scenario-b-mcp-automation.md` 第四节；只暴露任务所需的最小工具集；关键操作前提示用户确认。
-
-**6. 测试验证**：重启 MCP 客户端，确认 Server 已连接（`/mcp` 或连接状态）；在对话中调用基础工具（读取单元格、写入数据）验证链路；测试 VBA 宏调用（如使用）确认白名单生效。
-
-**7. 故障排查**：Server 未连接 → 检查 command/args 路径；"Application is busy" → COM STA 冲突，使用带专用 COM 线程的项目；Excel 进程残留 → 任务管理器结束 EXCEL.EXE；宏无反应 → 检查 VBA 项目是否解锁、白名单是否包含该宏。7 种常见故障的排查步骤见 `references/12-scenario-b-mcp-automation.md` 第六节。
-
-### 5.2 核心原则
-
+**核心原则**：
 1. **MCP Server 本质是场景 A 的协议封装**：内部调用 `xw.Book()`/`xw.App()`，场景 A 的所有规则（COM 单线程、进程清理、大块读写）均适用
 2. **COM STA 冲突**：多工具并发调用会导致 "Application is busy"，需专用 COM 线程或每会话锁（hyunjae-labs/vohoailinh90 已内置解决）
 3. **权限最小化**：只暴露任务所需的最小工具集，不暴露完整文件系统
 
 ---
+## 5 场景 B：Web / 服务化 Excel 方案（xlwings Server / Lite / Office.js）
 
-## 6 场景 C：宏/VBA 集成与加载项开发（主干工作流）
+**适用**：需要 Excel 能力跑在**浏览器 / 服务器**而非本机 COM——多人在线协作、Excel on the web、企业级部署（SSO/RBAC）、目标机无 Python。三条 Web 通道的深度参考文档：
+
+| 通道 | 定位 | 参考文档 | 关键资源 |
+|------|------|---------|---------|
+| xlwings Server | 服务端运行时（FastAPI + Socket.IO + Redis），Office.js 加载项后端 | `references/14-xlwings-server-guidance.md` | `xlwings-server/`（docs 61 篇 + xlwings_server 包 + deployment/nginx/scripts/tests） |
+| xlwings Lite | 浏览器端运行时（Pyodide/WASM），免费自包含 | `references/15-xlwings-lite-guidance.md` | `xlwings-lite/`（官方文档 31 篇镜像）+ taxi-duckdb 案例 |
+| Office.js 引擎 | 客户端引擎（值转换层 + UDF/脚本全链路），Server 与 Lite 共享的语义内核 | `references/16-xlwings-officejs.md` | `xlwings-0.37.3/xlwings/pro/_xlofficejs.py` + `udfs_officejs.py` |
+
+**工作流**：
+
+```
+需求判定 → 选型（Server / Lite / 引擎研读）→ 按对应文档阶段推进 → 验证交付
+```
+
+1. **需求判定**：确认是否真的需要 Web/服务化路线。单机离线自动化走场景 A；桌面 VBA 生态走场景 C；需要浏览器端 / 服务器集中 / 多人在线 / SSO 才走本场景。
+2. **选型**：
+   - 需要自有服务器、企业认证、Python 集中 → **Server**（14 号文档，8 阶段工作流）
+   - 需要免费、浏览器内自包含、无服务器 → **Lite**（15 号文档，7 阶段工作流）
+   - 需要理解 Web 加载项底层机制、自定义函数/脚本协议 → **Office.js 引擎**（16 号文档，7 阶段工作流）
+3. **推进**：按所选文档的阶段 → 步骤 → 输出物执行（14/15/16 号文档均为开发生命周期工作流编排，各阶段含任务内容 / 步骤 / 输出物）。
+4. **验证**：三通道共用的 "加载项三件套" 检查（manifest / 端点 / 任务窗格）见 14 号文档 0 定位。
+
+**核心原则**：
+- Office.js 引擎是 Server 与 Lite 共享的语义内核（值转换层 + UDF/脚本管线）——先读 16 号理解机制，再进 14/15 应用；
+- 本场景三条通道均不承载 runPython（VBA 桥接走场景 C）与 COM 桌面自动化（场景 A）；
+- Web 通道的 "目标机" 是无状态的浏览器——一切状态在 Server（Redis）或浏览器（Pyodide）侧管理。
+---
+
+## 6 场景 C：使用 xlwings 开发 VBA 宏或 VBA 加载项（主干工作流）
 
 ### 6.1 场景能力与核心原则
 
-场景 C 覆盖：VBA 宏、RunPython 桥接、UDF 自定义函数、Ribbon 自定义、UserForm 窗体、桌面面板（pywebview+FastHTML）、白标 xlam 加载项、便携运行时分发。
+场景 C 覆盖：VBA 宏、RunPython 桥接、UDF 自定义函数（桌面 UDF）、Ribbon 自定义、UserForm 窗体、桌面面板（pywebview+FastHTML）、白标 xlam 加载项、便携运行时分发。**专指桌面 VBA 通道**；Web/Office.js 加载项（Server/Lite）不属本场景，见场景 B（5 章）。
 
 **架构约束（必须遵守）**：
 1. **RunPython 不支持传参/返回值**：需参数时改用 UDF 或从单元格读写
@@ -279,14 +296,14 @@ import xlwings as xw
 
 **操作**：
 1. 创建虚拟环境：`scripts/ensure_uv_env.ps1`（Windows 推荐）
-2. 安装依赖：`xlwings==0.37.2`、`pywin32`、面板/测试按需
-3. 验证本地源码注入：`python -c "import sys; sys.path.insert(0,'xlwings-0.37.2'); import xlwings; print(xlwings.__version__)"`
+2. 安装依赖：`xlwings==0.37.3`、`pywin32`、面板/测试按需
+3. 验证本地源码注入：`python -c "import sys; sys.path.insert(0,'xlwings-0.37.3'); import xlwings; print(xlwings.__version__)"`
 4. 配置 COM 权限：Excel 信任中心 → 启用「对 VBA 项目对象模型的访问」（AccessVBOM）——白标 xlam UDF 导入必需
 5. 验证 COM 可用：`python -c "import xlwings as xw; app=xw.App(visible=False); print(app.api.Version); app.quit()"`
 
 **环境就绪清单**（6 项全部通过才进入下一步）：
 - [ ] Python 解释器可用（3.10+）
-- [ ] xlwings 0.37.2 源码注入成功
+- [ ] xlwings 0.37.3 源码注入成功
 - [ ] pywin32 安装，COM 可创建 Excel 实例
 - [ ] AccessVBOM 已启用
 - [ ] WPS/Excel 信任中心已配置（宏启用）
@@ -489,7 +506,7 @@ Ribbon 官方文档导航与注入结果验证方法见 `references/06-ribbon-gu
 
 **目标**：按规范开发 UDF，注册测试并导入目标产物。UDF 仅 Windows 支持，必须承载于 .xlsm 或 .xlam。
 
-**官方示例**：`xlwings-0.37.2/examples/udf/udf.py`（`@xw.sub`/`@xw.func` 最小集）与 `fibonacci/fibonacci.py`（含 `build_standalone.py` PyInstaller 冻结 → zip 便携分发）——可对照模板与官方 quickstart 实现。
+**官方示例**：`xlwings-0.37.3/examples/udf/udf.py`（`@xw.sub`/`@xw.func` 最小集）与 `fibonacci/fibonacci.py`（含 `build_standalone.py` PyInstaller 冻结 → zip 便携分发）——可对照模板与官方 quickstart 实现。
 
 **UDF 编写规范**：
 - 使用 `@xw.func` 装饰器标记函数，导入后可在 Excel 公式中使用
@@ -753,7 +770,7 @@ release_tool 分发必须执行 `smoke_test.py --install-dir <安装目录>`，5
 
 ### 7.1 源码架构认知
 
-源码研读入口为 `xlwings-0.37.2/`：Python 包 `xlwings/`、原生桥 `xlwingsdll/`、测试 `tests/`、文档 `docs/`。**详细技术研读（xlwingsdll 原生 DLL、xlwings 包架构、构建与测试体系）见 `references/13-scenario-d-source-code.md` 第 2 章**。
+源码研读入口为 `xlwings-0.37.3/`：Python 包 `xlwings/`、原生桥 `xlwingsdll/`、测试 `tests/`、文档 `docs/`。**详细技术研读（xlwingsdll 原生 DLL、xlwings 包架构、构建与测试体系）见 `references/13-scenario-d-source-code.md` 第 2 章**。
 
 - **对象模型**：`main.py` 定义全部公开类（App/Book/Sheet/Range/Chart 等）；`base_classes.py` 为平台无关基类；`constants.py` 为 Excel 常量枚举；`utils.py` 为工具函数
 - **平台适配层**：Windows 用 `_xlwindows.py` + `_win32patch.py`（pywin32 COM + 行为补丁）；macOS 用 `_xlmac.py` + `mac_dict.py` + `xlwings-dev.applescript`
@@ -763,9 +780,9 @@ release_tool 分发必须执行 `smoke_test.py --install-dir <安装目录>`，5
 - **命令行与杂项**：`cli.py`（quickstart/addin install）、`server.py`（REST 服务端）、`reports.py`、`expansion.py`（Range 动态扩展）
 - **PRO 功能模块**（`xlwings/pro/`，需许可）：四引擎、Reports、ObjectHandle、OfficeJS UDF、许可证管理
 
-平台差异汇总见 `xlwings-0.37.2/docs/missing_features.md`。
+平台差异汇总见 `xlwings-0.37.3/docs/missing_features.md`。
 
-Web 加载项（Lite）完整案例 `examples/taxi-duckdb-main/`（一个内嵌 Office.js 加载项与 Python 脚本的自包含 .xlsx，DuckDB 数据应用，不依赖 PRO/Server）——内嵌内容已提取至 `taxi-duckdb-main/taxi-duckdb-main/extracted/`（`extract_webextension.py` 一步到位：解包到 `full/` 且 `main.py` / `requirements.txt` 解码明文就地生成），案例研读见 `references/13-scenario-d-source-code.md` 4.5，条目说明见 `examples/ReadMe.md` 第 10 节。
+Web 加载项（Lite）完整案例 `examples/taxi-duckdb-main/`（一个内嵌 Office.js 加载项与 Python 脚本的自包含 .xlsx，DuckDB 数据应用，不依赖 PRO/Server）——内嵌内容已提取至 `taxi-duckdb-main/taxi-duckdb-main/extracted/`（`extract_webextension.py` 一步到位：解包到 `full/` 且 `main.py` / `requirements.txt` 解码明文就地生成），案例研读见 `references/15-xlwings-lite-guidance.md` 阶段七，条目说明见 `examples/ReadMe.md` 第 10 节。
 
 ### 7.2 入门学习与教学演示
 
@@ -777,11 +794,11 @@ Web 加载项（Lite）完整案例 `examples/taxi-duckdb-main/`（一个内嵌 
 
 ### 7.4 PRO 功能研读（仅源码研读，不部署运行）
 
-xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、xlwings Lite 异步 API、ObjectHandle 自定义对象传递。深度技术分析见 `references/13-scenario-d-source-code.md`：引擎原理（含 calamine 只读引擎 `pro/_xlcalamine.py` 的 Python 适配层与 Office.js 转换层）见 1.2 / 1.8 节，许可证机制见 1.1，Reports 架构见 1.3，部署机制见 1.4；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）见该文件 1.8 节。
+xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、ObjectHandle 自定义对象传递。深度技术分析见 `references/13-scenario-d-source-code.md`：引擎原理（含 calamine 只读引擎 `pro/_xlcalamine.py` 的 Python 适配层与 Office.js 转换层）见 1.2 节，许可证机制见 1.1，Reports 架构见 1.3，部署机制见 1.4；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）已独立为 `references/16-xlwings-officejs.md`（与官方教程对照的工作流编排）。**xlwings Lite（免费 Web 加载项）的独立参考手册（产品能力/运行机制/开发工作流/自托管/taxi-duckdb 案例 + BookAsync 等源码研读）见 `references/15-xlwings-lite-guidance.md`**。
 
 ### 7.5 服务端工程与部署机制
 
-官方 xlwings Server 实现位于 `examples/xlwings-server-main/`（与源码包独立，source-available 双许可），为 Excel 与 Google Sheets 提供 Python 支持，可自托管于裸机/Linux VM/Docker Compose/Kubernetes/Serverless。Python 代码部署三种方式：ZIP 打包（与工作簿同名，xlwings 自动识别）、RunFrozenPython（PyInstaller 冻结 .exe，仅 Windows 不支持 UDF）、PRO 部署（`code embed`/`release`，需许可）。
+官方 xlwings Server 实现位于 `xlwings-server/`（与源码包独立，source-available 双许可），为 Excel 与 Google Sheets 提供 Python 支持，可自托管于裸机/Linux VM/Docker Compose/Kubernetes/Serverless。**其完整六块研读（docs 61 篇教程 / xlwings_server 包 / deployment / nginx / scripts / tests）与开发生命周期工作流（预研选型→初始化→扩展机制→自定义函数/脚本→认证安全→测试调试→部署运维升级）见 `references/14-xlwings-server-guidance.md`（Office.js Excel 加载项的后端运行时，8 阶段工作流，13-d 1.7 已压缩为指针）；Office.js 客户端引擎（值转换层 + UDF/脚本全链路，Server 与 Lite 共享的语义内核）见 `references/16-xlwings-officejs.md`**。Python 代码部署三种方式：ZIP 打包（与工作簿同名，xlwings 自动识别）、RunFrozenPython（PyInstaller 冻结 .exe，仅 Windows 不支持 UDF）、PRO 部署（`code embed`/`release`，需许可）。
 
 ### 7.6 产物质检
 
@@ -794,7 +811,7 @@ xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无�
 
 实战任务案例（Eikon 数据接入、Excel/Web 双端原型、Power Query 库管理）由场景 A 4.3 引用介绍，详细展开见 `references/11-scenario-a-python-automation.md` 七章 7.4–7.6。
 
-xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架构、code embed 部署、ObjectHandle、Lite）、入门学习执行步骤与案例总览（含 PRO 案例研读）见 `references/13-scenario-d-source-code.md`。
+xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架构、ObjectHandle）见 `references/13-scenario-d-source-code.md`；PRO 部署机制（code embed/release）对照研读见 `references/10-deployment-delivery.md` 附录 A（开发加载项部署走自研 release_tool 主线）；**xlwings Lite 独立参考手册（免费 Web 加载项，开发生命周期工作流编排）见 `references/15-xlwings-lite-guidance.md`**；Office.js 引擎（Server 与 Lite 共享的语义内核）见 `references/16-xlwings-officejs.md`；xlwings Server 服务端的独立深度参考（开发生命周期工作流编排，六块全覆盖，13-d 1.7 已指针化）见 `references/14-xlwings-server-guidance.md`。
 
 ---
 
@@ -805,14 +822,14 @@ xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架
 - 只有**核心、主干、非常重要**的内容（必经流程、门禁、铁律、形态判定、关键顺序约束）才沉淀到本 SKILL.md
 - 判断标准：能防止重复踩坑的经验与坑点 → `docs/troubleshooting.md`；决定工作流走向的规则与铁律 → 本 SKILL.md
 
-**通用调试方法**：`xlwings-0.37.2/docs/debugging.md`；性能优化：`xlwings-0.37.2/docs/troubleshooting.md`。
+**通用调试方法**：`xlwings-0.37.3/docs/debugging.md`；性能优化：`xlwings-0.37.3/docs/troubleshooting.md`。
 
 **跨平台差异速查**：
 - UDF 仅 Windows；`Characters` 对象与 `app.interactive` macOS 不支持；macOS 不支持多实例写同一文件
 - Excel 版本 < 15 时 macOS 使用 `mac_latin2` 编码
 - WPS 表格通过 COM 兼容，部分高级功能可能不可用
 
-**其他参考**：缺失功能 `xlwings-0.37.2/docs/missing_features.md`；常见问题 `xlwings-0.37.2/docs/troubleshooting.md`。
+**其他参考**：缺失功能 `xlwings-0.37.3/docs/missing_features.md`；常见问题 `xlwings-0.37.3/docs/troubleshooting.md`。
 
 > docs 目录中 `conf.py`/`Makefile`/`make.bat`/`requirements.txt`/`index_latex.md` 及 `locales/`/`_static/`/`_templates/`/`_ext/`/`images/` 为官方文档站构建产物、翻译与资源文件，非工作流引用对象；`pro/` 为需 PRO 许可的付费文档，本技能不依赖。
 
@@ -822,8 +839,8 @@ xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架
 
 本地上游原文目录共 **17 路**，随官方仓库演进，由脚本统一跟踪，**禁止手改上游原文**（zip 快照）：
 
-- `xlwings-<ver>/`：xlwings 核心源码包，tag 锁定（当前 `0.37.2`）
-- `examples/` 与 `MCP-Server/` 下全部开源仓库：`xlwings-server`（tag 锁定 `1.14.0`）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
+- `xlwings-<ver>/`：xlwings 核心源码包，tag 锁定（当前 `0.37.3`）
+- `examples/`、`MCP-Server/` 与技能根目录下全部开源仓库：`xlwings-server`（跟 main，目录在技能根目录 `xlwings-server/`，由 examples/ 迁出）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
 
 **组件**：
 - `manifest.json`：上游锁定清单（repo / ref / local_dir / pinned_sha / last_synced，单一事实来源；ref 为 tag 或默认分支）

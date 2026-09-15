@@ -1,4 +1,4 @@
-# 编码与 COM 前置
+﻿# 编码与 COM 前置
 这个文档保留 Excel COM、AccessVBOM、WPS 信任和 VBA / Ribbon 交付所需的前置约束。
 如果问题更偏向 PowerShell `5.1` 的文件读写、模板实例化、中文乱码、BOM / 无 BOM 处理，优先看本文件末尾"PowerShell 5.1 推荐写法与排查"节。
 ## 编码固定规则

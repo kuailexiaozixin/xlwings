@@ -10,23 +10,6 @@ AIGC:
 ---
 
 # xlwings 技能案例集总览（examples/）
-> 本目录下的示例仓库为官方/第三方开源项目的本地克隆，**未随本仓库分发**（以本文件占位并链接官方来源）；官方克隆方式：`git clone <url>`。
->
-> | 子目录 | 官方来源 |
-> |---|---|
-> | `Excel_udf_itus-main` | <https://github.com/Kiran3002/Excel_udf_itus> |
-> | `cross-check-reports-main` | <https://github.com/xlwings/cross-check-reports> |
-> | `excel-automated-testing-master` | <https://github.com/xlwings/xlwings-automated-testing> |
-> | `python-for-excel-course-main` | <https://github.com/xlwings/python-for-excel-course> |
-> | `simulation-demo-master` | <https://github.com/xlwings/simulation-demo> |
-> | `static-excel-test-master` | <https://github.com/xlwings/static-excel-test> |
-> | `taxi-duckdb-main` | <https://github.com/xlwings/taxi-duckdb> |
-> | `xl-pq-handler-master` | <https://pypi.org/project/xl-pq-handler/> |
-> | `xlwings-demo-master` | <https://github.com/xlwings/xlwings-demo> |
-> | `xlwings-eikon-master` | <https://github.com/xlwings/xlwings-eikon> |
-> | `xlwings-factsheet-demo-main` | <https://github.com/xlwings/xlwings-factsheet-demo> |
-> | `xlwings-server-main` | <https://github.com/xlwings/xlwings-server> |
-
 
 本目录集中存放本技能内置的场景样例与演示仓库。SKILL.md 各场景任务块按主题引用本目录中的案例；**案例的目录结构、设计思路、运行方式与个性化改造说明一律以本文件（及仓库自带 README）为准**，SKILL.md 只做简要介绍与引用。
 
@@ -41,11 +24,12 @@ AIGC:
 | simulation-demo-master | Excel/Web 双端快速原型（同一份蒙特卡洛计算逻辑同时驱动 Excel 与 Flask Web） | 场景 A · 任务块 4.9 |
 | xl-pq-handler-master | Power Query（.pq）脚本库管理工具：从工作簿批量提取 M 代码、按依赖顺序注入回工作簿 | 场景 A · 任务块 4.10 |
 | static-excel-test-master | 静态坏引用扫描（#REF!/#DIV/0!/#VALUE! 残留检查，openpyxl 实现，无 Excel 依赖） | 场景 D · 任务块 7.9 |
-| excel-automated-testing-master | 自动化回归测试骨架（xlsm 工作簿的 pytest/unittest 驱动测试） | 场景 C · 工作流第 9 步、场景 B · 5.2 |
+| excel-automated-testing-master | 自动化回归测试骨架（xlsm 工作簿的 pytest/unittest 驱动测试） | 场景 A · 4.3（自动化测试）、场景 C · 6.5.12 操作 5（回归） |
 | cross-check-reports-main | 报表交叉核验（两份同构报表逐单元格断言） | 场景 D · 任务块 7.9 |
-| Excel_udf_itus-main | 数据表查询驱动 UDF 完整工程（SQLite → @xw.func → example.xlsm 公式调用） | 场景 B · 5.2 |
-| xlwings-demo-master | 官方综合演示集（basics/correlation/performance/frozen/reporting 等 13 个主题） | 场景 A/B/C/D 多处引用（A 整链、B·5.2、C 测试、D·7.5/7.7/7.8 等） |
-| xlwings-server-main | 官方 xlwings Server 服务端工程（为 Excel/Google Sheets 提供 Python 支持，可自托管） | 场景 D · 7.8 源码研读（不部署） |
+| Excel_udf_itus-main | 数据表查询驱动 UDF 完整工程（SQLite → @xw.func → example.xlsm 公式调用） | 场景 A · 4.3（UDF 完整工程） |
+| xlwings-demo-master | 官方综合演示集（basics/correlation/performance/frozen/reporting 等 13 个主题） | 场景 A · 4.3（社区版子目录文件级用途见 11 号文档）、场景 C · 测试写法、场景 D · 7.2/7.6 |
+| xlwings-server（已迁至技能根目录 `../xlwings-server/`） | 官方 xlwings Server 服务端工程（为 Excel/Google Sheets 提供 Python 支持，可自托管） | 场景 B · 5（Server 通道）、场景 D · 7.5（不部署）；完整研读见 `references/14-xlwings-server-guidance.md` |
+| taxi-duckdb-main | Web 加载项 + DuckDB 一体化案例（内嵌 Office.js 加载项，Pyodide 浏览器端 Python，任务窗格 `@script` 按钮查询纽约出租车 Parquet 数据） | 场景 B · 5（Lite 通道案例）、场景 D · 7.1；完整研读见 `references/15-xlwings-lite-guidance.md` 阶段七 |
 | python-for-excel-course-main | 官方入门视频课程（2018）配套 Jupyter 讲义，按 0-7 Part 组织 | 场景 D · 7.5 |
 
 ---
@@ -79,7 +63,7 @@ AIGC:
 2. 更换模板：以 `template/template.xlsx` 为蓝本重设 `{{ }}` 占位符；
 3. 更换输出渠道：修改 `demo.py` 的 postprocess 段（默认演示上传 S3，可改为邮件、网页等）。
 
-> 官方使用文档：xlwings Reports 详见 `../xlwings-0.37.2/docs/pro/reports/`。
+> 官方使用文档：xlwings Reports 详见 `../xlwings-0.37.3/docs/pro/reports/`。
 
 ---
 
@@ -236,7 +220,7 @@ in
 | `basics/` | 最小脚本+UDF 骨架（`xwdemo.py` + `xwdemo.xlsm`，含 `xw.Book.caller()`/`set_mock_caller()` 写法） | A 通用、D·7.5 演示兜底 |
 | `correlation/` | 拉历史行情做相关性分析并写图表（`correlation.py` + `correlation.xlsm`） | A 整链参考、D·7.5 |
 | `interactive/` | Jupyter 交互示例（`interactive.ipynb`，AAPL.xlsx） | D·7.5 |
-| `performance/` | 性能主题：数组读写实测（`arrays.ipynb`、`raw.ipynb`）、UDF 写法（`udfs.py` + `udfs.xlsm`）、数组 UDF（`arrayudf/arrayudf.py`） | A 性能参考、B·5.2 |
+| `performance/` | 性能主题：数组读写实测（`arrays.ipynb`、`raw.ipynb`）、UDF 写法（`udfs.py` + `udfs.xlsm`）、数组 UDF（`arrayudf/arrayudf.py`） | 场景 A · 4.3（性能参考） |
 | `reader/` | Reader 引擎：无 Excel 读取 .xls/.xlsb/.xlsx（`xlwings File Reader.ipynb` + AAPL 系列样例文件） | D·7.7 Reader 引擎源码研读 |
 | `reporting/` | Reports API 入门（`reports101.ipynb`、`report_template.py` + 模板 xlsx） | D·7.7 Reports 源码研读 |
 | `reporting_bigmac/` | Big Mac 指数报告（`_bigmac_index.py` + 已生成 `report_*.pdf`） | D·7.7 Reports 源码参考 |
@@ -244,16 +228,16 @@ in
 | `reporting_fund/` | 基金报告场景（`fund_template.py` + `fund_template.xlsx` + data.pickle） | D·7.7 报告模板源码参考 |
 | `frozen/` | PyInstaller 冻结部署（`demo.py`、`demo.spec`、`demo.xlsm`） | D·7.8 RunFrozenPython 机制源码研读 |
 | `restapi/` | REST API 主题（`timeseries.xlsx` 演示输出） | D·7.7 REST API 源码研读 |
-| `simulation/` | 蒙特卡洛模拟（`simulation.py` + `simulation.xlsm`，与 UDF 异步模式演示同源） | B·5.2 异步/模拟参考 |
+| `simulation/` | 蒙特卡洛模拟（`simulation.py` + `simulation.xlsm`，与 UDF 异步模式演示同源） | 场景 C · 6.5.7（UDF 异步）参考 |
 | `testing/` | 自动化测试（`mybook.py` + `mybook.xlsm`、`test_mybook.py`、`test_sample.py`、`.gitlab-ci.yml`） | 场景 C 测试写法参考 |
 
-## 8. xlwings-server-main：官方 xlwings Server 服务端工程
+## 8. xlwings-server（已迁移至技能根目录）：官方 xlwings Server 服务端工程
 
 **一句话定位**：xlwings Server 官方服务端工程，为 Microsoft Excel 与 Google Sheets 提供 Python 支持（无需本地 Python 安装），可自托管于任意支持 Python/Docker 的平台；source-available 双许可（PolyForm Noncommercial License 1.0.0 非商业免费 / xlwings PRO EULA 商业需付费）。
 
 **约束**：按本技能约定（SKILL.md 场景 D·7.8），本仓库仅作为源码在工作流 D 中研读（理解架构、启动编排、部署形态与二次开发参考），**不纳入工作流 A/B/C/D 执行实际部署运行**；需要部署能力时以仓库 `docs/` 与官方文档 https://server.xlwings.org 为准。
 
-**目录**：`xlwings-server-main/xlwings-server-main/`
+**目录**：`../xlwings-server/`（自技能根目录，已从 examples/ 迁出；本节保留历史说明）
 
 | 文件/目录 | 职责 |
 | --- | --- |
@@ -275,7 +259,7 @@ in
 
 **一句话定位**：xlwings 官方 YouTube 入门视频课程（2018）配套 Jupyter notebook 讲义，按 `0 - Intro` 至 `7 - Part7` 共 8 个 Part 组织，系统覆盖 xlwings 基础到 UDF、单元测试与应用部署，用于场景 D·7.5 的系统入门学习与教学演示。
 
-**注意**：课程发布于 2018 年，部分写法可能过时，但作为 xlwings 基础概念入门仍有效；执行时以本技能内置 xlwings-0.37.2 源码为准（见 SKILL.md 3.1 本地源码注入）。
+**注意**：课程发布于 2018 年，部分写法可能过时，但作为 xlwings 基础概念入门仍有效；执行时以本技能内置 xlwings-0.37.3 源码为准（见 SKILL.md 3.1 本地源码注入）。
 
 **目录**：`python-for-excel-course-main/python-for-excel-course-main/`
 

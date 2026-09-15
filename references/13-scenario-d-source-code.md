@@ -1,6 +1,6 @@
 ﻿# 场景 D：xlwings PRO 深度技术分析与源码扩展
 
-> 本文件是 SKILL.md 第 7 章（场景 D）的**深度扩展资源**。SKILL.md 保留源码架构导航、子场景路由与核心索引；本文件聚焦 xlwings PRO 的深度技术分析（许可证机制、四种引擎原理、Reports 架构、部署机制）、**xlwings 核心源码研读（xlwingsdll 原生桥 + xlwings Python 包架构）**以及入门学习执行步骤与案例总览（社区版案例详展在场景 A/C references，本文件不重复）。
+> 本文件是 SKILL.md 第 7 章（场景 D）的**深度扩展资源**。SKILL.md 保留源码架构导航、子场景路由与核心索引；本文件聚焦 xlwings PRO 的深度技术分析（许可证机制、四种引擎原理、Reports 架构、部署机制）、**xlwings 核心源码研读（xlwingsdll 原生桥 + xlwings Python 包架构）**以及入门学习执行步骤与案例总览（社区版案例详展在场景 A/C references，本文件不重复）。**xlwings Lite（免费 Web 加载项）的独立参考手册见 `references/15-xlwings-lite-guidance.md`（原 1.6/4.5 已迁入并指针化）**。
 
 ## 目录
 
@@ -8,11 +8,11 @@
   - [1.1 许可证机制](#11-许可证机制)
   - [1.2 四种引擎深度分析与数据通道选型](#12-四种引擎深度分析与数据通道选型)
   - [1.3 Reports 报告系统架构](#13-reports-报告系统架构)
-  - [1.4 PRO 部署机制：code embed 与 release](#14-pro-部署机制code-embed-与-release)
+  - [1.4 PRO 部署机制：code embed 与 release（指针 → 10 号附录 A）](#14-pro-部署机制code-embed-与-release指针--10-号附录-a)
   - [1.5 caller 机制与 ObjectHandle](#15-caller-机制与-objecthandle)
-  - [1.6 xlwings Lite 异步 API](#16-xlwings-lite-异步-api)
+  - [1.6 xlwings Lite（指针）](#16-xlwings-lite指针)
   - [1.7 xlwings Server 官方工程技术研读](#17-xlwings-server-官方工程技术研读)
-  - [1.8 PRO OfficeJS 引擎与 UDF/脚本系统源码研读](#18-pro-officejs-引擎与-udf脚本系统源码研读)
+   - [1.8 Office.js 引擎（指针，详见 16 号文档）](#18-officejs-引擎指针详见-16-号文档)
 - [二、xlwings 核心源码研读（xlwingsdll + xlwings 包）](#二xlwings-核心源码研读xlwingsdll--xlwings-包)
   - [2.1 xlwingsdll 原生 DLL](#21-xlwingsdll-原生-dll)
   - [2.2 xlwings Python 包核心架构](#22-xlwings-python-包核心架构)
@@ -27,14 +27,15 @@
   - [4.2 xlwings-demo-master 子目录地图（13 项全览）](#42-xlwings-demo-master-子目录地图13-项全览)
   - [4.3 教学演示选材与执行](#43-教学演示选材与执行)
   - [4.4 xlwings PRO 案例研读（依赖 PRO Reports / Reader / REST API）](#44-xlwings-pro-案例研读依赖-pro-reports--reader--rest-api)
-  - [4.5 taxi-duckdb：Web 加载项 + DuckDB 一体化案例研读](#45-taxi-duckdbweb-加载项--duckdb-一体化案例研读)
+  - [4.5 taxi-duckdb（指针）](#45-taxi-duckdb指针)
   - [4.6 数据服务层案例研读：SQLite 数据访问模式（SQL）](#46-数据服务层案例研读sqlite-数据访问模式sql)
+  - [4.7 DuckDB 桌面端数据访问模式（taxi-duckdb 桌面端分支）](#47-duckdb-桌面端数据访问模式taxi-duckdb-桌面端分支)
 
 ---
 
 ## 一、xlwings PRO 深度技术分析
 
-xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源码位于 `xlwings-0.37.2/xlwings/pro/`。所有 PRO 模块在导入时调用 `LicenseHandler.validate_license("pro")`，无有效许可抛 `xlwings.LicenseError`。
+xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源码位于 `xlwings-0.37.3/xlwings/pro/`。所有 PRO 模块在导入时调用 `LicenseHandler.validate_license("pro")`，无有效许可抛 `xlwings.LicenseError`。
 
 ### 1.1 许可证机制
 
@@ -60,14 +61,14 @@ xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源�
 
 ### 1.2 四种引擎深度分析与数据通道选型
 
-xlwings 0.37.2 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book()` 的连接方式与能力边界：
+xlwings 0.37.3 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book()` 的连接方式与能力边界：
 
 | 引擎 | 许可 | 平台 | 实现文件 | 核心原理 |
 |------|------|------|---------|---------|
 | `excel` | 免费 | Windows/macOS | `_xlwindows.py`/`_xlmac.py` | 本地 COM/appscript 驱动桌面 Excel |
 | `remote` | PRO | 全平台 | `pro/_xlremote.py` | REST API 连接 xlwings Server |
 | `calamine` | PRO | 全平台 | `pro/_xlcalamine.py` | Rust calamine 库只读解析，无需 Excel |
-| `officejs` | PRO | 全平台 | `pro/_xlofficejs.py` | Office.js API，Web 加载项环境 |
+| `officejs` | PRO | 全平台 | `pro/_xlofficejs.py` | Office.js API，Web 加载项环境；完整研读见 `references/16-xlwings-officejs.md` |
 
 #### 1.2.1 数据通道选型（读取侧决策）
 
@@ -96,11 +97,9 @@ xlwings 0.37.2 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 #### 1.2.3 remote 引擎（xlwings Server）
 
-- **实现**：`pro/_xlremote.py`，通过 HTTP REST API 与 xlwings Server 通信
-- **异步加载**：使用 `_SHEET_VALUES_LOADED_KEY` 标记 sheet 单元格值是否已加载，实现 lazy load（元数据先加载，值按需获取）
-- **Office.js 协议映射**：`_CALCULATION_PY2JS`/`_CALCULATION_JS2JS` 字典映射 xlwings 计算模式与 Office.js `Excel.CalculationMode`（`semiautomatic` → `AutomaticExceptTables`）
-- **颜色规范化**：`_color_to_hex()` 将 RGB 元组/十六进制字符串/整数统一为 Office.js 需要的 `#RRGGBB` 格式
-- **适用场景**：服务器端无 Excel 环境、Linux 部署、Google Sheets 支持
+- **实现**：`pro/_xlremote.py`（4173 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
+- **细节去向（单点原则）**：客户端"如何连 Server"的完整机制（JSON 动作协议、lazy load、计算模式映射、颜色规范化、版本校验、对象覆盖）已迁移至 `references/14-xlwings-server-guidance.md` 阶段一 1.6，本处不再展开
+- **对比要点**：与 excel/calamine/officejs 三引擎并列，属"服务端无 Excel 环境、Linux 部署、Google Sheets 支持"通道
 
 #### 1.2.4 calamine 引擎（Reader，只读）
 
@@ -156,11 +155,9 @@ xlwings 0.37.2 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 底层 Rust 层见 2.3.2 `src/`（`lib.rs`：`CellValue` 枚举逐类转 Python 对象、`get_values(used_range)` 读区域、`CalamineError` → `XlwingsError` 透传）。
 
 #### 1.2.5 officejs 引擎（Web 加载项）
-
-- **实现**：`pro/_xlofficejs.py`，基于 Office.js API 的 Excel Web 加载项
-- **custom functions**：`pro/udfs_officejs.py` 提供 `@xlfunc`/`@xlarg`/`@xlret` 装饰器（与桌面 `@xw.func` 对应），生成 Office.js 自定义函数
-- **适用场景**：Excel Online、跨平台 Web 加载项、与 Office 365 生态集成
-- **源码级研读**：`_xlofficejs.py`（值转换层）与 `udfs_officejs.py`（UDF/脚本全链路）的深度拆解见 **1.8**
+**定位**：`pro/_xlofficejs.py`（160 行，值转换层）+ `pro/udfs_officejs.py`（1255 行，UDF/脚本全链路），基于 Office.js API 的 Excel Web 加载项通道——**Server 与 Lite 共享的语义内核**。
+- **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开；与桌面 UDF（2.2.2）同源异路
+- **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开
 
 ### 1.3 Reports 报告系统架构
 
@@ -209,141 +206,10 @@ Reports 是 xlwings PRO 的核心增值功能，实现"Excel 模板 + 结构化�
 2. **数据准备**：结构化数据（DataFrame/dict）作为 `**data` 传入
 3. **渲染输出**：`render_template()` 批量生成独立报告文件
 
-### 1.4 PRO 部署机制：code embed 与 release
+### 1.4 PRO 部署机制：code embed 与 release（指针 → 10 号附录 A）
 
-#### 1.4.1 code embed 技术原理
-
-`code embed`（`pro/embedded_code.py` + CLI `xlwings code embed`）将 Python 源码嵌入 Excel 工作簿的隐藏 sheet，实现「单文件分发」——用户只需一个 .xlsm/.xlam，无需附带 .py 文件。
-
-**嵌入流程**（`cli.py:code_embed()`）：
-
-1. **删除旧代码 sheet**：遍历工作簿所有 sheet，删除以 `.py` 结尾的 sheet（避免重复嵌入）
-2. **UUID 化 sheet 名**：每个 .py 文件对应一个隐藏 sheet，sheet 名为 `uuid.uuid4().hex[:28] + ".py"`（28 位十六进制 + .py 后缀）。**不用原文件名作 sheet 名**——Excel sheet 名限 31 字符且禁止 `[]:*?/\\`，UUID 规避所有限制
-3. **单元格文本格式**：A 列设 `NumberFormat = "@"`（文本格式），列宽 65，代码按行写入 A1:A{n}
-4. **单引号转义**：以 `'` 开头的行前补一个 `'`（Excel 会把前导单引号解释为「文本前缀标记」，需双写才能保留原文）；`'''` 三引号替换为 `"""`（避免 VBA 字符串解析冲突）
-5. **写入 RELEASE_EMBED_CODE_MAP**：配置表中写入 JSON 映射 `{sheet名: 相对路径}`，如 `{"a1b2c3.py": "src/app.py"}`。此映射超 32767 字符时 `sys.exit("ERROR: The package structure is too complex to embed.")`——包结构过深会超限
-
-**运行时提取流程**（`pro/embedded_code.py:dump_embedded_code()`）：
-
-1. 从配置表读取 `RELEASE_EMBED_CODE_MAP`（JSON 解析为 sheet→路径映射）
-2. 遍历所有以 `.py` 结尾的 sheet，读取 A 列值（`options(ndim=1)`），按行写入临时目录
-3. `None` 行写为空行（`\n`），保留原始空行
-4. `sys.path[0:0] = [target_dir]` 将临时目录插入模块搜索路径最前
-5. `@lru_cache()` 缓存提取结果——同一工作簿只提取一次
-
-**关键限制**：
-- 单 sheet 单元格上限 32767 字符（Excel 单元格文本上限），超大型模块需拆分
-- `RELEASE_EMBED_CODE_MAP` JSON 也受 32767 字符限制，包文件过多会超限
-- 提取到 `%TEMP%` 临时目录，进程退出后不自动清理（多次运行会累积临时文件）
-
-**VBA 端检测逻辑（`addin/Main.bas`，理解「为什么禁用 code embed」的关键）**：
-
-VBA 的 `RunPython` 函数在构建 Python 命令前，先检测工作簿中是否存在 `.py` sheet：
-
-```vba
-' Check for embedded Python code
-uses_embedded_code = False
-For i = 1 To 2
-    If i = 1 Then
-        Set wb = ActiveWorkbook
-    Else
-        Set wb = ThisWorkbook
-    End If
-    For Each sht In wb.Worksheets
-        If Right$(sht.Name, 3) = ".py" Then
-            uses_embedded_code = True
-            Exit For
-        End If
-    Next
-Next i
-
-If uses_embedded_code = True Then
-    AddExcelDir = "false"
-Else
-    AddExcelDir = GetConfig("ADD_WORKBOOK_TO_PYTHONPATH", "true")
-End If
-```
-
-**三个关键事实**：
-
-1. **检测范围是 ActiveWorkbook + ThisWorkbook**：不仅检查当前加载项（ThisWorkbook），还检查用户打开的活动工作簿（ActiveWorkbook）。如果用户在任意工作簿中创建了名为 `xxx.py` 的 sheet，也会触发 embedded code 模式
-2. **检测条件仅为 sheet 名后缀 `.py`**：不检查 `RELEASE_EMBED_CODE` 配置项，不检查 sheet 是否隐藏，不检查 sheet 是否有内容。只要 sheet 名以 `.py` 结尾就触发
-3. **触发后走 `RunPythonEmbeddedCode` 分支**：该分支最终调用 Python 端 `xlwings.pro.embedded_code.runpython_embedded_code(command)`，而 `pro/embedded_code.py` 模块级调用 `LicenseHandler.validate_license("pro")`，无有效许可直接抛 `LicenseError`
-
-**推论：配置表 `RELEASE_EMBED_CODE=False` 无法阻止许可证检查**。VBA 是通过检测 sheet 名判断的，不是通过读取配置项。因此，要彻底避免许可证检查，**必须确保工作簿中不存在任何以 `.py` 结尾的 sheet**，而不是仅设置配置项。
-
-**VBA 端 LICENSE_KEY 检查（code embed 的核心障碍）**：
-
-检测到 `.py` sheet 后，VBA `RunPython` 函数执行以下逻辑：
-
-```vba
-' PythonCommand with embedded code
-If uses_embedded_code = True Then
-    licenseKey = GetConfig("LICENSE_KEY")
-    If licenseKey = "" Then
-        MsgBox "Embedded code requires a valid LICENSE_KEY."
-        Exit Function
-    Else
-        PythonCommand = "import xlwings.pro;xlwings.pro.runpython_embedded_code('" & SourcePythonCommand & "')"
-    End If
-End If
-```
-
-**官方机制的两个关键环节**：
-
-1. **LICENSE_KEY 检查**：VBA 先检查配置表中的 `LICENSE_KEY`，为空直接 `MsgBox` 报错并 `Exit Function`
-2. **命令构建**：VBA 构建的命令是 `import xlwings.pro;xlwings.pro.runpython_embedded_code('command')`，这会导入 `xlwings.pro` 包，触发 `pro/__init__.py` 中的许可证验证
-
-**UDF 场景的特殊处理**：`GetUdfModules` 函数会自动把 `.py` sheet 名（去掉后缀）加入 UDF 模块列表，因此嵌入代码的 UDF 不需要在 `UDF Modules` 配置中显式声明。但修改代码后需要重新导入 UDF。
-
-#### 1.4.2 release 命令完整流程
-
-`xlwings release`（`cli.py:release()`）在当前打开的工作簿上执行「一键发布」，**不区分 xlam 还是 xlsm**——用 `xw.apps.active.books.active` 获取当前活动工作簿。
-
-**执行步骤**：
-
-1. **创建 Deploy Key**：`LicenseHandler.create_deploy_key()` 生成部署密钥（试用密钥直接用 license_key）。Deploy Key 与开发者密钥不同——它绑定到发布的工作簿，目标机无需开发者许可
-2. **写入 xlwings.conf 配置表**（首次 release 时交互询问）：
-   - `Interpreter_Win`: `%LOCALAPPDATA%\{project_name}\python.exe`——便携运行时路径，`%LOCALAPPDATA%` 在运行时由 xlwings 展开
-   - `Interpreter_Mac`: `$HOME/{project_name}/bin/python`
-   - `PYTHONPATH`: None（嵌入代码模式不需要外部模块路径）
-   - `LICENSE_KEY`: deploy_key
-   - `RELEASE_EMBED_CODE`: True/False（是否嵌入代码）
-   - `RELEASE_HIDE_CONFIG_SHEET`: True/False（隐藏配置表）
-   - `RELEASE_HIDE_CODE_SHEETS`: True/False（隐藏代码 sheet）
-   - `RELEASE_NO_ADDIN`: True/False（是否不需要 xlwings 加载项，独立运行模式）
-   - `RELEASE_REMOTE_INTERPRETER`: True/False（是否支持 xlwings Server 远程解释器）
-3. **RELEASE_NO_ADDIN 模式**（独立运行，目标机无需安装 xlwings.xlam）：
-   - 移除 VBA 引用 `xlwings`（`VBProject.References.Remove`）
-   - 移除 VBA 模块：`xlwings`、`Dictionary`、`IWebAuthenticator`、`WebClient`、`WebRequest`、`WebResponse`、`WebHelpers`
-   - 导入独立运行模块：`xlwings.bas`（不含加载项依赖的 RunPython 实现）、`Dictionary.cls`
-   - 远程解释器模式额外导入 `Remote.bas` 等 6 个模块
-4. **嵌入代码**（RELEASE_EMBED_CODE=True 时）：调用 `code_embed(None)` 嵌入工作簿同目录下所有 .py 文件
-5. **隐藏 sheet**：按配置隐藏 xlwings.conf 和 .py 代码 sheet
-6. **版本兼容性检查**：用 `Interpreter_Win` 指向的解释器运行 `xlwings.__version__`，与工作簿中 VBA 模块版本比对
-
-**关键设计决策**：
-- release 是「在当前打开的工作簿上原地修改」，不是生成新文件——发布前应备份
-- `%LOCALAPPDATA%\{project_name}\python.exe` 是约定路径，安装器负责把便携运行时解压到该路径
-- RELEASE_NO_ADDIN 模式下，VBA 端的 RunPython 实现内嵌在 xlwings.bas 中，不依赖 xlwings.xlam 加载项
-
-#### 1.4.3 COM 保存与 Ribbon 回注（通用坑）
-
-**「COM 保存会剥掉 customUI 注册」的含义**：
-- 用 COM 自动化打开 .xlam/.xlsm 并执行 `wb.save()` 时，Excel 重新序列化 OOXML 包
-- 在此过程中，`[Content_Types].xml` 中 customUI 的 `Override` 条目可能被 `Default` 条目覆盖，`_rels/.rels` 中 customUI 的 Relationship 可能丢失
-- 结果：Ribbon 自定义消失，Excel 只显示默认 Ribbon
-- 解决：用 zip 级操作重新注入 customUI（直接操作 OOXML 包，补回 Override 和 Relationship）
-
-
-#### 1.4.4 部署方式对比
-
-| 方式 | 许可 | 单文件 | UDF 支持 | 目标机 Python | 适用场景 |
-|------|------|--------|---------|-------------|---------|
-| ZIP 打包（xlam+src） | 免费 | 否 | 是 | 需要 | 团队内部、环境可控 |
-| RunFrozenPython（xlam+exe） | 免费 | 否 | 否 | 不需要 | 简单宏、无 UDF |
-| code embed（PRO） | PRO | 是 | 是 | 需要 | 单文件分发、目标机有 Python |
-| release（PRO） | PRO | 是 | 是 | 不需要（嵌入运行时） | 对外分发、目标机无 Python |
+> 已迁移整合至 `references/10-deployment-delivery.md` 附录 A（部署与交付工作流的 PRO 对照研读）。原内容（源码深度：`cli.py:code_embed()` / `pro/embedded_code.py:dump_embedded_code()` / `addin/Main.bas` 检测逻辑与 LICENSE_KEY 检查 / `cli.py:release()` / Deploy Key / RELEASE_NO_ADDIN / COM 保存 Ribbon 回注 / 部署方式对比，含官方文档映射）在 10 号附录 A 完整保留。
+> **定位**：PRO 部署机制仅作对照研读、不采用；开发加载项部署走自研 release_tool（10 号正文主线，无需 PRO 许可证）。
 
 ### 1.5 caller 机制与 ObjectHandle
 
@@ -359,139 +225,37 @@ End If
 - UDF 返回自定义对象时，ObjectHandle 生成句柄字符串存入单元格，后续 UDF 可通过句柄取回对象
 - 解决 Excel 单元格只能存基本类型的限制，支持链式 UDF 调用（如 `=GetData() → FilterData(A1) → PlotData(B1)`）
 
-### 1.6 xlwings Lite 异步 API
+### 1.6 xlwings Lite（指针）
 
-xlwings Lite 是嵌入工作簿的轻量版本，运行在 Pyodide（浏览器端 Python）中，通过 `@script` 装饰器与 `BookAsync` 类型提示使用。
+**定位**：xlwings Lite 是嵌入工作簿的轻量版本（Office Web 加载项，运行在 Pyodide 浏览器端 Python 中），免费、跨平台、目标机零安装。
 
-- **异步方法命名**：以 `get_` 前缀命名，需 `await` 调用
-- **数据生命周期**：`Book.load()` 重新加载数据、`Book.flush()` 刷新操作到 Excel
-- **Office JS 环境 UDF**：`pro/udfs_officejs.py` 提供 `custom_functions_code()`/`custom_functions_meta()`/`custom_functions_call()` 生成 Office.js 自定义函数代码
-- **API 文档**：`xlwings-0.37.2/docs/api/book_async.md`；实现见 `xlwings/ext/`（`sql.py` + `__init__.py`）
-- **限制**：运行在浏览器端，无法访问本地文件系统；依赖 Pyodide 运行时
+**细节去向（单点原则）**：Lite 的全部内容（产品定位/能力全景/适用边界、Pyodide 运行机制、信任模型、自定义函数/脚本/Notebooks/异步 API/数据与网络开发工作流、测试调试、App Mode 与分发、自托管部署、taxi-duckdb 完整案例研读、`BookAsync`/`base_classes.py` 异步方法族/`ext/sql.py` 等源码研读）已独立为以**开发生命周期工作流**编排的参考手册：
 
-### 1.7 xlwings Server 官方工程技术研读（examples/xlwings-server-main/）
+- 读 Lite 相关内容一律进入 **`references/15-xlwings-lite-guidance.md`**；
+- 本处不再重复任何 Lite 细节。
 
-**定位**：把 xlwings 能力服务化的官方开源参考工程——目标机**无需本地 Python 安装**，Excel/Google Sheets（含 Excel on the web）经浏览器调用服务端 Python。技术栈：FastAPI + Socket.IO + Redis + Office.js +（可选）WASM/Pyodide。与桌面版（场景 A/C）互补；source-available 双许可（PolyForm Noncommercial / PRO EULA，见 `LICENSE.md`），**仅供源码研读借鉴设计，不部署、不抄码**。工程总览：393 文件 / 67 个 .py（约 7900 行）+ 25 个测试文件；`run.py`（uvicorn 启动、云端环境检测、WASM 设置注入）+ `Makefile`/`pyproject.toml`/`uv.lock`；部署编排 `deployment/docker-compose.prod{,-min}.yaml`，HTTPS 反代样例 `nginx/` + `certs/`。
+**与本章的关系**：1.8（Office.js 引擎 `pro/_xlofficejs.py` + `udfs_officejs.py` 全链路）是 PRO 侧的 Web 通道实现，Lite 复用其转换层与 UDF/脚本管线（含 `streaming_callback` 的 Lite/Pyodide 直推分支）——该部分属 PRO 源码研读，已独立为 `references/16-xlwings-officejs.md`；Lite 产品侧如何用这些能力见 15 号手册。
 
-**功能用途**：
+### 1.7 xlwings Server 官方工程技术研读
 
-- 把 Python 能力带给**浏览器中的 Excel/Google Sheets**——目标机（含纯浏览器端用户）无需安装 Python/加载项，业务计算、数据访问、报表生成全部在服务端执行；
-- **自定义函数（Custom Functions）**：Excel 单元格公式 `=MyFunc(...)` 经 Office.js 调服务端 Python，返回值写回单元格——公式即远程调用；
-- **自定义脚本（Custom Scripts）**：从任务窗格/按钮触发整段脚本，操作整个工作簿（读写任意区域）；
-- 作为**计算服务**独立部署：把 Excel 场景的算法沉淀为 HTTP 服务，供 Web 端/其他系统调用（不限于 Office 生态）。
+**定位**：把 xlwings 能力服务化的官方开源参考工程——Excel 与 Google Sheets（含 Excel on the web）经浏览器调用服务端 Python（FastAPI + Socket.IO + Redis + Office.js + 可选 WASM/Pyodide），目标机无需安装 Python。与桌面版（场景 A/C）互补；source-available 双许可（PolyForm Noncommercial / PRO EULA，见 `LICENSE.md`），**仅供源码研读借鉴设计，不部署、不抄码**。
 
-**适用场景**：
+**细节去向（单点原则）**：xlwings Server 的完整六块研读（`docs/` 61 篇官方教程、`xlwings_server/` 服务端包、`deployment/`、`nginx/`、`scripts/`、`tests/`）已独立为以**开发生命周期工作流**编排的参考手册：
 
-- 团队/组织级 Excel 自动化：多人共用一套 Python 能力，免去每人装 Python 与依赖；
-- Excel on the web / Google Sheets：浏览器端没有 COM，只有服务端通道可用；
-- 服务器端批处理与集成：Docker/K8s/Serverless 上跑 Excel 计算，与现有系统对接；
-- 需集中管控的认证与安全：Entra ID 登录、角色、审计日志、敏感数据不出服务端；
-- 不适合：单机离线、强交互式调试（仍用场景 A/C 桌面版）。
+- 定位与选型、初始化与本地开发环境、应用装配与扩展机制、自定义函数、自定义脚本与任务窗格、认证授权与安全、测试调试与性能、部署运维与升级——**全部分阶段详展见 `references/14-xlwings-server-guidance.md`**
+- 本处不再重复任何 server 细节；读 server 相关内容一律进入 14 号手册
 
-**1. 应用装配模式（main.py）——"用户扩展三通道"**：
+**与 1.2.3 的关系**：1.2.3 的客户端侧 remote 引擎细节（`pro/_xlremote.py`，如何连 Server）已一并迁移至 14 号手册阶段一 1.6；14 号手册其余章节是 Server 服务端如何工作。
+### 1.8 Office.js 引擎（指针，详见 16 号文档）
 
-- **项目目录注入**：`XLWINGS_PROJECT_DIR` 环境变量 → `sys.path` 前置（在 import 用户模块之前）——用户代码放项目目录即被服务发现；
-- **lifespan.py 用户钩子**：项目目录可选 `lifespan.py`，用 `importlib.util.spec_from_file_location` 以私有模块名加载（防与第三方 `lifespan` 包冲突）；文件存在但无 `lifespan` 上下文管理器 → **fail fast**（宁可起不来也不静默无启动代码，如数据库连接池/缓存预热）；
-- **routers/custom.py 用户路由**：`importlib.util.find_spec` 探测后导入注册；
-- **静态文件可覆盖**：`OverridableStaticFiles`（用户目录优先、包目录兜底）——同路径用户资源覆盖默认资源。
-- 可借鉴：**服务化业务后端的"用户扩展点"设计**（目录注入 + 钩子探测 + 覆盖优先级）。
+**定位**：`xlwings/pro/_xlofficejs.py`（160 行）+ `xlwings/pro/udfs_officejs.py`（1255 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**——remote 类型引擎，走 socket.io 推流（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）。
 
-**2. 异常分层语义（main.py）——可重试 vs 不可重试**：
+**要点**（完整源码研读 + 官方教程对照 + 工作流编排见 `references/16-xlwings-officejs.md`）：
 
-- `XlwingsOperationalError → 503`：瞬时/操作失败（如对象缓存后端不可达）→ **客户端应重试**（对齐 `custom_functions_retry_codes`）；
-- `XlwingsError → 400`：确定性错误（参数错/角色缺失/不是对象句柄）→ **客户端不应重试**；
-- `Exception → 500`：未知错误（prod 隐藏细节）。
-- 可借鉴：**远程调用/自定义函数的错误语义设计**——用状态码区分"重试"与"放弃"，避免客户端盲目重试幂等错误。
-
-**3. 对象句柄缓存（object_handles.py）——跨请求对象保持**：
-
-- 核心句柄机制在 xlwings PRO `pro/object_handles.py`（UDF 返回自定义对象时生成句柄字符串存入单元格，后续 UDF 凭句柄取回——解决 Excel 单元格只能存基本类型，支持链式 UDF 如 `=GetData() → FilterData(A1) → PlotData(B1)`）；
-- Server 侧实现**可插拔存储后端**：`core_object_handles.cache = RedisObjectCache() | _WarningLRUObjectCache(maxsize)`（按配置安装，转换器运行时查该属性）；
-- **RedisObjectCache**：zlib 可选压缩、cron 到期（`croniter`，默认 `0 12 * * sat`）、**按用户分区**（`XLWINGS_OBJECT_CACHE_PARTITION_BY_USER`；无认证用户时 **fail loud**——隔离控制不静默降级）、`evict_superseded`（生产者映射存 Redis，**跨 worker 清理旧代**；并发 get/set 非原子→最坏一代泄漏至过期，自愈）；
-- **_WarningLRUObjectCache（开发期）**：内存 LRU + **每次写都告警**（生产须 Redis）+ **与 Redis 同一序列化路径**（dev 与 prod 行为一致：不支持的类型在开发期就在产生单元格报错）。
-- 可借鉴：**缓存后端的"开发期告警 + 生产一致性"**——开发内存、生产 Redis，同一序列化路径保证行为一致。
-
-**4. 序列化框架（serializers/）——注册表模式**：
-
-- `framework.py`：`Serializer` 基类 + `register(*types)` 注册表（名称与类型双键）；`custom_encoder/custom_decoder` 接入 json（datetime→isoformat）；
-- `pandas_serializer.py`：DataFrame/Series ↔ JSON（`to_json(date_format="iso")` + dtypes 记录 + **MultiIndex 临时列名映射还原** + **DatetimeIndex freq 保留**）——pandas 对象跨进程往返的完整样板；
-- `dictionary_serializer.py`/`numpy_serializer.py`/`default_serializer.py` 同类；测试 `tests/test_serializers.py`。
-- 可借鉴：**JSON 序列化注册表**——新类型接入只需 `Serializer` 子类 + `register`。
-
-**5. 认证（auth/entraid/）**：
-
-- `validate_token`（JWT 校验）+ `jwks.py`（密钥集缓存）+ `obo.py`（**OBO 流**：代表用户调用 Microsoft Graph）；多租户开关、角色要求（`auth_required_roles`）、`auth_entraid_token_scopes`。
-- 可借鉴：**JWT 校验（jwks 缓存）+ OBO 委托**的认证栈布局；测试样例 `tests/test_auth_entraid.py`、`test_obo.py`。
-
-**6. 扩展点（custom_functions / custom_scripts，routers/xlwings.py）**：
-
-- `POST /xlwings/custom-functions-call`：函数调用端点——`typehint_to_value={CurrentUser, Caller}` **类型提示注入**；`ObjectCacheMissError → stale_object_handle`（返回可操作卡片而非 `#VALUE!`）；`CustomFunctionResult` + `WithScript` **后续脚本**（校验 `@script` 标记，解析 include/exclude/lazy 元数据）；
-- `GET /xlwings/custom-functions-code.js`：**动态生成客户端 JS**——`inspect.getmembers` 枚举 `__xlfunc__` 属性 → 生成 async 包装 + `CustomFunctions.associate`；
-- `POST /xlwings/custom-scripts-call/{name}`：脚本调用——`dep.Book` 注入、缺参/多余参数→400；
-- **日志注入防护**：`sanitize_log_input`（换行→`\n` 字面量）——服务端日志处理不可信输入；
-- `custom_functions/examples.py`：扩展点示例（`arg`/`func`/`ret`、`CachedObject`/`Caller`/`WithScript`、SQL 扩展）。
-- 可借鉴：**自定义函数网络化**的"类型提示注入 + 句柄 + 后续脚本"模式。
-
-**7. 部署与安全**：
-
-- 安全头中间件（`add_security_headers`：Excel Online/CDN 感知、图片扩展豁免 Cache-Control）、`custom_headers`、CORS（`allow_methods=["POST"]`、`allow_credentials=False`）；
-- WASM 模式：`enable_wasm` 挂载、`pyodide.json` 动态生成（packages + 文件清单）、`wasm/wasm_runtime.py`；
-- 配置（config.py）：环境（dev/qa/uat/staging/prod）、对象缓存、认证、socketio 消息队列、静态路径等 40+ 项，全部环境变量驱动。
-
-**对构建业务系统的借鉴**：
-
-- 服务化业务后端（把 Excel/计算能力暴露 HTTP）的完整分层模板：路由 / 序列化 / 缓存 / 认证 / 扩展点 / 部署
-- 分布式对象缓存的工程细节：压缩、过期、分区、跨 worker 清理
-- `routers/custom.py` 用户扩展 + `lifespan.py` 钩子 + 静态覆盖的"三通道扩展"装配模式
-
-**工程文件导航**：
-
-- 工程说明与开发约定：`README.md`、`DEVELOPER_GUIDE.md`、`CLAUDE.md`；配置文档见仓库 `docs/`
-- 入口与部署编排源码（研读构建与编排写法）：`run.py`、`Makefile`、`pyproject.toml`、`uv.lock` 与 `deployment/`；HTTPS 反向代理样例见 `nginx/` 与 `certs/`
-- 服务端扩展与改造参考：`xlwings_server/` 包与 `scripts/`；测试样例见 `tests/`
-
-### 1.8 PRO OfficeJS 引擎与 UDF/脚本系统源码研读（_xlofficejs + udfs_officejs）
-
-**定位**：`xlwings/pro/_xlofficejs.py`（163 行）+ `xlwings/pro/udfs_officejs.py`（1254 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**。要点：
-
-- 引擎类型：`remote` 类型引擎，走 socket.io 推流，与 COM 引擎完全不同通道（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）
-- 配套测试：`tests/test_custom_functions_officejs.py` / `test_custom_scripts_call.py` / `test_jsnull.py` / `test_streaming_*.py`
-
-#### 1.8.1 `_xlofficejs.py`：Office.js 引擎的转换层
-
-- `Engine` 单例：`name="officejs"`、`type="remote"`——注册为 remote 引擎（与 excel/calamine 并列，见 1.2 四引擎）；
-- **读侧 `clean_value_data`**：逐元素 `_clean_value_data_element`——Pyodide ≥ 0.28 的 **`JsNull` 哨兵**（JS `null` 空单元格）与 `""` 均归一为 `empty_as`；data types 协议的 `dict`（`Error`/日期）取 `basicValue`；float 走 `number_builder`；
-- **写侧 `prepare_xl_data_element`**：`None`→`""`；`pd.isna`/`np.nan`→`#NUM!` Error 类型；`np.number`→float；`np.datetime64`/`pd.Timestamp`/`date`/`datetime`→`datetime_to_formatted_number`；以 `#` 开头的字符串→`errorstr_to_errortype`；
-- **data types 协议**（自定义函数的数据类型）：runtime ≥ 1.4 时日期包装为 `{"type":"FormattedNumber","basicValue":serial,"numberFormat":date_format}`，错误映射 `#DIV/0!`→`Div0`、`#N/A`→`NotAvailable`、`#NAME?`→`Name`、`#NULL!`→`Null`、`#NUM!`→`Num`、`#REF!`→`Ref`、`#VALUE!`→`Value`；runtime < 1.4 降级为裸值——**旧版 Office 兼容开关**。
-
-#### 1.8.2 `udfs_officejs.py`：UDF/脚本全链路
-
-- **注入类型机制**（框架值不进 Excel 签名）：`register_injectable_typehint()` 注册（如 Server 的 `CurrentUser`）→ `func_sig` 从签名剔除注入参数（可放任意位置，含 keyword-only）；`_unwrap_optional_hint`（`Optional[X]`/`X | None` 解包为 X）；**Book 不注册**（脚本经 `custom_scripts_call` 单独注入）；
-- **装饰器族**：
-  - `xlfunc`：核心 UDF 装饰器——类型提示 → 枚举描述符（`Literal[...]` → Office.js `customEnumId`）或转换选项；`Annotated[X, {"doc","convert",...}]` 抽取选项字典、`ObjectHandle` 出现在 Annotated 中时顶层类型归一为 `object`（走对象句柄缓存而非自身转换器，`-> ObjectHandle` 裸别名同理）；`volatile`/`name=`（Excel 名校验，正则 `[^\W\d_][\w.]*`，≤128 字符）/`namespace`/`help_url`/`required_roles`；
-  - `xlret`/`xlarg`：返回值与按参数名覆盖转换选项；
-  - `script`：自定义脚本装饰器——`include`/`exclude`/`button`/`show_taskpane`；`lazy=` 已弃用 → **`book: xw.BookAsync` 注解**等价（内部统一发 `"lazy"` wire 键）；**book 参数必须恰一个**（`_book_param_hint`：多 Book/BookAsync 注解 → 报错）；`BookAsync` 注解与 `lazy=False` 冲突 → 报错（注解优先，仅与显式 False 矛盾才拒绝）；
-- **签名约束**：UDF 不支持 keyword 参数（`XlwingsError`）；vararg 与 optional 参数不能共存；
-- **值转换**：`js_to_none`（JsNull→None）；`to_scalar`（单元素 list/tuple 降标量）；`date_format_language_map`（**22 个 locale 的日期格式字符映射**：de `j→y`/`t→d`、fr `a→y`/`j→d`、ru `г→y`/`м→m`/`д→d` 等——Office.js 交付本地化 shortDatePattern 需转回 Excel 格式）；`convert` async 写侧——date_format 三级回退（`@ret` 装饰器 → `XLWINGS_DATE_FORMAT` 环境变量 → Excel cultureInfo）+ locale 归一 + `conversion.async_write(engine_name="officejs")`；
-- **调用管线 `custom_functions_call`**：
-  1. `check_user_roles`（`required_roles` 缺失 → Access Denied 报错并日志）；
-  2. 版本一致性（client version ≠ `__version__` → 提示重启 Excel / reload 任务窗格）；
-  3. varargs 展平 → 逐参数 `conversion.read` → 可选参数默认值 → `provide_values_for_special_args` 注入；
-  4. 三形态：**asyncgen → 流式**（`background_tasks` 字典、task_key 去重复用、socket.io `set-result-{task_key}` 推流或 Lite `streaming_callback` 直推、`on_task_done` 清理竞态保护）；coroutine / 普通函数 await 或同步调用；
-  5. **WithScript 解包**：`CustomFunctionResult(value, script=payload)`——脚本随结果返回（流式函数拒绝 WithScript，因 socket.io 无法携带）；
-  6. **对象句柄代际回收**：仅句柄生产函数（`ret` convert ∈ `object_handles.CONVERTER_KEYS`）+ 带 caller_address 时算 `producer_discriminator`，调用后 `evict_superseded` 清理该单元格旧代句柄（避免每次调用做 Redis 往返；公式从生产函数改成非生产函数时旧句柄等 LRU 驱逐兜底）；
-- **脚本管线 `custom_scripts_call`**：current_user 前置 → 注入书对象（`_inject_value`：**BookAsync 注解 → `value.impl._lazy = True`** 懒加载，见 remote 后端 `Range.raw_value`）→ `_coerce_script_arg`（JSON 字符串按 `dt.date`/`dt.datetime` 提示 ISO 解析）→ keyword-only / `**kwargs` 参数拒绝 → 多余参数检查 → 返回 book；
-- **元数据生成**：`custom_functions_code`（从 `custom_functions_code.js` 模板注入版本/路径，为每个函数生成 JS 包装 + `CustomFunctions.associate`）；`custom_functions_meta`（清单 JSON：`stream`/`requiresAddress`/`volatile` 选项、matrix 维度、枚举注册、**重复 Excel 名检测**；**流式函数（asyncgen）带 `Caller` 注解 → 注册即报错**——Office.js 中 `stream` 与 `requiresAddress` 互斥，流式函数永远拿不到调用格地址，注册期拒绝而非运行期注入 None）；`custom_scripts_meta`；
-- **socket.io 会话**：`sio_connect`（认证 token）/`sio_disconnect`（订阅计数归零取消任务）/`sio_custom_function_call`（sid 计数）/`sio_cancel_task`——`task_key_to_sid_counts`/`task_key_to_task` 双字典管理流式任务生命周期。
-
-**对构建应用系统的借鉴**：
-
-- 跨 Web/Excel 端 UDF 的**数据类型协议**（FormattedNumber/Error 包装）与 JsNull 归一——多端统一值语义的模板；
-- **locale 日期格式归一**（date_format_language_map）——处理多语言客户端格式差异的实例；
-- 流式函数的**订阅计数 + 任务去重 + 断连取消**生命周期管理（sid/task_key 双字典）——WebSocket/socket.io 服务的可靠模式；
-- 框架注入类型（CurrentUser/Book）的**签名隐藏与位置无关注入**——服务端框架扩展点的设计。
-
----
+- 值转换层（`_xlofficejs.py`）：读侧 `clean_value_data`（JsNull 哨兵 / 空单元格归一 / Error dict 取 basicValue）、写侧 `prepare_xl_data_element`（None→空、NaN→#NUM!、日期→FormattedNumber、`#`开头→Error 类型），data types 协议随 `runtime < 1.4` 降级裸值；
+- UDF 全链路（`udfs_officejs.py`）：注入类型隐藏（CurrentUser/Book）、`xlfunc`/`xlret`/`xlarg` 装饰器（Literal→枚举、Annotated 选项、volatile/name/namespace/help_url/required_roles）、签名约束（无 keyword、vararg+optional 互斥）、22 locale 日期格式映射、调用管线三形态（流式/coroutine/同步）、WithScript 解包、对象句柄代际回收；
+- 脚本全链路：book 注入与 `_lazy` 懒加载、参数强制与 ISO 解析、元数据生成（JS 包装 + `CustomFunctions.associate` + 注册期校验：重复名 / stream+requiresAddress 互斥）；
+- socket.io 会话：`sio_connect`/`sio_disconnect`/`sio_custom_function_call`/`sio_cancel_task` 双字典管理流式任务生命周期。
 
 ## 二、xlwings 核心源码研读（xlwingsdll + xlwings 包）
 
@@ -536,7 +300,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **UDF 系统**（`udfs.py`，29KB）：`@xw.func`（类别/异步/调用链/自动转置）、`@xw.sub`、`@xw.ret`（返回值转换）、`@xw.arg`（参数转换）；`get_udf_module`/`call_udf`（**按工作簿加载 UDF 模块并执行**）；`generate_vba_wrapper`（**自动生成 VBA 包装代码**——`import_udfs` 把 Python 函数注入 Excel 为可调 UDF）；`ComRange`（UDF 内的 Range 参数包装）；`has_dynamic_array`（动态数组检测）。**源码级研读**（装饰器/签名、ComRange 跨线程、call_udf 运行时、VBA 包装器生成、import_udfs 注入）见 **2.2.2**。
 
-**平台适配层**：Windows `_xlwindows.py`（68KB，pywin32 COM 实现，见主技能 §2.1/§7 引用）+ `_win32patch.py`（上游 COM 行为补丁）；macOS `_xlmac.py`（66KB）+ `mac_dict.py`（AppleScript 字典映射，258KB）+ `xlwings-dev.applescript`。平台差异汇总见 `xlwings-0.37.2/docs/missing_features.md`。
+**平台适配层**：Windows `_xlwindows.py`（89KB，pywin32 COM 实现，见主技能 §2.1/§7 引用）+ `_win32patch.py`（上游 COM 行为补丁）；macOS `_xlmac.py`（102KB）+ `mac_dict.py`（AppleScript 字典映射，258KB）+ `xlwings-dev.applescript`。平台差异汇总见 `xlwings-0.37.3/docs/missing_features.md`。
 
 **对构建应用系统的借鉴**：COM 服务器"**最小方法集覆盖全部对象操作**"设计（27 个方法即完成 Python 任意对象的操纵）；转换器"**读写分管道 + 可插拔 Converter + 注册表**"模式（新增类型只需 Converter 子类 + 注册）；UDF"**Python 定义 → 自动生成 VBA 包装 → 注入工作簿**"链路。
 
@@ -707,7 +471,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 - 引擎与专项：`test_remote_*.py`（3 个）/`test_custom_functions_officejs.py`/`test_custom_scripts_call.py`/`test_object_handles.py`（22KB）/`test_caller.py`/`test_e2e.py`/`test_jsnull.py`/`test_markdown.py`/`test_fileformats.py`/`test_streaming_*.py`（2 个）/`test_async_load.py`；
 - 数据资产：`cell_errors.xlsx`/`tables.xlsx`/`test book.xlsx`/`macro book.xlsm`/`sample_picture.png`/`pandas_excel_files_quick_test.py`。
 
-**构建系统与开发文档**：Python 包 `pyproject.toml`/`setup.py`/`MANIFEST.in`/`Makefile`；C++ DLL `xlwingsdll/`（`xlwings.sln`/`xlwingsdll.vcxproj`）；Rust `Cargo.toml`。路线图 `plans/issue-shortlist.md` 与 `plans/v1.0-breaking-changes.md`；开发者指南 `DEVELOPER_GUIDE.md`；版本历史 `xlwings-0.37.2/docs/whatsnew.md`。
+**构建系统与开发文档**：Python 包 `pyproject.toml`/`setup.py`/`MANIFEST.in`/`Makefile`；C++ DLL `xlwingsdll/`（`xlwings.sln`/`xlwingsdll.vcxproj`）；Rust `Cargo.toml`。路线图 `plans/issue-shortlist.md` 与 `plans/v1.0-breaking-changes.md`；开发者指南 `DEVELOPER_GUIDE.md`；版本历史 `xlwings-0.37.3/docs/whatsnew.md`。
 
 ---
 
@@ -720,7 +484,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 #### 3.1.1 仓库概览与学习路径
 
-- **定位**：xlwings 官方 2018 年 YouTube 入门视频课程（"Python for Excel with xlwings"）配套 notebook 仓库，共 8 个目录（`0 - Intro` 至 `7 - Part7`）+ 7 个教程 notebook + 配套数据文件。README 明确标注课程偏旧（outdated）——**适合理解基础概念与经典模式，具体语法以 `xlwings-0.37.2/docs/` 与官方最新文档为准**。
+- **定位**：xlwings 官方 2018 年 YouTube 入门视频课程（"Python for Excel with xlwings"）配套 notebook 仓库，共 8 个目录（`0 - Intro` 至 `7 - Part7`）+ 7 个教程 notebook + 配套数据文件。README 明确标注课程偏旧（outdated）——**适合理解基础概念与经典模式，具体语法以 `xlwings-0.37.3/docs/` 与官方最新文档为准**。
 - **目录结构**：
   - `0 - Intro/`：`Instructions.md`（学习路径建议）+ `Language and Regional Settings.md`（非英语 Excel 差异处理）
   - `1 - Part1/`：Tutorial 1 The Basics（+ `table_objects.xlsx`/`timeseries.xlsx`/`img` 架构图）
@@ -877,8 +641,9 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 | `xlwings-factsheet-demo-main/` | **PRO**（`xlwings.pro.reports`：Markdown/MarkdownStyle/Image） | 本章 xlwings PRO 案例研读 |
 | `xlwings-demo-master/` | PRO/社区版混合（13 场景） | 子目录地图见下方（唯一明细入口）；PRO 深读见本章 PRO 案例研读 |
 | `xlwings-eikon-master/` | **PRO 部分**（`_report_template.py`/`sample3.py` 用 `create_report`） | 11-scenario-a 七章 7.6（主链路）+ 本章 PRO 案例研读 |
-| `xlwings-server-main/` | **Server**（FastAPI 服务端工程） | 1.7 xlwings Server 研读 |
-| `taxi-duckdb-main/` | xlwings Lite / Pyodide + DuckDB（社区版，不依赖 PRO/Server） | 下方 4.5 taxi-duckdb 案例研读 |
+| `xlwings-server/` | **Server**（FastAPI 服务端工程） | `references/14-xlwings-server-guidance.md`（六块完整研读） |
+| `xlwings-lite/` | Lite（官方文档 31 篇离线镜像 + README 索引） | `references/15-xlwings-lite-guidance.md`（逐阶段引用源） |
+| `taxi-duckdb-main/` | xlwings Lite / Pyodide + DuckDB（社区版，不依赖 PRO/Server） | `references/15-xlwings-lite-guidance.md` 阶段七（完整案例研读） |
 | `python-for-excel-course-main/` | 社区版 | 三章入门学习 |
 | `simulation-demo-master/` | 社区版 | 11-scenario-a 七章 7.4 |
 | `xl-pq-handler-master/` | 社区版 | 11-scenario-a 七章 7.5 |
@@ -887,7 +652,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 | `excel-automated-testing-master/` | 社区版 | 11-scenario-a 七章（自动化测试） |
 | `Excel_udf_itus-main/` | 社区版 | 07-udf 六章（UDF 完整工程）；SQLite 数据服务模式见下方 4.6 |
 
-**源码包内置案例**（`xlwings-0.37.2/examples/`，5 项 + `build_lite.py`，**全部社区版 BSD**，不依赖 PRO/Server）：
+**源码包内置案例**（`xlwings-0.37.3/examples/`，5 项 + `build_lite.py`，**全部社区版 BSD**，不依赖 PRO/Server）：
 
 | 案例 | 用途 | 引用位置 |
 |------|------|---------|
@@ -898,7 +663,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 | `simulation/simulation.py` | numpy 蒙特卡洛模拟回填 | 11-scenario-a 七章（A 侧） |
 | `build_lite.py` | 打包上述 5 例为 xlwings Lite 的 `_build/*.zip` | 1.6 / 2.2 |
 
-**结论**：依赖 PRO 的为 `xlwings-factsheet-demo-main`、`xlwings-demo-master`（PRO 部分 6 个子目录：reader / restapi / reporting 系 4 项，见 4.2 子目录地图）、`xlwings-eikon-master`（Reports 部分）；依赖 Server 的为 `xlwings-server-main`；`taxi-duckdb-main` 为 **Web 加载项（Lite）案例**，不依赖 PRO/Server，研读见下方 4.5；**其余全部社区版**由场景 A/场景 C 引用介绍，详细展开见 `references/11-scenario-a-python-automation.md` 七章与 `references/07-udf-guidance.md` 六章——本章不再详展社区版案例（唯二例外：SQLite 数据服务模式在下方 4.6 详展，因其同时是官方源码包案例与 UDF 工程的"数据层"样板）。
+**结论**：依赖 PRO 的为 `xlwings-factsheet-demo-main`、`xlwings-demo-master`（PRO 部分 6 个子目录：reader / restapi / reporting 系 4 项，见 4.2 子目录地图）、`xlwings-eikon-master`（Reports 部分）；依赖 Server 的为 `xlwings-server`；`taxi-duckdb-main` 为 **Web 加载项（Lite）案例**，不依赖 PRO/Server，完整研读见 `references/15-xlwings-lite-guidance.md` 阶段七（4.5 已指针化）；**其余全部社区版**由场景 A/场景 C 引用介绍，详细展开见 `references/11-scenario-a-python-automation.md` 七章与 `references/07-udf-guidance.md` 六章——本章不再详展社区版案例（唯二例外：SQLite 数据服务模式在下方 4.6 详展，因其同时是官方源码包案例与 UDF 工程的"数据层"样板）。
 
 ### 4.2 xlwings-demo-master 子目录地图（13 项全览）
 
@@ -1002,102 +767,11 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 ---
 
-### 4.5 taxi-duckdb：Web 加载项 + DuckDB 一体化案例研读
+### 4.5 taxi-duckdb（指针）
 
-**定位**：xlwings 官方"一个 .xlsx 自包含完整数据应用"样板——工作簿内嵌 Office Web 加载项（xlwings Lite / Pyodide 0.27.5 浏览器端 Python），任务窗格提供两个 `@script` 按钮，用 DuckDB 直接查询纽约出租车 Parquet 数据并回写 Excel 报告图表。**不依赖 PRO/Server**，是 1.2.5 officejs 引擎 / 1.6 Lite 的完整实践案例。
+**定位**：xlwings 官方"一个 .xlsx 自包含完整数据应用"样板——工作簿内嵌 Office Web 加载项（xlwings Lite / Pyodide 0.27.5 浏览器端 Python），任务窗格提供两个 `@script` 按钮，用 DuckDB 直接查询纽约出租车 Parquet 数据并回写 Excel 报告图表。**不依赖 PRO/Server**，是 1.2.5 officejs 引擎 / Lite 的完整实践案例。
 
-**仓库构成**（`examples/taxi-duckdb-main/taxi-duckdb-main/`）：
-- `LICENSE`（MIT）
-- `taxi_local.xlsx`（11.6KB）——全部应用逻辑在此一个文件
-- `extracted/`——本技能提取的内嵌源码（`README.md` 目录说明）：`extract_webextension.py`（一步到位提取脚本：解包 + 解码，stdlib 无依赖）、`full/`（完整解包产物：12 个 zip 条目原样落盘 + `main.py` 98 行 / `requirements.txt` 解码明文就地生成于 `xl/webextensions/`——解包即解码，无第二目录）
-
-**xlsx 内嵌结构解密**（zip 解包）：
-- `xl/webextensions/webextension1.xml`：加载项定义——AppSource 引用 `wa200008175`（xlwings 官方 OMEX 加载项）、`xlwingsWorkbookId`（UUID `a0403022-...`）、`pyodideVersion=0.27.5`、`addinVersion=1.0.0.0-35`
-- `xl/webextensions/taskpanes.xml`：任务窗格右侧停靠、宽 837、可见；`xlwingsSettingsWorkbook={"startupBehavior":"taskpane"}`——打开工作簿即启动窗格
-- 六个 `we:property` 承载全部应用内容：`main.py`（后端脚本全文，**HTML 实体 + JSON 字符串双重编码**）、`requirements.txt`（依赖清单）、运行参数与设置
-- `xl/worksheets/sheet1.xml`：`<sheetData/>` 空表——数据全部由脚本运行时写入，文件只是"壳"
-
-**Python 代码的嵌入与执行机制**：
-
-- **嵌入载体链（代码如何进入文件）**：
-  - 明文 `main.py`（98 行）→ HTML 实体转义（`&quot;` / `&gt;` / 字面 `\n`）→ JSON 字符串包裹 → 存入 `<we:property name="main.py" value="…"/>` → 写入 `xl/webextensions/webextension1.xml` → 随 xlsx（zip）分发——磁盘上只有 `taxi_local.xlsx` 一个文件，代码"活在" zip 内清单的属性里
-  - 双编码的必然性：XML 属性值只能是单行文本，整段 Python 必须两次转换才能安全落位（先转义成合法属性字符，再包成合法 JSON 字符串）；还原即反向 `html.unescape` + `json.loads`——`extracted/extract_webextension.py` 已工具化，实测还原 98 行 / 2528 字符与原文一致
-- **运行时执行链（代码如何跑起来）**：
-  - 打开 xlsx → Excel 读清单，按 OMEX 引用 `wa200008175` 从 Office 加载项商店拉取 xlwings Lite 加载项本体（office.js + Lite 运行时，闭源）
-  - `startupBehavior=taskpane` → 右侧任务窗格自动打开；`xlwingsWorkbookId` 确认宿主工作簿
-  - 读 `pyodideVersion` → 从 Pyodide CDN 启动浏览器内 Python（WASM 0.27.5）
-  - 解析 `requirements.txt`：PyPI 安装 `xlwings==0.33.20` 等，pandas / matplotlib / duckdb 直接用 Pyodide 内置
-  - 还原 `main.py` → 交 Pyodide 编译 → `@script` 把 `explore` / `report` 注册为任务窗格按钮
-  - 点击按钮 → 整段脚本执行：`duckdb.read_parquet("/taxi/…")`（pyodide-http 虚拟路径取数）→ SQL → pandas → Lite 异步 API 写回 Excel（`options` / `tables` / `pictures`）
-- **存储形态 ≠ 运行形态**：文件里是"XML 属性内双编码文本"，运行中是"Pyodide 内存中的 Python 模块"——清单只负责分发，执行在浏览器 WebView 内完成；不落盘、无后端
-- **远程加载的三来源**（"无服务器"的真实边界——指无你自己的后端，而非零网络依赖）：
-  - 加载项本体：Office 加载项商店（OMEX）CDN
-  - Python 运行时：Pyodide CDN（0.27.5）
-  - 数据文件：`/taxi/` 虚拟路径，经 `pyodide-http` 在 Python 内发 HTTP 获取
-  - 计算（SQL 查询、DataFrame 转换、绘图）全部在 WebView 本地完成
-
-**main.py 两个 `@script` 分析**（`from xlwings import script`，任务窗格按钮触发整段脚本，参数仅 `book`）：
-- `explore(book)`：`duckdb.read_parquet("/taxi/yellow_tripdata_2025-01.parquet")` → `SELECT count(*)` + `DESCRIBE SELECT *`——数据探查（规模 + 结构），结果打印到控制台
-- `report(book)`：数据 → 分析 → 报告四层管线：
-  - **查询**：SQL 按 `hour(tpep_pickup_datetime)` 分组（行程数 `count(*)`、平均里程 `round(avg(trip_distance),2)`，过滤 `trip_distance BETWEEN 0.1 AND 50`）→ `duckdb.sql(query).df()` 转 pandas
-  - **写回**：新建 sheet → 标题（A1 加粗 24pt）→ 表格（A3 起 `options(index=False).value = df` + `sheet.tables.add(resize(len(df)+1, len(df.columns)))`）
-  - **可视化**：`create_plot(df)` 双子图（行程数柱状 + 平均里程折线，`sharex=True`，figsize 12×8）→ `sheet.pictures.add(fig, name="TaxiAnalysis", anchor="E3")`
-  - **性能度量**：`print(f"Processed {df['Number of Trips'].sum():,} records in {total_time:.2f} seconds")`
-
-**DuckDB API 使用细节（浏览器端 Pyodide 环境）**：
-- `duckdb.read_parquet(path)` 返回 **`DuckDBPyRelation`（惰性关系）**——不把数据载入内存，仅建立"数据源 → 查询"的引用；同一文件可多次 `duckdb.sql()` 复用
-- `duckdb.sql(query)` 执行 SQL 返回 relation；`relation.df()` 物化为 pandas DataFrame（案例即 `duckdb.sql(query).df()`）；`relation.show()` 打印前若干行到控制台（`explore` 用）
-- `DESCRIBE SELECT * FROM taxi` 取表结构（列名 + 类型），是"先侦察 schema 再写查询"的标准探查步骤
-- 本案例用到的 SQL 特性：`hour(tpep_pickup_datetime)` 时间函数、`count(*)` / `avg(...)` / `round(...,2)` 聚合、`BETWEEN 0.1 AND 50` 过滤、`GROUP BY "Hour" ORDER BY "Hour"`（**带引号别名**——DuckDB 中双引号标识符保留大小写与空格）
-- **与 pandas 的互操作边界**：`.df()` 得到 pandas DataFrame 后即脱离 DuckDB 上下文（后续 `set_index`/`plot` 均走 pandas）；查询层与展示层由此解耦（四层职责分离见下）
-- DuckDB 还支持 `relation.pl()` 直接导出 polars DataFrame、`duckdb.register` 注册内存表、`read_csv`/`read_json` 等同类 reader——本案例仅用 Parquet 单通道，是"一个 reader + 一个执行入口"的最小可复刻模式
-- 环境注意：Pyodide 内置 duckdb 版本不固定（requirements.txt 未锁版本），`hour()` 等函数在不同版本行为一致但性能特性不同；`/taxi/` 为加载项环境虚拟路径，见本节末"注意"
-
-**DuckDB 桌面端 API 扩充（脱离 Pyodide、本地 Python 场景）**：
-- **多源混查**：同一 SQL 内可直接 JOIN 不同格式文件——`SELECT ... FROM read_parquet('a.parquet') p JOIN read_xlsx('b.xlsx') x ON p.id = x.id JOIN read_csv_auto('c.csv') c ON ...`（DuckDB 不做任何导入即可跨格式关联，是"Excel 数据 + 外部 Parquet/CSV"联查的标准做法）
-- **视图与内存注册**：`CREATE VIEW v AS SELECT ...`（同一连接内复用复杂查询）；`duckdb.register('tbl', df)` 把 pandas DataFrame 注册为可 SQL 查询的表（与 `read_*` 函数等效）
-- **导出通道**：relation 除 `.df()` 外还有 `.pl()`（polars）、`.arrow()`（PyArrow）、`.fetchall()`（Python 列表）、`.fetchone()`；`.show()` 打印前 10 行
-- **连接对象**：模块级 `duckdb.sql()` 走全局默认连接（脚本内多次调用共享）；`con = duckdb.connect()` 可建独立连接（并行任务 / 隔离环境）
-- **性能特性**：向量化执行 + **filter pushdown**（`WHERE` 条件下推到 Parquet 元数据层，只读命中块）；对 1 亿行级文件 `count(*)` 级查询亚秒级完成——这是"Excel 大数据分析"选 DuckDB 而非 pandas 逐行处理的核心理由
-
-**requirements.txt 依赖策略**：
-- 固定版本（PyPI 安装）：`xlwings==0.33.20`、`python-dotenv==1.2.1`、`pyodide-http`、`black`
-- 不固定版本（Pyodide 内置包）：`pandas`、`matplotlib`、`duckdb`
-- 注释说明 Pyodide 包管理：新包即装即用；移除 / 改版本 / 加可选依赖（如 polars）需重启
-
-**工程借鉴（构建 Web 加载项数据应用）**：
-- "空 xlsx 壳 + 内嵌加载项"自包含交付：应用配置、Python 脚本、依赖清单全打进 `webextensions`，用户拿单文件即用——零安装、零后端
-- `@script` 函数 = 任务窗格按钮的原子动作：参数仅 `book`，数据经 DuckDB/pandas 在脚本内流转，Excel 只做展示层
-- 四层职责分离：DuckDB 只管 SQL 查询、pandas 管转换、matplotlib 管可视化、`options/tables/pictures` 管写回 Excel
-- 数据通道：DuckDB 在 Pyodide 内直读远程 Parquet（`/taxi/` 为加载项环境虚拟路径）——**无服务器、无本地 Python**，浏览器端完成全链路（对应 1.6 Lite 与 1.2.5 officejs 引擎）
-- **内嵌源码提取（工具化，一步到位）**：`extracted/extract_webextension.py`——一次命令完成解包 + 解码：全部 zip 条目原样落盘到 `full/`（`webextension1.xml` 保持原始字节作证据），`we:property` 中"HTML 实体 + JSON 字符串"双编码的 `main.py` / `requirements.txt` 经 `html.unescape` + `json.loads` 双层还原为明文，就地生成于 `full/xl/webextensions/`；默认提取本案例 `taxi_local.xlsx`，换路径即可提取任意 xlwings Lite 工作簿（原理与用法见 `extracted/README.md`）
-
-**DuckDB 官方 excel 扩展（桌面端直读直写 .xlsx）**——taxi 案例用 Parquet 单通道，若让 DuckDB 直接读写 Excel，用官方 `excel` 扩展（仅 `.xlsx`，`.xls` 不支持）：
-
-- 安装：`INSTALL excel; LOAD excel;`（首次使用自动加载，无需手动 INSTALL）
-- **读取**（与 read_parquet 同构的 `read_xlsx`）：
-  - `SELECT * FROM 'test.xlsx'` 直接表名读取（第一个 Sheet）
-  - `SELECT * FROM read_xlsx('test.xlsx', header=true, sheet='Sheet2', all_varchar=false, ignore_errors=false, range='A1:B2', stop_at_empty=true, empty_as_varchar=false)`
-  - 命名参数：`header`（默认自动推断：首行全为非空字符串即视为表头）/ `sheet`（默认第一个 Sheet）/ `all_varchar`（true 则跳过类型推断全读文本）/ `ignore_errors`（true 则无法转换的单元格置 NULL）/ `range`（电子表格记号如 `'A1:B2'`）/ `stop_at_empty`（遇空行停止，默认有 range 时 false 否则 true）/ `empty_as_varchar`（空单元格按 VARCHAR 而非 DOUBLE）
-  - `COPY tbl FROM 'f.xlsx' WITH (FORMAT xlsx, HEADER)`——导入已有表，**不做类型推断**，用目标表列类型强转
-  - 类型推断规则：绝大多数列 = DOUBLE / VARCHAR；TIMESTAMP·DATE·TIME·BOOLEAN 按单元格格式识别；文本 `TRUE`/`FALSE` → BOOLEAN；空单元格默认 DOUBLE；推断基准 = 首个数据行（首行有大量空单元格时用 `empty_as_varchar` / `ignore_errors` 兜底）
-- **写入**：
-  - `COPY tbl TO 'out.xlsx' WITH (FORMAT xlsx, HEADER true, SHEET 'Sheet1')`；也可直接写查询结果 `COPY (SELECT ...) TO ...`
-  - 选项：`header`（默认 false，是否写列名首行）/ `sheet`（默认 `Sheet1`）/ `sheet_row_limit`（默认 1048576，超限报错）
-  - 类型转换：数值 → DOUBLE；时间 → Excel 序列号 + 数字格式；布尔 → 1/0（显示 TRUE/FALSE）；`TIMESTAMP_TZ`/`TIME_TZ` → 截断为 UTC；其余 → 文本
-  - 写出为纯数据：无样式、公式、合并单元格、多 Sheet 联动
-- **与 xlwings 通道的分工**：DuckDB excel 扩展 = 无 Excel 进程的批量读/写（适合 ETL、CI、大数据量）；xlwings COM / File Reader / calamine = 与 Excel 应用交互（样式、表格对象、图表、活会话）。组合示例：
-
-  ```python
-  import duckdb, xlwings as xw
-  # ① DuckDB 直读 xlsx → SQL 分析 → xlwings 呈现
-  df = duckdb.sql("SELECT * FROM read_xlsx('data.xlsx', header=true) WHERE 金额 > 1000").df()
-  xw.Book().sheets[0]["A1"].options(index=False).value = df
-  # ② DuckDB 直写 xlsx（纯数据落盘）
-  duckdb.sql("COPY (SELECT * FROM read_xlsx('data.xlsx')) TO 'out.xlsx' WITH (FORMAT xlsx, HEADER true, SHEET '分析结果')")
-  ```
-
-**注意**：DuckDB 读取依赖 Pyodide 运行环境与 `/taxi/` 虚拟路径，脱离 xlwings Lite 无法直接复现；研读价值在"加载项应用的组织方式"与"查询 → 分析 → 图表 → 写回"管线，而非可离线执行。
+**细节去向（单点原则）**：该案例的完整研读（xlsx 内嵌结构解密、Python 代码双编码嵌入与执行链、main.py 双脚本四层管线、DuckDB 浏览器端使用模式、桌面端 DuckDB API 扩充与 excel 扩展、工程借鉴）已迁至 **`references/15-xlwings-lite-guidance.md` 阶段七**；内嵌源码提取工具 `extracted/extract_webextension.py` 及其用法见该案例 `extracted/README.md`。本处不再重复任何细节。
 
 ### 4.6 数据服务层案例研读：SQLite 数据访问模式（SQL）
 
@@ -1130,8 +804,36 @@ Excel 应用系统对接关系型数据的两种官方样例：源码包内置 `
 
 ---
 
+
+### 4.7 DuckDB 桌面端数据访问模式（taxi-duckdb 桌面端分支）
+
+taxi-duckdb 案例的 **Lite/Pyodide 浏览器端**研读在 `references/15-xlwings-lite-guidance.md` 阶段七 7.5；本节承接其**桌面端分支**（脱离 Pyodide、本地 Python 场景，供升级到桌面版 / 自建数据层时参考）——属纯桌面端 Python 数据层知识，与 xlwings Lite 无涉，故集中于此（与 4.6 SQLite 模式并列，构成"关系型 / 文件型数据层"两种样板）。
+
+**桌面端 DuckDB API 扩充**：
+- **多源混查**：`SELECT ... FROM read_parquet('a.parquet') p JOIN read_xlsx('b.xlsx') x ON p.id = x.id JOIN read_csv_auto('c.csv') c ON ...`——跨格式关联免导入；
+- **视图与内存注册**：`CREATE VIEW v AS SELECT ...` 复用复杂查询；`duckdb.register('tbl', df)` 注册 pandas DataFrame 为可 SQL 查询表；
+- **导出通道**：`.df()`（pandas）/ `.pl()`（polars）/ `.arrow()`（PyArrow）/ `.fetchall()` / `.fetchone()`；
+- **性能特性**：向量化执行 + **filter pushdown**（WHERE 下推到 Parquet 元数据层）——1 亿行级 `count(*)` 亚秒级。
+
+**DuckDB 官方 excel 扩展**（桌面端直读直写 .xlsx，`INSTALL excel; LOAD excel;`）：
+- **读取**：`SELECT * FROM 'test.xlsx'` 直接表名读（第一个 Sheet）；`read_xlsx('f.xlsx', header=true, sheet='Sheet2', range='A1:B2', ...)` 命名参数控制；`COPY tbl FROM 'f.xlsx' WITH (FORMAT xlsx, HEADER)` 导入已有表（不做类型推断）；
+- **写入**：`COPY tbl TO 'out.xlsx' WITH (FORMAT xlsx, HEADER true, SHEET 'Sheet1')`；纯数据无样式/公式/合并单元格；
+- **与 xlwings 通道分工**：DuckDB excel 扩展 = 无 Excel 进程的批量读/写（ETL/CI/大数据量）；xlwings COM / File Reader / calamine = 与 Excel 应用交互（样式、表格对象、图表、活会话）。组合示例：
+
+```python
+import duckdb, xlwings as xw
+# ① DuckDB 直读 xlsx → SQL 分析 → xlwings 呈现
+df = duckdb.sql("SELECT * FROM read_xlsx('data.xlsx', header=true) WHERE 金额 > 1000").df()
+xw.Book().sheets[0]["A1"].options(index=False).value = df
+# ② DuckDB 直写 xlsx（纯数据落盘）
+duckdb.sql("COPY (SELECT * FROM read_xlsx('data.xlsx')) TO 'out.xlsx' WITH (FORMAT xlsx, HEADER true, SHEET '分析结果')")
+```
+
+**工程借鉴**：① "查询层（DuckDB SQL）与展示层（pandas/xlwings）解耦"——数据文件不载入内存，SQL 层物化再交给 Excel；② excel 扩展满足"无 Excel 进程的批量 ETL"，与 xlwings 活会话互补，按"是否需应用交互"选通道；③ 与 4.6 SQLite 模式对照：SQLite 适合结构化关系数据（事务/约束），DuckDB 适合文件型/分析型数据（Parquet/CSV/xlsx 直读），两者都是"config/代码驱动 DB 类型切换"的可迁移数据层样板。
+
+---
 ## 可配套阅读
 
-- `xlwings-0.37.2/docs/pro/`（PRO 官方文档：license_key.md、reader.md、release.md、reports/）
-- `xlwings-0.37.2/xlwings/pro/`（PRO 源码）
+- `xlwings-0.37.3/docs/pro/`（PRO 官方文档：license_key.md、reader.md、release.md、reports/）
+- `xlwings-0.37.3/xlwings/pro/`（PRO 源码）
 - `examples/ReadMe.md`（各实战项目的详细说明）

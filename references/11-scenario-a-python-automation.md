@@ -1,4 +1,4 @@
-# 场景 A：Python 脚本自动化 — 深度技术展开
+﻿# 场景 A：Python 脚本自动化 — 深度技术展开
 
 > 本文件是 SKILL.md 第 4 章（场景 A）的**深度技术扩展**。SKILL.md 保留主线工作流、关键规则与 API 文档导航；本文件展开容易踩坑的技术细节、内部机制、完整操作代码与性能对比。
 
@@ -28,7 +28,7 @@ data = sheet['A1:A100000'].options(chunksize=10000).value
 # 不需要：for chunk in data: ... （这是错误用法）
 ```
 
-**本质**：`chunksize` 只控制内部 COM 调用的批次大小，不改变返回类型。源码见 `xlwings-0.37.2/xlwings/conversion.py` 中 `Range.value` 的 getter 逻辑——分批调用 `GetValue` 后 `extend` 到同一个 list。
+**本质**：`chunksize` 只控制内部 COM 调用的批次大小，不改变返回类型。源码见 `xlwings-0.37.3/xlwings/conversion.py` 中 `Range.value` 的 getter 逻辑——分批调用 `GetValue` 后 `extend` 到同一个 list。
 
 ### 1.3 写入行为
 
@@ -147,7 +147,7 @@ s.delete()       # 删除
 
 ### 4.3 形状类型常量
 
-完整的 MSO_SHAPE_TYPE 枚举有 100+ 种，常用的：矩形(1)、圆角矩形(5)、椭圆(9)、三角形(7)、菱形(4)、箭头(33/34)、标注(51+)。需要时查 `xlwings-0.37.2/xlwings/constants.py` 或微软文档。
+完整的 MSO_SHAPE_TYPE 枚举有 100+ 种，常用的：矩形(1)、圆角矩形(5)、椭圆(9)、三角形(7)、菱形(4)、箭头(33/34)、标注(51+)。需要时查 `xlwings-0.37.3/xlwings/constants.py` 或微软文档。
 
 ---
 
@@ -182,7 +182,7 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 - 每个子进程启动独立 Excel 实例，资源开销大
 - 大量小任务用多线程（每个线程独立连接），CPU 密集型任务才考虑多进程
 
-详细说明见 `xlwings-0.37.2/docs/threading_and_multiprocessing.md`。
+详细说明见 `xlwings-0.37.3/docs/threading_and_multiprocessing.md`。
 
 ---
 
@@ -231,7 +231,7 @@ sheet['A1'].characters[5:].font.bold = True  # "1000" 加粗
 
 以下社区版案例（不依赖 PRO/Server）由场景 A 引用并介绍，详细展开供直接借鉴：
 
-### 7.1 官方 quickstart 迷你示例（xlwings-0.37.2/examples/，BSD）
+### 7.1 官方 quickstart 迷你示例（xlwings-0.37.3/examples/，BSD）
 
 - **`database/database.py`**（SQLite → Excel 回填）：`sqlite3` 连接 `chinook.sqlite` → 查询结果 → `xw.Range` 写入指定工作表——外部数据源接入 Excel 的最小闭环（场景 A 数据接入参考）；`database.xlsm` 为已装配演示工作簿；
 - **`mpl/mpl.py`**（matplotlib → Excel）：matplotlib/seaborn 绘图 → `xw` 写入图表（`plots` 函数）——场景 A 图表输出样例；`mpl.xlsm` 演示工作簿；
@@ -282,7 +282,7 @@ sheet['A1'].characters[5:].font.bold = True  # "1000" 加粗
 
 ## 可配套阅读
 
-- `xlwings-0.37.2/docs/`（官方文档权威参考）
+- `xlwings-0.37.3/docs/`（官方文档权威参考）
 
 ## 附：场景 A 实战案例索引（examples/）
 

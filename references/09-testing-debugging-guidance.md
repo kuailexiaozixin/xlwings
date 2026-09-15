@@ -170,8 +170,8 @@ try {
 
 ## 六、调试技巧（官方导航）
 
-- `xlwings-0.37.2/docs/debugging.md`：UDF 断点（xw.serve）、日志
-- `xlwings-0.37.2/docs/troubleshooting.md`：官方常见问题
+- `xlwings-0.37.3/docs/debugging.md`：UDF 断点（xw.serve）、日志
+- `xlwings-0.37.3/docs/troubleshooting.md`：官方常见问题
 - `docs/troubleshooting.md`：本技能沉淀的坑点（发布流水线/COM/Ribbon）
 - `docs/troubleshooting-python.md`：Python/面板专项坑（WebView2 Runtime、端口、编码）
 

@@ -2,7 +2,7 @@
 
 > 本文件是 SKILL.md 6.5.4（自足模板：双形态×双入口、装饰器模板、分层铁律、业务核心规范、编码铁律、三阶段门禁）的**扩展资源**——官方文档导航 + 官方示例导航 + 进阶主题提炼。规则与模板以 6.5.4 正文为准，本文件不重复。
 
-## 一、官方文档导航（`xlwings-0.37.2/docs/`，Python 侧权威）
+## 一、官方文档导航（`xlwings-0.37.3/docs/`，Python 侧权威）
 
 | 文档 | 一句话要点 | 何时读 |
 |------|-----------|--------|
@@ -33,7 +33,7 @@
 | `simulation-demo-master/` | 蒙特卡洛模拟（大量数组运算示范） |
 | `xlwings-factsheet-demo-main/` | 基金数据表 |
 | `xlwings-eikon-master/` | 金融数据终端集成（Refinitiv Eikon） |
-| `xlwings-server-main/` | xlwings Server（服务端形态，393 文件，按需深读） |
+| `xlwings-server/` | xlwings Server（服务端形态，399 文件，按需深读） |
 
 ## 三、进阶主题提炼（官方文档要点 + 实战）
 

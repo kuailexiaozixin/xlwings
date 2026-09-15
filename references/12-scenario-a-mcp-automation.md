@@ -1,6 +1,6 @@
-# 场景 B：MCP 自动化 — 深度技术展开
+﻿# 场景 A 4.4：MCP 自动化 — 深度技术展开
 
-> 本文件是 SKILL.md 第 5 章（场景 B）的**深度扩展资源**。SKILL.md 保留 7 步工作流与核心原则；本文件展开 4 个社区 MCP Server 的技术细节、工具清单、客户端配置模板、安全机制源码分析与故障排查。所有内容均基于 `MCP-Server/` 目录下 4 个实际项目的源码与 README 核实。
+> 本文件是 SKILL.md 第 4 章（场景 A）4.4 小节（MCP 自动化）的**深度扩展资源**。SKILL.md 保留 7 步工作流与核心原则；本文件展开 4 个社区 MCP Server 的技术细节、工具清单、客户端配置模板、安全机制源码分析与故障排查。所有内容均基于 `MCP-Server/` 目录下 4 个实际项目的源码与 README 核实。
 
 ## 目录
 
@@ -264,8 +264,8 @@ python server.py
 
 MCP Server 本质上是**场景 A（Python 脚本自动化）的 MCP 协议封装**：
 - 场景 A：Python 脚本直接调用 `xw.Book()` 操作 Excel
-- 场景 B：MCP Server 内部调用 `xw.Book()`，通过 MCP 协议暴露给 AI Agent
-- 因此场景 A 的所有规则（进程清理、COM 单线程、大块读写等）均适用于场景 B 的 Server 内部实现
+- 场景 A 4.4：MCP Server 内部调用 `xw.Book()`，通过 MCP 协议暴露给 AI Agent
+- 因此场景 A 的所有规则（进程清理、COM 单线程、大块读写等）均适用于 MCP Server 内部实现
 
 ---
 
@@ -387,4 +387,4 @@ python server.py
 ## 可配套阅读
 
 - `MCP-Server/` 目录下 4 个项目的 README 与源码
-- `xlwings-0.37.2/docs/`（xlwings API 权威文档）
+- `xlwings-0.37.3/docs/`（xlwings API 权威文档）

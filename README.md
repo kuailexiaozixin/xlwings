@@ -17,9 +17,11 @@
 
 | 目录 | 官方来源 |
 |---|---|
-| `examples/` | 12 个官方/第三方示例仓库（见 `examples/README.md`） |
+| `examples/` | 11 个官方/第三方示例仓库（见 `examples/ReadMe.md`） |
 | `MCP-Server/` | 4 个 xlwings MCP 服务器实现（见 `MCP-Server/README.md`） |
-| `xlwings-0.37.2/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
+| `xlwings-0.37.3/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
+| `xlwings-server/` | <https://github.com/xlwings/xlwings-server> · <https://server.xlwings.org/> |
+| `xlwings-lite/` | <https://github.com/xlwings/xlwings-lite> · <https://docs.xlwings.org/en/latest/lite.html> |
 
 ## 许可
 
