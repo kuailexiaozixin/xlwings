@@ -65,9 +65,14 @@ def download_tarball(repo: str, ref: str) -> Path | None:
     """curl 下载 codeload tarball 并 tar 解压，返回解压根目录（含顶层目录）或 None。"""
     tmp = Path(tempfile.mkdtemp(prefix="xlwings_up_"))
     tarball = tmp / "src.tar.gz"
-    url = f"https://codeload.github.com/{repo}/tar.gz/refs/tags/{ref}"
-    r = run(["curl.exe", "-sL", "-o", str(tarball), url, "-w", "%{http_code}"])
-    if r.returncode != 0 or not tarball.exists() or r.stdout.strip() != "200":
+    # tag 用 refs/tags/<ref>，分支（如 main）用 refs/heads/<ref>
+    for ref_path in (f"refs/tags/{ref}", f"refs/heads/{ref}", ref):
+        url = f"https://codeload.github.com/{repo}/tar.gz/{ref_path}"
+        r = run(["curl.exe", "-sL", "-o", str(tarball), url, "-w", "%{http_code}"])
+        if r.returncode == 0 and tarball.exists() and r.stdout.strip() == "200":
+            break
+        tarball.unlink(missing_ok=True)
+    else:
         return None
     r = run(["tar", "-xzf", str(tarball), "-C", str(tmp)])
     if r.returncode != 0:
@@ -150,7 +155,7 @@ def sync_one(src: dict, force: bool = False) -> str:
     src["last_synced"] = date.today().isoformat()
     if vid == "xlwings":
         src["local_dir"] = target.relative_to(SKILL_ROOT).as_posix()
-    MANIFEST.write_text(json.dumps(MANIFEST_CFG, ensure_ascii=False, indent=2), encoding="utf-8")
+    MANIFEST.write_text(json.dumps(MANIFEST_CFG, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
     with open(SYNCLOG, "a", encoding="utf-8") as f:
         if f.tell() == 0:
@@ -165,7 +170,7 @@ def main() -> int:
     check_only = "--check" in args
     force_ids = [args[i + 1] for i, a in enumerate(args) if a == "--force"]
     global MANIFEST_CFG
-    MANIFEST_CFG = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    MANIFEST_CFG = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))
     stats: dict[str, list[str]] = {"updated": [], "unchanged": [], "failed": []}
     for src in MANIFEST_CFG["sources"]:
         if check_only:

@@ -1,4 +1,4 @@
-﻿{
+{
  "_comment": "xlwings 技能上游锁定清单。xlwings-<ver>/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
  "sources": [
   {
@@ -16,8 +16,8 @@
    "repo": "xlwings/xlwings-server",
    "ref": "main",
    "subpath": "",
-   "pinned_sha": "5f3fccbf97cef7aa0f429c1902a8f48ef8794eeb",
-   "last_synced": "2026-09-15"
+   "pinned_sha": "9a7807b011ed214c180aa4232c7b1b596b5a9148",
+   "last_synced": "2026-09-17"
   },
   {
    "id": "mcp-server-xlwings",

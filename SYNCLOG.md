@@ -9,3 +9,4 @@
 | 2026-09-15 | `xlwings` | tarball | `46301d0`（0.37.3） | 416 个文件 |
 | 2026-09-15 | `xlwings-server` | tarball（main） | `5f3fccb` | 399 个文件 |
 | 2026-09-15 | 目录迁移 | — | — | `examples/xlwings-server-main`→`xlwings-server/`、`examples/xlwings-lite`→`xlwings-lite/`（技能根目录） |
+| 2026-09-17 | `xlwings-server` | tarball | `9a7807b` | 399 个文件 |
