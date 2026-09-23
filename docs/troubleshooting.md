@@ -106,7 +106,8 @@
 - **根因**：PATH 被其他运行时（IDE 沙箱 / 虚拟环境 / WindowsApps）劫持，且存在系统级 `PYTHONHOME`/`PYTHONPATH` 指向另一份 Python——解释器与 stdlib 版本错配。
 - **诊断**：`python -c "import sys; print(sys.executable)"` 与 `python --version` 对照；`echo $env:PYTHONHOME` / `echo $env:PYTHONPATH` 检查残留；`where.exe python` 查看 PATH 命中顺序。
 - **修复**：开发/构建一律用显式解释器绝对路径（`sys.executable` 确认后写入配置表 `Interpreter_Win` / 构建参数 `-InterpreterWin` / release_tool），禁止依赖 PATH 命令名；环境变量错配时临时清理或修正。
-- **教训**：解释器身份以 `sys.executable` 为准，不以 `python` 命令名解析为准；技能外发后绝对路径不可写死进规则，规则只保留"显式确认方法论"，具体路径属于项目级配置。
+- **升级案例（实测铁证）**：**显式绝对路径并不能免疫 PYTHONHOME 劫持**。加载项链中 `Interpreter_Win` 指向 uv venv 的 `python.exe`（显式路径），但 Excel 进程环境带 `PYTHONHOME=<base解释器>` 时，实际启动 EXE=3.13、PREFIX/BASE 均回落 base、**venv site-packages 不进 sys.path** → 报 `No module named 'xlwings'`。判据：`python -c "import sys, site; print(sys.prefix, sys.base_prefix, site.getsitepackages())"`，`prefix == base_prefix` 即 venv 未生效。**修复用 bat 包装解释器**（`set PYTHONHOME=<base>` + `set PYTHONPATH=<模块目录>` + 调 base 解释器）或 junction 纯 ASCII 路径，完整方案见 `references/04-python-guidance.md` 第五节。
+- **教训**：解释器身份以 `sys.executable` 为准，不以 `python` 命令名解析为准；**venv 在 Excel/cmd 启动链中不可靠，加载项分发默认走"bat 包装 base 解释器 + PYTHONPATH 指模块目录"**；技能外发后绝对路径不可写死进规则，规则只保留"显式确认方法论"，具体路径属于项目级配置。
 
 ## 坑 11：xlwings CLI 入口是独立脚本，`python -m xlwings` 不可用
 
@@ -131,13 +132,33 @@
 - **修复**：uvicorn 必须在独立 subprocess 中运行（`subprocess.Popen([sys.executable, "server.py", "--port", ...])`），与 webview 进程隔离；`server.py` 自行 `from src.app import app` 并 `uvicorn.run(app, ...)`；FastHTML app 对象不可 pickle，不能通过 multiprocessing 传递。
 - **教训**：**GUI 消息循环与 ASGI 服务必须进程隔离**。任何"主线程跑 GUI、子线程跑 HTTP 服务"的架构在 CPython GIL 下都不可靠；面板侧模板必须默认 subprocess 模式。
 
+## 坑 14：XLSTART 目录下的 `.conf` 文件被 Excel 当工作簿打开（2026-09-17 Hermes 实战）
+
+- **现象**：安装脚本往 `XLSTART\` 写了 `xlwings.conf`（目录级配置）后，每次启动 Excel 多出一个**未隐藏的 "xlwings" 工作表**（A1 显示 INTERPRETER_WIN 等键值）；Ribbon 点击报错。删除该 conf 后工作表消失。
+- **根因**：`XLSTART\` 目录下任何文件都会在 Excel 启动时被当作工作簿/加载项处理——目录级 `xlwings.conf` 不是"配置"，而是被打开的文本工作簿。
+- **修复**：**XLSTART 目录永远不要放 `.conf` 文件**。配置只写 xlam 内嵌配置表（构建期写入）+ 安装脚本动态改配置表（如 PYTHONPATH），或写用户级/项目级 `xlwings.conf`（坑 2 场景）。安装脚本模板 `templates/internal-bases/excel-addin-core/install/install_xlstart.ps1.tmpl` 的做法正确（只改配置表、不写 conf）。
+- **清理**：`Remove-Item "$env:APPDATA\Microsoft\Excel\XLSTART\*.conf" -Force`（仅当确认无用户自建 conf 时；更稳妥是只删自己写入的那个文件）。
+- **教训**：**安装脚本写入任何 XLSTART 文件前，先问"Excel 启动时会怎么处理它"**——只允许 .xlam/.xll（加载项）与 .xlsm（模板宏）类文件。
+
+## 坑 15：Excel Resiliency（韧性机制）禁用加载项——反复强杀 Excel 的代价（2026-09-17 Hermes 实战）
+
+- **现象**：多次 `taskkill /F` 强杀 Excel（构建/测试循环）后，加载项在启动时"消失"——Ribbon 无选项卡、加载项管理器不显示；但文件与注册都正常。
+- **根因**：Excel 检测到加载项导致反复崩溃/被强杀，会把加载项记入**禁用列表**（`HKCU\Software\Microsoft\Office\<ver>\Excel\Resiliency\DisabledItems` / `DisableItems`），后续启动自动跳过该加载项。
+- **诊断**：
+  ```bat
+  reg query "HKCU\Software\Microsoft\Office\16.0\Excel\Resiliency" /s
+  ```
+  存在 DisabledItems 且含目标加载项名 → 命中本坑。
+- **修复**：删除 DisabledItems 中对应条目（先备份该项）；随后**避免用 `taskkill /F /IM EXCEL.EXE` 裸杀**——按 PID 精确终止（见 SKILL.md 3.4），并确保自动化用 `app.quit()` 正常退出。
+- **教训**：**加载项开发循环中，进程终止必须按 PID、正常退出优先**；裸杀不仅误伤用户工作簿，还会触发 Resiliency 让加载项"神秘消失"，排查成本极高。
+
 ## 真机 E2E 验证脚本（复用）
 
 `../dist/_e2e_test.py`：隐藏 Excel 打开产物 → 写输入 → `xl.Run("...xlwings.RunPython", "import ...;...")` → 断言 B3 状态 / A5 表头 / A6 数据 → 清空再断言。21s 全 PASS（下载 10 条真实公告）。
 
 ## 诊断方法论（可复用）
 
-1. **模态框是自动化的头号杀手**：隐藏实例里任何 Err.Raise 都会挂死整条链。用 `DisplayAlerts=False` + 子进程隔离 + 超时 taskkill 保命。
+1. **模态框是自动化的头号杀手**：隐藏实例里任何 Err.Raise 都会挂死整条链。用 `DisplayAlerts=False` + 子进程隔离 + 超时 taskkill 保命（**仅模态框挂死、无法正常退出时的应急手段**；日常清理一律按 PID 精确终止，见 SKILL.md 3.4）。
 2. **看不见就让它现形**：可见 Excel 复现 → Pillow 截屏 → win32 EnumWindows 读模态框文本，一步拿到真实错误（比猜快 10 倍）。
 3. **分阶段二分**：每步保存→重开→Ping，用最小可运行探针（PingTest 函数）判断工程是否还能编译执行。
 4. **手动复现子进程命令**：从 bas 源码拼出 VBA 将执行的确切命令行，手动跑拿 stderr——注意补全 `--wb/--from_xl/--hwnd` 参数（`Book.caller()` 依赖它们）。

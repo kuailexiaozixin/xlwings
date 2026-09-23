@@ -1,4 +1,4 @@
-﻿# 场景 D 附录：xlwings Server 参考手册（开发生命周期工作流）
+# 场景 D 附录：xlwings Server 参考手册（开发生命周期工作流）
 
 > 本手册由 `references/13-scenario-d-source-code.md` 1.7 节独立并大幅扩展而来：以开发生命周期工作流重排，深度研读官方仓库 `xlwings-server/` 的六块内容——`docs/`（61 篇官方教程）、`xlwings_server/`（服务端 Python 包）、`deployment/`、`nginx/`、`scripts/`、`tests/`。单点原则：xlwings Server 的一切细节只在本手册展开，13-d 1.7 只保留指针，本手册与 13-d 之间为单向导航。
 
@@ -50,7 +50,7 @@
 
 **与场景 C 的分工**：两条不同的加载项开发路径。
 
-| 维度 | 场景 C（SKILL.md 第 6 章：VBA 宏 / VBA 加载项） | 本手册（Server / Office.js） |
+| 维度 | 场景 C（VBA 宏 / VBA 加载项开发） | 本手册（Server / Office.js） |
 |------|--------------------------------|------------------------------|
 | 路径 | 桌面本地加载项 | Web / Office.js 加载项 |
 | 载体 | .xlam / .xlsm + XLSTART / 便携运行时 | manifest.xml + 任务窗格 |
@@ -138,7 +138,7 @@
 
 ### 1.6 客户端如何连接 Server：remote 引擎（`pro/_xlremote.py`）
 
-- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings-0.37.3/xlwings/pro/_xlremote.py`，4173 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
+- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，4814 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
 - **通信方式**：HTTP REST API；对象操作经 `append_json_action` 打包为 JSON 动作（`func`/`args`/`values`/`sheet_position` 等）累积在 `_json["actions"]`，随请求一并发送服务端执行
 - **对象覆盖**：Apps/App/Books/Book/Sheets/Sheet/Range/Names/Name/Pictures/Shapes/Charts/Characters/Note/PageSetup/Border/Borders/Font/FreezePanes/Table/Tables——与桌面引擎同构的高层 API，脚本代码无需感知通道差异
 - **lazy load**：`_SHEET_VALUES_LOADED_KEY = "_xlwings_values_loaded"` 标记 sheet 值是否已加载（元数据先加载、值按需获取）；该标记仅本地读取，不序列化回 JS

@@ -5,7 +5,7 @@
 用法:
     python scripts/sync_upstream.py --check          # 仅检测更新，不替换
     python scripts/sync_upstream.py                  # 检测并同步有更新的上游
-    python scripts/sync_upstream.py --force <id>     # 强制重拉指定 source（id: xlwings | xlwings-server）
+    python scripts/sync_upstream.py --force <id> [<id> ...]   # 只同步所列 source，且忽略 sha 比对强制重拉
 
 机制:
   1. 读 manifest.json 中每路上游的 repo/ref/subpath/local_dir/pinned_sha
@@ -15,7 +15,9 @@
 
 约束:
   - 本脚本只写 local_dir、manifest.json、SYNCLOG.md，绝不触碰 SKILL.md / references/ 等自研文件。
-  - 上游更新后若涉及版本号目录名（xlwings-<ver>），脚本自动以新 tag 命名；自研文档中的版本引用需人工核对刷新。
+  - local_dir 一律是固定目录名（xlwings、xlwings-server），不随上游版本号改变。要切换跟踪点只改
+    manifest.json 的 ref：跟最新正式版填 tag（如 0.37.4），跟开发线填 main。
+  - 上游内容变化后，自研文档里引用的行号与代码片段需人工复核（脚本不做这件事）。
 """
 from __future__ import annotations
 
@@ -32,8 +34,9 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = SKILL_ROOT / "manifest.json"
 SYNCLOG = SKILL_ROOT / "SYNCLOG.md"
-GH = r"C:\Users\贺新\AppData\Local\Programs\gh\bin\gh.exe"
+GH = shutil.which("gh") or str(Path.home() / "AppData" / "Local" / "Programs" / "gh" / "bin" / "gh.exe")
 TIMEOUT = 120
+DOWNLOAD_TIMEOUT = 900
 
 
 def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
@@ -68,7 +71,13 @@ def download_tarball(repo: str, ref: str) -> Path | None:
     # tag 用 refs/tags/<ref>，分支（如 main）用 refs/heads/<ref>
     for ref_path in (f"refs/tags/{ref}", f"refs/heads/{ref}", ref):
         url = f"https://codeload.github.com/{repo}/tar.gz/{ref_path}"
-        r = run(["curl.exe", "-sL", "-o", str(tarball), url, "-w", "%{http_code}"])
+        try:
+            r = run(["curl.exe", "-sL", "-o", str(tarball), url, "-w", "%{http_code}"],
+                    timeout=DOWNLOAD_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            print(f"  下载超时（{DOWNLOAD_TIMEOUT}s）：{url}")
+            tarball.unlink(missing_ok=True)
+            return None
         if r.returncode == 0 and tarball.exists() and r.stdout.strip() == "200":
             break
         tarball.unlink(missing_ok=True)
@@ -140,11 +149,9 @@ def sync_one(src: dict, force: bool = False) -> str:
         print(f"  [{vid}] 下载结果为空，放弃替换")
         return "failed"
 
-    if vid == "xlwings":
-        # 目录名跟随版本：xlwings-<tag>
-        target = SKILL_ROOT / f"xlwings-{ref}"
-    else:
-        target = SKILL_ROOT / src["local_dir"]
+    # local_dir 是固定目录名，不随上游版本变化：上游出新版只改 manifest 的 ref，
+    # 自研文档里引用的路径（如 xlwings/xlwings/cli.py）因此长期有效。
+    target = SKILL_ROOT / src["local_dir"]
     ok = replace_dir(stage, target)
     if not ok:
         print(f"  [{vid}] 替换失败（可能被占用，已回滚）")
@@ -153,8 +160,6 @@ def sync_one(src: dict, force: bool = False) -> str:
     n_files = count_files(target)
     src["pinned_sha"] = head
     src["last_synced"] = date.today().isoformat()
-    if vid == "xlwings":
-        src["local_dir"] = target.relative_to(SKILL_ROOT).as_posix()
     MANIFEST.write_text(json.dumps(MANIFEST_CFG, ensure_ascii=False, indent=2), encoding="utf-8-sig")
 
     with open(SYNCLOG, "a", encoding="utf-8") as f:
@@ -168,11 +173,14 @@ def sync_one(src: dict, force: bool = False) -> str:
 def main() -> int:
     args = sys.argv[1:]
     check_only = "--check" in args
-    force_ids = [args[i + 1] for i, a in enumerate(args) if a == "--force"]
+    force_ids = [a for a in args[args.index("--force") + 1:] if not a.startswith("--")] \
+        if "--force" in args else []
     global MANIFEST_CFG
     MANIFEST_CFG = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))
     stats: dict[str, list[str]] = {"updated": [], "unchanged": [], "failed": []}
     for src in MANIFEST_CFG["sources"]:
+        if force_ids and src["id"] not in force_ids:
+            continue
         if check_only:
             head = latest_sha(src["repo"], src["ref"])
             has_new = head is not None and head != src.get("pinned_sha")

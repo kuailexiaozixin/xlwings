@@ -1,6 +1,6 @@
 ﻿# UDF 构建指南（6.5.7 聚合）
 
-> 本文件是 SKILL.md 6.5.7（UDF 开发与导入）的扩展资源。权威语义与全部装饰器参数见 `xlwings-0.37.3/docs/udfs.md`。UDF 侧开发以本文档为准。
+> 本文件是工作流 6.5.7（UDF 开发与导入）的扩展资源。权威语义与全部装饰器参数见 `xlwings/docs/udfs.md`。UDF 侧开发以本文档为准。
 
 ## 一、存放位置选择：xlsm vs xlam
 
@@ -109,15 +109,15 @@ Excel "Add-in & Settings" 勾选 "Debug UDFs"，`Ctrl+Alt+F9` 重算即在 IDE �
 
 以下社区版案例（不依赖 PRO/Server）由场景 C 引用，详细展开供直接借鉴：
 
-- **`xlwings-0.37.3/examples/udf/udf.py`**（最小 UDF 集）：`@xw.sub` 的 `get_workbook_name`（宏入口）+ `@xw.func` 函数（含 numpy/pandas 转换）——UDF 编写的最小对照；`udf.xlsm` 为已装配工作簿；
-- **`xlwings-0.37.3/examples/fibonacci/`**（UDF + 便携分发）：`fibonacci.py`（`@xw.func` 斐波那契）+ `build_standalone.py`（PyInstaller 冻结独立可执行 → zip 分发）+ `setup_fibonacci.py`（冻结配置）——场景 C 6.5.10 便携运行时分发的官方样例；
+- **`xlwings/examples/udf/udf.py`**（最小 UDF 集）：`@xw.sub` 的 `get_workbook_name`（宏入口）+ `@xw.func` 函数（含 numpy/pandas 转换）——UDF 编写的最小对照；`udf.xlsm` 为已装配工作簿；
+- **`xlwings/examples/fibonacci/`**（UDF + 便携分发）：`fibonacci.py`（`@xw.func` 斐波那契）+ `build_standalone.py`（PyInstaller 冻结独立可执行 → zip 分发）+ `setup_fibonacci.py`（冻结配置）——场景 C 6.5.10 便携运行时分发的官方样例；
 - **`examples/Excel_udf_itus-main/`**（金融数据查询 UDF 完整工程）：`ebitda_margins_data_udf.py`（SQLite 查询 → `@xw.func` → 单元格公式端到端）、`config.ini`（数据源/参数配置）、`scema.sql`（表结构）、`example.xlsm`（已装配演示工作簿）——"把数据库查询封装为 Excel 公式"的完整参照；`readme.md` 含安装与信任中心设置指引。
 
 ## 七、官方导航
 
-- **`xlwings-0.37.3/docs/udfs.md`（权威，全部装饰器参数与语义）**：读 UDF 前必读
-- `xlwings-0.37.3/docs/converters.md`：类型转换体系（UDF 入参/返回转换的底层）
+- **`xlwings/docs/udfs.md`（权威，全部装饰器参数与语义）**：读 UDF 前必读
+- `xlwings/docs/converters.md`：类型转换体系（UDF 入参/返回转换的底层）
 - `examples/Excel_udf_itus-main/`：UDF 教程（类型提示/二维数组/DataFrame 实战）
-- `xlwings-0.37.3/docs/threading_and_multiprocessing.md`：异步 UDF 的线程语义
+- `xlwings/docs/threading_and_multiprocessing.md`：异步 UDF 的线程语义
 
 

@@ -63,7 +63,7 @@ AIGC:
 2. 更换模板：以 `template/template.xlsx` 为蓝本重设 `{{ }}` 占位符；
 3. 更换输出渠道：修改 `demo.py` 的 postprocess 段（默认演示上传 S3，可改为邮件、网页等）。
 
-> 官方使用文档：xlwings Reports 详见 `../xlwings-0.37.3/docs/pro/reports/`。
+> 官方使用文档：xlwings Reports 详见 `../xlwings/docs/pro/reports/`。
 
 ---
 
@@ -259,7 +259,7 @@ in
 
 **一句话定位**：xlwings 官方 YouTube 入门视频课程（2018）配套 Jupyter notebook 讲义，按 `0 - Intro` 至 `7 - Part7` 共 8 个 Part 组织，系统覆盖 xlwings 基础到 UDF、单元测试与应用部署，用于场景 D·7.5 的系统入门学习与教学演示。
 
-**注意**：课程发布于 2018 年，部分写法可能过时，但作为 xlwings 基础概念入门仍有效；执行时以本技能内置 xlwings-0.37.3 源码为准（见 SKILL.md 3.1 本地源码注入）。
+**注意**：课程发布于 2018 年，部分写法可能过时，但作为 xlwings 基础概念入门仍有效；执行时以本技能内置的 `xlwings/` 源码为准（见 SKILL.md 3.1 本地源码注入）。
 
 **目录**：`python-for-excel-course-main/python-for-excel-course-main/`
 

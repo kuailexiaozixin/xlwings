@@ -1,6 +1,6 @@
-﻿# xlwings Office.js 引擎深度技术分析与构建工作流
+# xlwings Office.js 引擎深度技术分析与构建工作流
 
-> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1255 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
+> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1254 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
 
 > **三文档分工**：Office.js 引擎同时服务 xlwings Server 与 xlwings Lite/Pyodide。
 >
@@ -63,7 +63,7 @@
 ### 〇.2 引擎事实总览
 
 - `xlwings/pro/_xlofficejs.py`（160 行）：值转换层——Engine 单例（`name="officejs"`、`type="remote"`）+ 读写两侧的数据清洗/编码。
-- `xlwings/pro/udfs_officejs.py`（1255 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
+- `xlwings/pro/udfs_officejs.py`（1254 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
 - 引擎类型：`remote`（走 socket.io 推流），与 `excel`（COM）、`calamine`（只读）并列（四引擎见 `references/13-scenario-d-source-code.md` 1.2）。
 - 配套测试：`tests/test_custom_functions_officejs.py` / `test_custom_scripts_call.py` / `test_jsnull.py` / `test_streaming_*.py`。
 
@@ -258,7 +258,7 @@
 - **输出物**：测试记录 + 门禁输出（pytest 结果 / 清单校验输出 / 冒烟结果）。
 - **验收**：引擎 pytest 全绿；清单校验通过、HTTP 冒烟双 200、真实宿主任务窗格可开；任何 failed 进入 Debug 闭环，不得跳过。
 
-- **引擎级测试**（`xlwings-0.37.3/tests/`）：
+- **引擎级测试**（`xlwings/tests/`）：
   - `test_custom_functions_officejs.py`：UDF 全链路（装饰器 → 调用管线 → 返回值编码）；
   - `test_custom_scripts_call.py`：脚本管线（book 注入、参数强制、返回 book）；
   - `test_jsnull.py`：JsNull 哨兵归一（Pyodide ≥ 0.28 兼容分支）；
@@ -302,12 +302,12 @@
 
 | 资源 | 路径 |
 |------|------|
-| 值转换层源码 | `xlwings-0.37.3/xlwings/pro/_xlofficejs.py` |
-| UDF/脚本全链路源码 | `xlwings-0.37.3/xlwings/pro/udfs_officejs.py` |
+| 值转换层源码 | `xlwings/xlwings/pro/_xlofficejs.py` |
+| UDF/脚本全链路源码 | `xlwings/xlwings/pro/udfs_officejs.py` |
 | 函数教程 | `xlwings-lite/custom-functions.md`（lite.xlwings.org） |
 | 脚本教程 | `xlwings-lite/custom-scripts.md` |
-| 版本演进 | `xlwings-0.37.3/docs/whatsnew.md` |
-| 配套测试 | `xlwings-0.37.3/tests/test_custom_functions_officejs.py` 等（见阶段七） |
+| 版本演进 | `xlwings/docs/whatsnew.md` |
+| 配套测试 | `xlwings/tests/test_custom_functions_officejs.py` 等（见阶段七） |
 | 官方清单参考 | 微软 office-js-docs-reference 的 docs/manifest（105 篇）与 requirement-sets（92 篇） |
 | 官方测试/发布文档 | Microsoft Learn `testing/` 与 `publish/` 目录（见阶段七/八官方支撑） |
 | 服务端侧 | `references/14-xlwings-server-guidance.md`（Server 运行时） |

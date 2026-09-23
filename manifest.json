@@ -1,14 +1,14 @@
 {
- "_comment": "xlwings 技能上游锁定清单。xlwings-<ver>/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
+  "_comment": "xlwings 技能上游锁定清单。xlwings/、xlwings-server/、xlwings-lite/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；local_dir 是固定目录名，不含版本号，上游出新版不需要改路径。SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
  "sources": [
   {
    "id": "xlwings",
-   "local_dir": "xlwings-0.37.3",
+   "local_dir": "xlwings",
    "repo": "xlwings/xlwings",
-   "ref": "0.37.3",
+   "ref": "main",
    "subpath": "",
-   "pinned_sha": "46301d08ced63e9e6a23cd86bbe33f448ce304de",
-   "last_synced": "2026-09-15"
+   "pinned_sha": "3dc83bbb4434b7815106f38ef2c1c846494c8550",
+   "last_synced": "2026-09-23"
   },
   {
    "id": "xlwings-server",
@@ -16,8 +16,8 @@
    "repo": "xlwings/xlwings-server",
    "ref": "main",
    "subpath": "",
-   "pinned_sha": "9a7807b011ed214c180aa4232c7b1b596b5a9148",
-   "last_synced": "2026-09-17"
+   "pinned_sha": "8cbe5e1bd0e3f1e0a86b2f8fa6ef3cacfba3d5b6",
+   "last_synced": "2026-09-23"
   },
   {
    "id": "mcp-server-xlwings",

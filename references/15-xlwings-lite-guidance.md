@@ -1,6 +1,6 @@
 ﻿# 场景 D 附录：xlwings Lite 深度技术分析与开发工作流
 
-> 本文件是 SKILL.md 第 7 章（场景 D）的**独立深度扩展资源**，承接 `references/13-scenario-d-source-code.md` 中分离出的 xlwings Lite 内容（原 1.6 节、4.5 节，以及 1.8 的 Lite 特有适配分支），并按**开发生命周期工作流**重新编排：认知选型 → 环境准备 → 核心开发 → 测试调试 → 应用化分发 → 自托管部署 → 案例研读。
+> 本文件是场景 D（源码学习与二次开发）的**独立深度扩展资源**，承接 `references/13-scenario-d-source-code.md` 中分离出的 xlwings Lite 内容（原 1.6 节、4.5 节，以及 1.8 的 Lite 特有适配分支），并按**开发生命周期工作流**重新编排：认知选型 → 环境准备 → 核心开发 → 测试调试 → 应用化分发 → 自托管部署 → 案例研读。
 >
 > **与 13/16 号文档的分工**：13 号文档保留 PRO 许可证机制、四引擎原理、Reports 架构、code embed/release 部署等 PRO 专有内容；Office.js 引擎**整体**源码研读（`pro/_xlofficejs.py` + `pro/udfs_officejs.py` 全链路）已独立为 `references/16-xlwings-officejs.md`（值转换层 / UDF 全链路 / 脚本全链路 / socket.io 会话，Server 与 Lite 共享的语义内核）；凡属 **Lite 特有**的适配分支（Pyodide 环境的 JsNull 空值归一、流式函数 `streaming_callback` 直推与 Lite 侧任务重启、`BookAsync` 注解的懒加载注入）由本文件对应小节承接（机制细节处指向 16 号），13 号 1.8 仅保留指针。本文件聚焦 xlwings Lite 的**产品能力、运行机制、开发工作流与全部 Lite 相关源码研读**。
 >
@@ -12,7 +12,7 @@
 > 5. **参考**：editor → tests → configuration → environment-variables → troubleshooting → faq → changelog / about。
 > 开发时按"入门 → 进阶 → 分发 → 自托管"的官方路径推进；本文件阶段一/二承载选型与准备，阶段三按"入门组 → 进阶组"展开，阶段四/五/六对应参考/分发/自托管组，阶段七以完整案例收束。
 >
-> **内容来源**：① `xlwings-lite/`（lite.xlwings.org 官方文档 31 篇离线镜像，本文件按阶段语义引用，不重复全文）；② `xlwings-0.37.3/xlwings/` 源码（ext 包、main.py、base_classes.py、__init__.py、udfs.py、pro/udfs_officejs.py 的 Lite 分支）——每节"源码验证"块给出官方教程结论对应的实现位置；③ `examples/taxi-duckdb-main/`（Lite 完整案例）。
+> **内容来源**：① `xlwings-lite/`（lite.xlwings.org 官方文档 31 篇离线镜像，本文件按阶段语义引用，不重复全文）；② `xlwings/xlwings/` 源码（ext 包、main.py、base_classes.py、__init__.py、udfs.py、pro/udfs_officejs.py 的 Lite 分支）——每节"源码验证"块给出官方教程结论对应的实现位置；③ `examples/taxi-duckdb-main/`（Lite 完整案例）。
 
 ## 目录
 
@@ -152,13 +152,13 @@ Lite 在 xlwings 生态中的位置（与本地版 / Server 的关系，`index.m
 - **同源 API，入口相反**：场景 A 教的是**从 Python 进程驱动 Excel**（`xw.App/Book` 脚本自动化、COM 桥、批量处理）；本文件教的是**在 Excel 内嵌代码、由 Excel 承载 Python**（Pyodide 沙箱）。两者共用同一套 `@func`/`@script`/对象模型语义（1.1、1.5），差别只在"谁主动"。
 - **代码互迁**：场景 A 写的 UDF/脚本在 Lite 中大部分逐字可用（异步化例外，见 3.7）；Lite 应用迁到桌面版通常几乎零改动（官方升级路径，见上）。
 - **功能互补、边界清晰**：场景 A 覆盖本机 Python + 完整 Excel 对象模型（VBA/Ribbon/图表/批注/性能调优）的深度自动化；Lite 覆盖"零安装 + 浏览器沙箱"的轻应用（Pyodide 依赖生态、≤2GB、无 TCP）。需要 VBA/Ribbon 或本机资源 → 场景 A/C；需要免安装分发 → 本文件。
-- **在 SKILL.md 中的位置**：场景 A 是第 4 章主线，加载项开发是场景 C 6.5 工作流；本文件是第 7 章场景 D 的附录——用途是**理解与选型**，不是替代 6.5 开发流程：Lite 应用的交付形态是"内嵌 Python 的工作簿"，不经场景 C 的 xlam/Ribbon/安装脚本体系。
+- **文档定位**：场景 A 是 Python 自动化主线，加载项开发是场景 C 6.5 工作流；本文件是场景 D 的附录——用途是**理解与选型**，不是替代 6.5 开发流程：Lite 应用的交付形态是"内嵌 Python 的工作簿"，不经场景 C 的 xlam/Ribbon/安装脚本体系。
 
 ### 1.5 源码探针：Lite 在 xlwings 包中的投影
 
-在 `xlwings-0.37.3/xlwings/` 源码中，Lite 并非独立实现一套对象模型，而是通过三种方式"投影"到既有架构上——理解这三处投影，就理解了 Lite 与桌面版的关系：
+在 `xlwings/xlwings/` 源码中，Lite 并非独立实现一套对象模型，而是通过三种方式"投影"到既有架构上——理解这三处投影，就理解了 Lite 与桌面版的关系：
 
-**① `BookAsync` 类型提示（`main.py` L1389-1405）——异步 API 的开关**
+**① `BookAsync` 类型提示（`main.py` L1424-1441）——异步 API 的开关**
 
 ```python
 class BookAsync(Book):
@@ -277,7 +277,7 @@ Pyodide（WebAssembly 版 Python 解释器，从 CDN 加载）
 
 ## 阶段三：核心开发工作流（官方入门组 → 进阶组）
 
-> 本阶段是 Lite 开发的主干，按 **lite.xlwings.org 官方教程的层次结构**推进：**入门组（3.1-3.3）**——自定义函数 → 自定义脚本 → Notebooks，从"单元格函数"到"整段脚本"再到"单元格式开发"，先验证最小闭环；**进阶组（3.4-3.8）**——依赖 → 数据库 → Web 请求 → 异步 API → 绘图，把应用接入真实数据与外部世界；**3.9 个人模块**收尾（官方归"分发/共享"语境，作为代码组织手段放在开发末端）。每小节统一为：官方文档要点（`xlwings-lite/` 对应篇）→ **源码验证**（`xlwings-0.37.3/` 实现位置），结论可追溯到实现，不凭文档印象。
+> 本阶段是 Lite 开发的主干，按 **lite.xlwings.org 官方教程的层次结构**推进：**入门组（3.1-3.3）**——自定义函数 → 自定义脚本 → Notebooks，从"单元格函数"到"整段脚本"再到"单元格式开发"，先验证最小闭环；**进阶组（3.4-3.8）**——依赖 → 数据库 → Web 请求 → 异步 API → 绘图，把应用接入真实数据与外部世界；**3.9 个人模块**收尾（官方归"分发/共享"语境，作为代码组织手段放在开发末端）。每小节统一为：官方文档要点（`xlwings-lite/` 对应篇）→ **源码验证**（`xlwings/` 实现位置），结论可追溯到实现，不凭文档印象。
 
 ### 3.1 自定义函数（Custom Functions）
 
@@ -430,7 +430,7 @@ def hello_with_script(name):
 2. **下载 SQLite 数据库文件**：从网络位置取 `.sqlite` 文件，浏览器内 WASM 版 SQLite 打开——**注意必须把 `sqlite3` 加进 `requirements.txt`**（Pyodide 内置模块并非默认加载）。
 3. **Supabase（托管 Postgres，含 PostgREST）**：免费层可用、可自托管；**当前 Python 包兼容性坑**——`supabase`/`postgrest` 包在 Lite 下有问题，官方建议用 `requests` 或 `aiohttp` **直连 PostgREST 接口**（**httpx 当前也有问题**；用 `aiohttp` 必须同时把 `ssl` 加进 `requirements.txt`）。
 
-**源码验证——`=SQL()` 内置扩展**（`xlwings-0.37.3/xlwings/ext/sql.py`，74 行，Lite 与桌面版共用）：公式内嵌的 SQLite 内存表查询——单元格区域即表（类型推断建表 → 值序列化 → 内存库 → 别名解析 → 查询返回，完整五步管线与 Excel 用法见 13 号 4.6 的 SQL 写法要点与下方代码）：
+**源码验证——`=SQL()` 内置扩展**（`xlwings/xlwings/ext/sql.py`，74 行，Lite 与桌面版共用）：公式内嵌的 SQLite 内存表查询——单元格区域即表（类型推断建表 → 值序列化 → 内存库 → 别名解析 → 查询返回，完整五步管线与 Excel 用法见 13 号 4.6 的 SQL 写法要点与下方代码）：
 
 ```python
 @func
@@ -473,7 +473,7 @@ Excel 用法：`=SQL("SELECT ...", ["alias1"], range1, ["alias2"], range2, ...)`
 - **`flush()`**：写值后立即可见——典型场景：写 A1 后在同一单元格/脚本内读它或读依赖单元格；print 后立即在 Output pane 看到输出；调用 `to_png()` 等写文件系统方法后在同一单元格/脚本内访问文件。自动 flush 仍发生在单元格/脚本结束时。
 - **`load()`**：单元格/脚本运行前 Lite 自动执行一次，一般无需手动；中途刷新用 `await book.load()` 或 `await mysheet.load()`（sheet 级只刷该 sheet，更高效）。异步 Book 上 `load()` **不含值**（值走 `get_value()`）；同步 Book 上 `load()` 含值，可 `load(values=False)` 排除。
 
-**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings-0.37.3/xlwings/main.py` L1389-1405 + `pro/udfs_officejs.py`）：
+**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings/xlwings/main.py` L1424-1441 + `pro/udfs_officejs.py`）：
 
 - `BookAsync` **运行时就是普通 `Book`**——类型提示只是信号：Lite 加载器看到该注解就**跳过整个工作簿的预加载**（`main.py` 注释原话："the annotation only signals xlwings Lite to skip loading the values of the entire book up front"）；
 - 引擎侧 `@script` 的 `lazy=` 参数已弃用，**统一由 `book: xw.BookAsync` 注解表达**（内部发 `"lazy"` wire 键）；**book 参数必须恰一个**（`_book_param_hint`），`BookAsync` 注解与 `lazy=False` 显式冲突 → 报错（注解优先）；
@@ -748,10 +748,10 @@ Lite 持续演进中，开发与分发时关注以下维度（具体版本号见
 ## 可配套阅读
 
 - `xlwings-lite/`（31 篇官方文档离线镜像 + README 索引 + 34 张插图）——本文件的逐阶段语义引用源，官方教程层次（入门/进阶/分发/自托管/参考）见 README"建议阅读顺序"；
-- `xlwings-0.37.3/xlwings/udfs.py`——`@func`/`@arg`/`@ret`/`@script` 装饰器实现（Lite 与桌面版同源，3.1/3.2 源码验证）；
-- `xlwings-0.37.3/xlwings/ext/`（sql.py + __init__.py）——`=SQL()` 扩展源码（3.5）；
-- `xlwings-0.37.3/xlwings/main.py`（BookAsync，L1389-1405）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings-0.37.3/docs/api/book_async.md`；
-- `xlwings-0.37.3/xlwings/__init__.py`（ObjectHandle/ObjectCacheMissError/WithScript）——对象句柄与函数后触发脚本（3.1/3.2）；
-- `xlwings-0.37.3/xlwings/pro/udfs_officejs.py`（streaming_callback、Lite 流式任务分支、_inject_value 懒加载注入）——officejs 引擎侧的 Lite 适配（引擎整体研读见 `references/16-xlwings-officejs.md`，Lite 侧解读见本文件 3.1/3.7）；
+- `xlwings/xlwings/udfs.py`——`@func`/`@arg`/`@ret`/`@script` 装饰器实现（Lite 与桌面版同源，3.1/3.2 源码验证）；
+- `xlwings/xlwings/ext/`（sql.py + __init__.py）——`=SQL()` 扩展源码（3.5）；
+- `xlwings/xlwings/main.py`（BookAsync，L1424-1441）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；
+- `xlwings/xlwings/__init__.py`（ObjectHandle/ObjectCacheMissError/WithScript）——对象句柄与函数后触发脚本（3.1/3.2）；
+- `xlwings/xlwings/pro/udfs_officejs.py`（streaming_callback、Lite 流式任务分支、_inject_value 懒加载注入）——officejs 引擎侧的 Lite 适配（引擎整体研读见 `references/16-xlwings-officejs.md`，Lite 侧解读见本文件 3.1/3.7）；
 - `examples/taxi-duckdb-main/`（taxi_local.xlsx + extracted/）——阶段七案例；
 - `references/13-scenario-d-source-code.md`（PRO 深度分析：许可证/四引擎/Reports/部署）与 `references/16-xlwings-officejs.md`（Office.js 引擎全链路，Lite 适配分支指针在其中）与 `references/14-xlwings-server-guidance.md`（xlwings Server 六块研读）——Lite 的 PRO/Server 兄弟专册。

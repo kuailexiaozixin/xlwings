@@ -160,6 +160,10 @@ try {
 5. **XLSTART 分发不需要任何注册表注册**（2026-09-05 补测）
 6. **门禁脚本内部 throw 会被同层容错 catch 吞掉**——门禁失败要检查返回码而非只看输出
 7. **对已部署插件的写盘操作必须避开用户 Excel 会话**（2026-09-05 事故实录）
+8. **中文/长路径下 UDF server（DLL 通道）报"拒绝访问"**（2026-09-17 Hermes 实战）：引擎经 `CreateProcessA` 启动 Python 并传命令行为 ANSI 拼接，路径含中文或过长时参数被破坏 → 接口对象创建失败或拒绝访问。规避：
+   - 用 **junction 纯 ASCII 别名**（`mklink /J D:\alias "中文长路径"`）作为 Python 模块/工作目录，配置表 PYTHONPATH 写别名
+   - 或缩短路径（移到盘符根下、减少层级）；**不要**尝试改引擎的 CreateProcess 调用（引擎行为固定，且 PRO 通道无源码可改）
+   - 直调验证（cmd 手动跑同款命令）成功但 Excel 内失败 → 优先怀疑 DLL 通道的 ANSI 拼接，按上法规避
 - **操作守则**：任何 COM 保存后必须回注 Ribbon（2026-09-05 实录）
 
 ## 五、安装与部署验证（6.5.10/11 门禁）
@@ -170,8 +174,8 @@ try {
 
 ## 六、调试技巧（官方导航）
 
-- `xlwings-0.37.3/docs/debugging.md`：UDF 断点（xw.serve）、日志
-- `xlwings-0.37.3/docs/troubleshooting.md`：官方常见问题
+- `xlwings/docs/debugging.md`：UDF 断点（xw.serve）、日志
+- `xlwings/docs/troubleshooting.md`：官方常见问题
 - `docs/troubleshooting.md`：本技能沉淀的坑点（发布流水线/COM/Ribbon）
 - `docs/troubleshooting-python.md`：Python/面板专项坑（WebView2 Runtime、端口、编码）
 

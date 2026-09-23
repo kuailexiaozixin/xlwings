@@ -1,6 +1,6 @@
-﻿# 场景 D：xlwings PRO 深度技术分析与源码扩展
+# 场景 D：xlwings PRO 深度技术分析与源码扩展
 
-> 本文件是 SKILL.md 第 7 章（场景 D）的**深度扩展资源**。SKILL.md 保留源码架构导航、子场景路由与核心索引；本文件聚焦 xlwings PRO 的深度技术分析（许可证机制、四种引擎原理、Reports 架构、部署机制）、**xlwings 核心源码研读（xlwingsdll 原生桥 + xlwings Python 包架构）**以及入门学习执行步骤与案例总览（社区版案例详展在场景 A/C references，本文件不重复）。**xlwings Lite（免费 Web 加载项）的独立参考手册见 `references/15-xlwings-lite-guidance.md`（原 1.6/4.5 已迁入并指针化）**。
+> 本文件是场景 D（源码学习与二次开发）的**深度扩展资源**。主文档保留源码架构导航、子场景路由与核心索引；本文件聚焦 xlwings PRO 的深度技术分析（许可证机制、四种引擎原理、Reports 架构、部署机制）、**xlwings 核心源码研读（xlwingsdll 原生桥 + xlwings Python 包架构）**以及入门学习执行步骤与案例总览（社区版案例详展在场景 A/C references，本文件不重复）。**xlwings Lite（免费 Web 加载项）的独立参考手册见 `references/15-xlwings-lite-guidance.md`（原 1.6/4.5 已迁入并指针化）**。
 
 ## 目录
 
@@ -35,7 +35,7 @@
 
 ## 一、xlwings PRO 深度技术分析
 
-xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源码位于 `xlwings-0.37.3/xlwings/pro/`。所有 PRO 模块在导入时调用 `LicenseHandler.validate_license("pro")`，无有效许可抛 `xlwings.LicenseError`。
+xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源码位于 `xlwings/xlwings/pro/`。所有 PRO 模块在导入时调用 `LicenseHandler.validate_license("pro")`，无有效许可抛 `xlwings.LicenseError`。
 
 ### 1.1 许可证机制
 
@@ -61,7 +61,7 @@ xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），源�
 
 ### 1.2 四种引擎深度分析与数据通道选型
 
-xlwings 0.37.3 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book()` 的连接方式与能力边界：
+xlwings 0.37.4 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book()` 的连接方式与能力边界：
 
 | 引擎 | 许可 | 平台 | 实现文件 | 核心原理 |
 |------|------|------|---------|---------|
@@ -97,7 +97,7 @@ xlwings 0.37.3 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 #### 1.2.3 remote 引擎（xlwings Server）
 
-- **实现**：`pro/_xlremote.py`（4173 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
+- **实现**：`pro/_xlremote.py`（4814 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
 - **细节去向（单点原则）**：客户端"如何连 Server"的完整机制（JSON 动作协议、lazy load、计算模式映射、颜色规范化、版本校验、对象覆盖）已迁移至 `references/14-xlwings-server-guidance.md` 阶段一 1.6，本处不再展开
 - **对比要点**：与 excel/calamine/officejs 三引擎并列，属"服务端无 Excel 环境、Linux 部署、Google Sheets 支持"通道
 
@@ -111,7 +111,7 @@ xlwings 0.37.3 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 ##### 1.2.4.1 `_xlcalamine.py` 引擎层深度研读（Python 适配层）
 
-`pro/_xlcalamine.py`（536 行）是 calamine 引擎的 **Python 侧适配层**：不直接碰 Rust，而是继承 `base_classes` 的对象骨架，把 `xlwingslib`（Rust pyo3 绑定）的四个底层函数包装成完整的 xlwings 对象 API（Apps/App/Book/Sheets/Sheet/Range/Names/Name），实现"免 Excel 读文件但高层 API 不变"。
+`pro/_xlcalamine.py`（561 行）是 calamine 引擎的 **Python 侧适配层**：不直接碰 Rust，而是继承 `base_classes` 的对象骨架，把 `xlwingslib`（Rust pyo3 绑定）的四个底层函数包装成完整的 xlwings 对象 API（Apps/App/Book/Sheets/Sheet/Range/Names/Name），实现"免 Excel 读文件但高层 API 不变"。
 
 **引擎身份与值归一化钩子**
 - `Engine` 单例（模块尾 `engine = Engine()`）：`name="calamine"`、`type="reader"`，暴露 `apps`；`App.engine` 返回该全局实例——应用层 `xw.App(engine="calamine")` 即路由到这里。
@@ -155,7 +155,7 @@ xlwings 0.37.3 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 底层 Rust 层见 2.3.2 `src/`（`lib.rs`：`CellValue` 枚举逐类转 Python 对象、`get_values(used_range)` 读区域、`CalamineError` → `XlwingsError` 透传）。
 
 #### 1.2.5 officejs 引擎（Web 加载项）
-**定位**：`pro/_xlofficejs.py`（160 行，值转换层）+ `pro/udfs_officejs.py`（1255 行，UDF/脚本全链路），基于 Office.js API 的 Excel Web 加载项通道——**Server 与 Lite 共享的语义内核**。
+**定位**：`pro/_xlofficejs.py`（160 行，值转换层）+ `pro/udfs_officejs.py`（1254 行，UDF/脚本全链路），基于 Office.js API 的 Excel Web 加载项通道——**Server 与 Lite 共享的语义内核**。
 - **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开；与桌面 UDF（2.2.2）同源异路
 - **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开
 
@@ -248,7 +248,7 @@ Reports 是 xlwings PRO 的核心增值功能，实现"Excel 模板 + 结构化�
 **与 1.2.3 的关系**：1.2.3 的客户端侧 remote 引擎细节（`pro/_xlremote.py`，如何连 Server）已一并迁移至 14 号手册阶段一 1.6；14 号手册其余章节是 Server 服务端如何工作。
 ### 1.8 Office.js 引擎（指针，详见 16 号文档）
 
-**定位**：`xlwings/pro/_xlofficejs.py`（160 行）+ `xlwings/pro/udfs_officejs.py`（1255 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**——remote 类型引擎，走 socket.io 推流（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）。
+**定位**：`xlwings/pro/_xlofficejs.py`（160 行）+ `xlwings/pro/udfs_officejs.py`（1254 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**——remote 类型引擎，走 socket.io 推流（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）。
 
 **要点**（完整源码研读 + 官方教程对照 + 工作流编排见 `references/16-xlwings-officejs.md`）：
 
@@ -278,6 +278,8 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **对构建应用系统的借鉴**：原生桥 DLL 的"**导出面最小化 + 配置驱动进程生命周期 + 句柄复用**"模式——VBA 侧只暴露 4 个函数，复杂逻辑全在 Python 侧；数组维度/转置在原生层完成，避免 COM 往返；Job 对象挂接子进程，父进程退出自动清理。
 
+**故障提示（2026-09-17 实战）**：`CreateProcessA` 以 ANSI 拼接命令行，**中文/长路径会破坏启动参数**——症状为 Excel 内 UDF server 报"拒绝访问"而 cmd 直调成功。规避：用 junction 纯 ASCII 别名作为模块/工作目录（`mklink /J D:\alias "中文长路径"`），勿尝试改引擎调用（引擎行为固定）。详见 `references/09-testing-debugging-guidance.md` 四·8。
+
 ### 2.2 xlwings Python 包核心架构
 
 **公开 API**（`__init__.py`，13KB）：`xw.App`/`Book`/`Sheet`/`Range`/`Chart`/`Shape`/`Name`/`Table` 等对象、`xw.func`/`xw.sub`/`xw.arg`/`xw.ret`/`xw.script` 装饰器、`xw.Book.caller()`（UDF/脚本内定位调用方工作簿）、`xw.view`（交互查看）。动态导入平台层（Windows `_xlwindows` / macOS `_xlmac`）。
@@ -300,7 +302,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **UDF 系统**（`udfs.py`，29KB）：`@xw.func`（类别/异步/调用链/自动转置）、`@xw.sub`、`@xw.ret`（返回值转换）、`@xw.arg`（参数转换）；`get_udf_module`/`call_udf`（**按工作簿加载 UDF 模块并执行**）；`generate_vba_wrapper`（**自动生成 VBA 包装代码**——`import_udfs` 把 Python 函数注入 Excel 为可调 UDF）；`ComRange`（UDF 内的 Range 参数包装）；`has_dynamic_array`（动态数组检测）。**源码级研读**（装饰器/签名、ComRange 跨线程、call_udf 运行时、VBA 包装器生成、import_udfs 注入）见 **2.2.2**。
 
-**平台适配层**：Windows `_xlwindows.py`（89KB，pywin32 COM 实现，见主技能 §2.1/§7 引用）+ `_win32patch.py`（上游 COM 行为补丁）；macOS `_xlmac.py`（102KB）+ `mac_dict.py`（AppleScript 字典映射，258KB）+ `xlwings-dev.applescript`。平台差异汇总见 `xlwings-0.37.3/docs/missing_features.md`。
+**平台适配层**：Windows `_xlwindows.py`（89KB，pywin32 COM 实现，见场景 A 章节与场景 D 主干导航）+ `_win32patch.py`（上游 COM 行为补丁）；macOS `_xlmac.py`（102KB）+ `mac_dict.py`（AppleScript 字典映射，258KB）+ `xlwings-dev.applescript`。平台差异汇总见 `xlwings/docs/missing_features.md`。
 
 **对构建应用系统的借鉴**：COM 服务器"**最小方法集覆盖全部对象操作**"设计（27 个方法即完成 Python 任意对象的操纵）；转换器"**读写分管道 + 可插拔 Converter + 注册表**"模式（新增类型只需 Converter 子类 + 注册）；UDF"**Python 定义 → 自动生成 VBA 包装 → 注入工作簿**"链路。
 
@@ -424,7 +426,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 #### 2.3.2 src/（Rust calamine 只读引擎：xlwingslib）
 
-`src/lib.rs`（9.4KB）+ `Cargo.toml` 构成 calamine 只读引擎的 **Rust 实现**，经 maturin 编译为 Python 扩展模块 `xlwings.xlwingslib`，由 PRO `pro/_xlcalamine.py`（1.2.4）`from xlwings import xlwingslib` 加载调用。
+`src/lib.rs`（9.6KB）+ `Cargo.toml` 构成 calamine 只读引擎的 **Rust 实现**，经 maturin 编译为 Python 扩展模块 `xlwings.xlwingslib`，由 PRO `pro/_xlcalamine.py`（1.2.4）`from xlwings import xlwingslib` 加载调用。
 
 **Cargo.toml 工程定义**：
 - `[package] name="xlwings"`、`version="0.0.0"`（版本号不参与发布，走 pyproject `dynamic=["version"]`）、`edition=2021`、`publish=false`
@@ -471,7 +473,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 - 引擎与专项：`test_remote_*.py`（3 个）/`test_custom_functions_officejs.py`/`test_custom_scripts_call.py`/`test_object_handles.py`（22KB）/`test_caller.py`/`test_e2e.py`/`test_jsnull.py`/`test_markdown.py`/`test_fileformats.py`/`test_streaming_*.py`（2 个）/`test_async_load.py`；
 - 数据资产：`cell_errors.xlsx`/`tables.xlsx`/`test book.xlsx`/`macro book.xlsm`/`sample_picture.png`/`pandas_excel_files_quick_test.py`。
 
-**构建系统与开发文档**：Python 包 `pyproject.toml`/`setup.py`/`MANIFEST.in`/`Makefile`；C++ DLL `xlwingsdll/`（`xlwings.sln`/`xlwingsdll.vcxproj`）；Rust `Cargo.toml`。路线图 `plans/issue-shortlist.md` 与 `plans/v1.0-breaking-changes.md`；开发者指南 `DEVELOPER_GUIDE.md`；版本历史 `xlwings-0.37.3/docs/whatsnew.md`。
+**构建系统与开发文档**：Python 包 `pyproject.toml`/`setup.py`/`MANIFEST.in`/`Makefile`；C++ DLL `xlwingsdll/`（`xlwings.sln`/`xlwingsdll.vcxproj`）；Rust `Cargo.toml`。路线图 `plans/issue-shortlist.md` 与 `plans/v1.0-breaking-changes.md`；开发者指南 `DEVELOPER_GUIDE.md`；版本历史 `xlwings/docs/whatsnew.md`。
 
 ---
 
@@ -484,7 +486,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 #### 3.1.1 仓库概览与学习路径
 
-- **定位**：xlwings 官方 2018 年 YouTube 入门视频课程（"Python for Excel with xlwings"）配套 notebook 仓库，共 8 个目录（`0 - Intro` 至 `7 - Part7`）+ 7 个教程 notebook + 配套数据文件。README 明确标注课程偏旧（outdated）——**适合理解基础概念与经典模式，具体语法以 `xlwings-0.37.3/docs/` 与官方最新文档为准**。
+- **定位**：xlwings 官方 2018 年 YouTube 入门视频课程（"Python for Excel with xlwings"）配套 notebook 仓库，共 8 个目录（`0 - Intro` 至 `7 - Part7`）+ 7 个教程 notebook + 配套数据文件。README 明确标注课程偏旧（outdated）——**适合理解基础概念与经典模式，具体语法以 `xlwings/docs/` 与官方最新文档为准**。
 - **目录结构**：
   - `0 - Intro/`：`Instructions.md`（学习路径建议）+ `Language and Regional Settings.md`（非英语 Excel 差异处理）
   - `1 - Part1/`：Tutorial 1 The Basics（+ `table_objects.xlsx`/`timeseries.xlsx`/`img` 架构图）
@@ -652,7 +654,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 | `excel-automated-testing-master/` | 社区版 | 11-scenario-a 七章（自动化测试） |
 | `Excel_udf_itus-main/` | 社区版 | 07-udf 六章（UDF 完整工程）；SQLite 数据服务模式见下方 4.6 |
 
-**源码包内置案例**（`xlwings-0.37.3/examples/`，5 项 + `build_lite.py`，**全部社区版 BSD**，不依赖 PRO/Server）：
+**源码包内置案例**（`xlwings/examples/`，5 项 + `build_lite.py`，**全部社区版 BSD**，不依赖 PRO/Server）：
 
 | 案例 | 用途 | 引用位置 |
 |------|------|---------|
@@ -834,6 +836,6 @@ duckdb.sql("COPY (SELECT * FROM read_xlsx('data.xlsx')) TO 'out.xlsx' WITH (FORM
 ---
 ## 可配套阅读
 
-- `xlwings-0.37.3/docs/pro/`（PRO 官方文档：license_key.md、reader.md、release.md、reports/）
-- `xlwings-0.37.3/xlwings/pro/`（PRO 源码）
+- `xlwings/docs/pro/`（PRO 官方文档：license_key.md、reader.md、release.md、reports/）
+- `xlwings/xlwings/pro/`（PRO 源码）
 - `examples/ReadMe.md`（各实战项目的详细说明）

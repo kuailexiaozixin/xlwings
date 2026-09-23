@@ -1,6 +1,6 @@
 ﻿# 部署与交付工作流（6.5.10/6.5.11/6.5.12/6.5.13 扩展）
 
-> 本文件是 SKILL.md 6.5.10（部署与交付物整备）、6.5.11（安装）、6.5.12（安装后集成验证）、6.5.13（分发）的扩展资源，把四个步骤编排为可执行工作流。
+> 本文件是工作流 6.5.10（部署与交付物整备）、6.5.11（安装）、6.5.12（安装后集成验证）、6.5.13（分发）的扩展资源，把四个步骤编排为可执行工作流。
 > **主线 = 自研 release_tool 便携运行时分发**（无需 PRO 许可证）。官方 xlwings PRO 部署机制（code embed / release）仅作附录 A 对照研读——理解其设计、借鉴其细节，但开发加载项一律按自研 release_tool 实施，不采用 PRO 机制。
 
 ## 目录
@@ -32,7 +32,7 @@
 **路由判据**：
 - 开发加载项 / 对外分发 / 目标机无 Python → 走本工作流（自研 release_tool）
 - 想理解官方 PRO 机制设计（LicenseHandler / Deploy Key / RELEASE_NO_ADDIN / 嵌入运行时）→ 读附录 A，仅借鉴不采用
-- PRO 机制依赖 PRO 许可证（无许可调用抛 LicenseError），本技能不部署运行 PRO（SKILL.md 7.4 声明）
+- PRO 机制依赖 PRO 许可证（无许可调用抛 LicenseError），本技能不部署运行 PRO（见场景 D 主干规则）
 
 ## 阶段一 分发方式选型
 
@@ -158,7 +158,7 @@ dist_release/
 
 xlwings 加载项通过 `xlwings.conf`（PROJECT_NAME 常量决定前缀）配置 Python 解释器、模块路径等。配置表是分发后最容易出问题的环节。
 
-**配置表键（权威见 `xlwings-0.37.3/docs/addin.md`）**：
+**配置表键（权威见 `xlwings/docs/addin.md`）**：
 
 | 键 | 作用 | 分发时注意 |
 |----|------|-----------|
@@ -250,7 +250,7 @@ xlwings 加载项通过 `xlwings.conf`（PROJECT_NAME 常量决定前缀）配�
 
 > **定位**：以下内容迁移自 `references/13-scenario-d-source-code.md` 1.4 节，源码级研读官方 PRO 部署机制（code embed / release）。
 > **用途**：仅用于理解官方机制的设计（LicenseHandler 许可模型、Deploy Key、RELEASE_NO_ADDIN 独立运行、COM 保存坑），在阶段三/四的实施中**借鉴其设计、不采用其机制**——开发加载项部署走自研 release_tool（正文主线），不依赖 PRO 许可证。
-> 官方文档：`xlwings-0.37.3/docs/pro/release.md`（PRO release 官方教程）、`docs/deployment.md`（部署总览）、`docs/addin.md`（配置表权威）。
+> 官方文档：`xlwings/docs/pro/release.md`（PRO release 官方教程）、`docs/deployment.md`（部署总览）、`docs/addin.md`（配置表权威）。
 
 ### A.1 code embed 技术原理（官方源码研读）
 
@@ -390,7 +390,7 @@ End If
 
 ## 附录 B 官方文档映射
 
-| 官方文档（`xlwings-0.37.3/docs/`） | 内容 | 对应阶段 |
+| 官方文档（`xlwings/docs/`） | 内容 | 对应阶段 |
 |------|------|---------|
 | `addin.md` | 配置表全部键权威、PROJECT_NAME 语义 | 阶段四 |
 | `deployment.md` | 官方部署选项（ZIP / RunFrozenPython / 代码嵌入 / 发布） | 阶段一 / 附录 A |
@@ -403,4 +403,4 @@ End If
 - `references/13-scenario-d-source-code.md` 1.4（原 PRO 部署机制详研，已压缩为指针）
 - `references/09-testing-debugging-guidance.md`（测试/调试/真机验证基础）
 - `references/06-ribbon-guidance.md`（Ribbon 注入与回调签名）
-- `xlwings-0.37.3/docs/addin.md`、`docs/deployment.md`、`docs/pro/release.md`
+- `xlwings/docs/addin.md`、`docs/deployment.md`、`docs/pro/release.md`

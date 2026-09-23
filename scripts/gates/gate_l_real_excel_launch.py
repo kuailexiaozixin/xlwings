@@ -18,6 +18,7 @@ import argparse
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -31,7 +32,7 @@ def _excel_running():
 
 
 def _kill_all_excel():
-    """终止所有 Excel 进程（--force-kill 时使用）"""
+    """终止所有 Excel 进程（--force-kill 时使用）；按 PID 精确操作，禁止 /IM 裸杀"""
     try:
         import psutil
         killed = []
@@ -48,18 +49,104 @@ def _kill_all_excel():
             time.sleep(2)
         return True
     except ImportError:
-        # psutil 不可用时回退到 taskkill
+        # psutil 不可用时回退：tasklist 解析 PID → 按 PID 终止（禁止按映像名全局裸杀，防误杀用户正在工作的 Excel）
         try:
-            subprocess.run(['taskkill', '/F', '/IM', 'EXCEL.EXE'],
-                           capture_output=True, timeout=10)
-            subprocess.run(['taskkill', '/F', '/IM', 'ET.EXE'],
-                           capture_output=True, timeout=10)
+            out = subprocess.run(
+                ['tasklist', '/FO', 'CSV', '/FI', 'IMAGENAME eq EXCEL.EXE'],
+                capture_output=True, text=True, timeout=10).stdout
+            pids = []
+            for line in out.splitlines()[1:]:
+                parts = line.split('","')
+                if len(parts) > 1:
+                    pid = parts[1].strip('"')
+                    if pid.isdigit():
+                        pids.append(pid)
+            for pid in pids:
+                subprocess.run(['taskkill', '/PID', pid, '/F'],
+                               capture_output=True, timeout=10)
+            if pids:
+                print(f'  --force-kill: 已按 PID 终止 {len(pids)} 个 Excel 进程: {pids}')
             time.sleep(2)
-            print('  --force-kill: 已通过 taskkill 终止 Excel 进程')
             return True
         except Exception as e:
             print(f'  --force-kill 失败: {e}')
             return False
+
+
+def _verify_interpreter_chain(interp):
+    """验证配置表 Interpreter_Win 指向的解释器在加载项链可导入 xlwings。
+
+    背景（2026-09-17 实测）：uv venv 在 Excel/cmd 链中可能不激活——
+    显式调用 venv python.exe，但 PYTHONHOME 指向 base 时 PREFIX 回落到 base，
+    venv site-packages 不进 sys.path → 'No module named xlwings'。
+    本子步在 Excel 内报错之前用同款命令行链拦截。返回 True/False。
+    """
+    if not interp:
+        print('  [跳过] 未提供 --interpreter，解释器链验证跳过（提供配置表 Interpreter_Win 值可启用）')
+        return True
+    if not os.path.exists(interp):
+        print(f'  [FAIL] --interpreter 路径不存在: {interp}')
+        return False
+    probe_src = (
+        "import sys, site\n"
+        "print('EXE=' + sys.executable)\n"
+        "print('PREFIX=' + sys.prefix)\n"
+        "print('BASE=' + sys.base_prefix)\n"
+        "print('SITE=' + ','.join(site.getsitepackages()))\n"
+        "try:\n"
+        "    import xlwings\n"
+        "    print('XLWINGS=' + xlwings.__version__)\n"
+        "except Exception as e:\n"
+        "    print('XLWINGS_ERR=' + repr(e))\n"
+    )
+    # 探针代码写临时文件再执行：cmd/bat 对 -c 内联长代码的引号重解析会破坏参数
+    #（2026-09-17 实测），传文件路径最可靠
+    fd, tmp = tempfile.mkstemp(suffix='.py', prefix='xlwings_chain_probe_')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            f.write(probe_src)
+        if interp.lower().endswith('.exe'):
+            r = subprocess.run([interp, tmp], capture_output=True,
+                               text=True, timeout=60, encoding='utf-8', errors='replace')
+        else:
+            # .bat 包装解释器：经 cmd 执行（bat 不能直接 CreateProcess）。
+            # call、bat 路径、脚本路径必须分开传参——subprocess 的 list2cmdline
+            # 会为含空格路径自动加引号；若拼成单个字符串，cmd 会在首个空格截断
+            # 路径（2026-09-17 三组实验实测结论）。
+            r = subprocess.run(
+                ['cmd.exe', '/d', '/s', '/c', 'call', interp, tmp],
+                capture_output=True, text=True, timeout=60,
+                encoding='utf-8', errors='replace')
+    except Exception as exc:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        print(f'  [FAIL] 解释器链验证执行异常: {exc}')
+        return False
+    try:
+        os.unlink(tmp)
+    except OSError:
+        pass
+    out = (r.stdout or '') + '\n' + (r.stderr or '')
+    for line in out.splitlines():
+        if line.startswith(('EXE=', 'PREFIX=', 'BASE=', 'SITE=', 'XLWINGS=')):
+            print(f'    {line}')
+    if 'XLWINGS=' in out and 'XLWINGS_ERR' not in out:
+        print('  [PASS] 解释器链可导入 xlwings')
+        return True
+    print('  [FAIL] 解释器链无法导入 xlwings')
+    if 'PREFIX=' in out and 'BASE=' in out:
+        import re
+        pm = re.search(r'PREFIX=(\S+)', out)
+        bm = re.search(r'BASE=(\S+)', out)
+        if pm and bm and pm.group(1) == bm.group(1):
+            print('    判据: PREFIX == BASE → venv 未生效（site-packages 不进 sys.path）')
+            print('    修复: 用 bat 包装解释器（set PYTHONHOME=<base> + set PYTHONPATH=<模块目录> + 调 base 解释器），'
+                  '见 references/04-python-guidance.md 第五节')
+        else:
+            print('    判据: PREFIX != BASE → venv 正常，需在 venv 内补装依赖或核对 PYTHONPATH')
+    return False
 
 
 def _find_excel_exe():
@@ -97,13 +184,21 @@ def main():
     parser.add_argument('--xlam', required=True, help='xlam 文件名')
     parser.add_argument('--addin-name', default='', help='项目名关键词（模糊匹配工作簿名，可选）')
     parser.add_argument('--runpython', action='store_true', help='额外执行一次 RunPython 链路口保活')
-    parser.add_argument('--force-kill', action='store_true', help='检测到 Excel 实例时自动终止所有残留进程后继续验证')
+    parser.add_argument('--force-kill', action='store_true', help='检测到 Excel 实例时自动终止残留进程后继续验证（按 PID，不 /IM 裸杀）')
+    parser.add_argument('--interpreter', default='', help='配置表 Interpreter_Win 的完整路径（python.exe 或 .bat 包装），验证加载项链可导入 xlwings')
     args = parser.parse_args()
 
     xlam_path = os.path.join(args.xlstart, args.xlam)
     if not os.path.exists(xlam_path):
         print(f'门禁 L 失败: XLSTART 中未找到 {xlam_path}')
         sys.exit(1)
+
+    # 子步 0：解释器链验证（在真实 Excel 报错之前拦截 'No module named xlwings'）
+    if args.interpreter:
+        print('  子步 0——解释器链验证...')
+        if not _verify_interpreter_chain(args.interpreter):
+            print('门禁 L 失败: 解释器链无法导入 xlwings（见上方修复指引）')
+            sys.exit(1)
 
     if _excel_running():
         if args.force_kill:

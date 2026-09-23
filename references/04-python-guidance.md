@@ -1,8 +1,8 @@
 ﻿# Python 构建指南（6.5.4 扩展与导航）
 
-> 本文件是 SKILL.md 6.5.4（自足模板：双形态×双入口、装饰器模板、分层铁律、业务核心规范、编码铁律、三阶段门禁）的**扩展资源**——官方文档导航 + 官方示例导航 + 进阶主题提炼。规则与模板以 6.5.4 正文为准，本文件不重复。
+> 本文件是工作流 6.5.4（自足模板：双形态×双入口、装饰器模板、分层铁律、业务核心规范、编码铁律、三阶段门禁）的**扩展资源**——官方文档导航 + 官方示例导航 + 进阶主题提炼。规则与模板以 6.5.4 正文为准，本文件不重复。
 
-## 一、官方文档导航（`xlwings-0.37.3/docs/`，Python 侧权威）
+## 一、官方文档导航（`xlwings/docs/`，Python 侧权威）
 
 | 文档 | 一句话要点 | 何时读 |
 |------|-----------|--------|
@@ -131,5 +131,72 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 ```
+
+## 五、Excel 启动链解释器身份与 venv 限制（实战铁证）
+
+**适用**：加载项/RunPython/UDF 在真实 Excel 中报 `ModuleNotFoundError: No module named 'xlwings'`、`No module named '<业务模块>'`、或解释器版本与预期不符时的排查与修复。
+
+### 5.1 现象与根因链
+
+- **现象**：开发环境 `python -c "import xlwings"` 正常，但 Excel Ribbon 按钮 / UDF 报无模块
+- **根因链**（按实测顺序）：
+  1. Excel 进程环境存在 `HKCU\Environment` 级 `PYTHONHOME`/`PYTHONPATH`，指向另一份 Python（历史安装残留）——**劫持所有子进程解释器身份**
+  2. 引擎（xlwingsdll / VBA RunPython）按配置表 `Interpreter_Win` 启动解释器，子进程继承 Excel 进程环境——即使配置表写的是 venv 的 `python.exe` 绝对路径
+  3. **uv venv 在 Excel 启动链中无法激活**：Python 解释器身份由 EXE 决定，但当 `PYTHONHOME` 指向 base 解释器时，venv 的 site-packages **不进入 sys.path**——`sys.prefix` 回落到 base，venv 形同虚设
+
+### 5.2 判定命令（先诊断，再修复）
+
+```bat
+:: 在 Excel 同款环境链中验证解释器身份（bat 显式调用目标 python.exe）
+@echo off
+"<配置表 Interpreter_Win 的完整路径>" -c "import sys, site; print('EXE=', sys.executable); print('PREFIX=', sys.prefix); print('BASE=', sys.base_prefix); print('SITE=', site.getsitepackages()); import xlwings; print('xlwings', xlwings.__version__)"
+```
+
+- `PREFIX == BASE` → **venv 未生效**（site-packages 不在搜索路径）→ 不能依赖 venv，见 5.3
+- `PREFIX != BASE` 但仍无 xlwings → venv 激活正常，缺依赖 → 在 venv 内 `pip install xlwings==<版本>`
+- 报 `sys` 模块错误 / 版本错乱 → PYTHONHOME 劫持 → 见 5.3 方案一
+
+### 5.3 修复方案（按可靠度排序）
+
+**方案一：bat 包装解释器（最可靠，推荐）**。配置表 `Interpreter_Win` 指向一个 `.bat`，bat 内显式钉死环境再调 base 解释器：
+
+```bat
+@echo off
+set PYTHONHOME=D:\Python\cpython-3.13.14-windows-x86_64-none
+set PYTHONPATH=D:\hermes
+"D:\Python\cpython-3.13.14-windows-x86_64-none\python.exe" %*
+```
+
+- **必须** `set PYTHONHOME` 覆盖被劫持的值（清空 `set PYTHONHOME=` 亦可，取决于 base 解释器是否依赖它）
+- base 解释器需自带 `xlwings`（或 PYTHONPATH 指向技能内 `xlwings/`）
+- bat 文件要求：**纯 ASCII + CRLF 行尾**（中文路径/UTF-8 内容在 cmd 重解析下会被破坏）；路径含空格时整行加引号
+- 配置表值示例：`Interpreter_Win = C:\...\.venv\Scripts\hermes_python.bat`（bat 自身路径可以含中文，bat 内部命令用纯 ASCII）
+
+**方案二：junction 纯 ASCII 别名传 PYTHONPATH**。中文/长路径在 cmd 引号重解析与 GBK 代码页下会丢参数（实测 `prepare_sys_path` 参数被破坏），用 junction 建立纯 ASCII 短路径：
+
+```bat
+mklink /J D:\hermes "D:\含中文的长路径\项目工作目录"
+:: 之后 PYTHONPATH 一律写 D:\hermes，模块内代码路径不受影响（物理路径未变）
+```
+
+junction 删除：`rmdir D:\hermes`（不是 rd /s，junction 不能递归删）
+
+**方案三：不用 venv，直接 base 解释器 + 技能源码注入**（开发机场景）：
+
+```python
+# 入口模块顶部
+import sys
+sys.path.insert(0, r'<技能根目录>\xlwings')  # 版本一致 + 可调试
+```
+
+### 5.4 环境变量劫持排查
+
+```bat
+reg query HKCU\Environment   :: 查 PYTHONHOME / PYTHONPATH / PATH 残留
+echo %PYTHONHOME%            :: cmd 当前值
+```
+
+- 存在 `PYTHONHOME` 指向非预期解释器 → 两种处理：① 修正该用户级变量（影响面大，需用户确认）；② 用方案一 bat 在加载项链内覆盖（**推荐，自包含不污染系统**）
+- VBA 侧 Auto_Open 可临时清空 `PYTHONHOME`/`PYTHONPATH` 再启动引擎（白标加载项常见做法），但引擎子进程环境仍以 Excel 进程为准，最稳的还是 bat 包装
 
 

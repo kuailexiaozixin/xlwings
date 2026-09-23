@@ -10,6 +10,7 @@
 - `docs/` — 补充文档
 - `templates/` — 工程模板
 - `dist/` — 构建产物
+- `manifest.json` / `SYNCLOG.md` — 第三方上游快照的跟踪清单（`ref` + `pinned_sha`）与同步历史，配合 `scripts/sync_upstream.py` 使用
 
 ## 第三方资源（占位说明）
 
@@ -19,7 +20,7 @@
 |---|---|
 | `examples/` | 11 个官方/第三方示例仓库（见 `examples/ReadMe.md`） |
 | `MCP-Server/` | 4 个 xlwings MCP 服务器实现（见 `MCP-Server/README.md`） |
-| `xlwings-0.37.3/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
+| `xlwings/` | <https://github.com/xlwings/xlwings> · <https://www.xlwings.org/> |
 | `xlwings-server/` | <https://github.com/xlwings/xlwings-server> · <https://server.xlwings.org/> |
 | `xlwings-lite/` | <https://github.com/xlwings/xlwings-lite> · <https://docs.xlwings.org/en/latest/lite.html> |
 
