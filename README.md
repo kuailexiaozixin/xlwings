@@ -1,6 +1,6 @@
 # xlwings（xlwings 开发技能）
 
-本仓库为豆包/VBA 技能体系中 xlwings 子技能的开源发布：使用 Python（xlwings）开发 Excel 应用的全生命周期技能——场景 A（Python 自动化操作 Excel）、场景 C（UDF 自定义函数）、场景 D（源码研读与工程借鉴），含构建、测试、部署与交付门禁。
+本仓库为 xlwings 开发技能的开源发布：使用 Python（xlwings）开发 Excel 应用的全生命周期技能——场景 A（Python 自动化操作 Excel）、场景 C（UDF 自定义函数）、场景 D（源码研读与工程借鉴），含构建、测试、部署与交付门禁。
 
 技能按 Agent Skills 规范以虚拟树结构发布：`skills/xlwings/` 为一个完整技能。
 
