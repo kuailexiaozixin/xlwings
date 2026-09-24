@@ -1,0 +1,114 @@
+Option Explicit
+
+' 说明：
+' 1. 当前蓝图用于演示"Ribbon 入口 -> UserForm 收集参数 -> 写入结果表"的完整链路。
+' 2. 第一个按钮打开窗体，适合普通用户手工录入。
+' 3. 第二个按钮直接调用业务过程，便于 COM 冒烟测试。
+' 4. 布局与窗体尺寸设计请继续参考 references/08-form-guidance.md。
+' 5. xlwings 桥接：RunPythonAction 演示 VBA -> Python 的调用形态；
+'    Python 侧代码写入 quickstart 生成的同名 .py（参考 src/python/bridge_example.py）。
+
+Private Const RESULT_SHEET_NAME As String = "录入结果"
+Private gDataEntryDialog As frmDataEntryWizard
+
+Public Sub __FIRST_CALLBACK_NAME__(ByVal control As IRibbonControl)
+    ShowDataEntryWizard
+End Sub
+
+Public Sub __SECOND_CALLBACK_NAME__(ByVal control As IRibbonControl)
+    RunSampleDataEntry
+End Sub
+
+' RunPython 桥接示例：把选中数据交给 Python 处理（演示混合形态）
+Public Sub RunPythonAction(ByVal control As IRibbonControl)
+    RunPython "import __PROJECT_NAME__; __PROJECT_NAME__.python_action()"
+End Sub
+
+Public Sub ShowDataEntryWizard()
+    Set gDataEntryDialog = New frmDataEntryWizard
+    gDataEntryDialog.Show vbModeless
+    DoEvents
+    gDataEntryDialog.ApplyPostShowSizeFromHost
+    DoEvents
+End Sub
+
+Public Sub RunSampleDataEntry()
+    SaveBusinessRecord "示例客户有限公司", "季度复盘项目", "李四", 98000, "中", True
+End Sub
+
+Public Sub SaveBusinessRecord( _
+    ByVal customerName As String, _
+    ByVal projectName As String, _
+    ByVal ownerName As String, _
+    ByVal amountValue As Double, _
+    ByVal priorityText As String, _
+    ByVal createSummary As Boolean)
+
+    Dim targetWb As Workbook
+    Dim targetWs As Worksheet
+    Dim nextRow As Long
+
+    On Error GoTo CleanFail
+
+    Set targetWb = GetTargetWorkbook()
+    If targetWb Is Nothing Then
+        Err.Raise vbObjectError + 3100, "SaveBusinessRecord", "当前没有可写入的工作簿。"
+    End If
+
+    Set targetWs = EnsureResultWorksheet(targetWb)
+    nextRow = targetWs.Cells(targetWs.Rows.Count, "A").End(xlUp).Row + 1
+    If nextRow < 2 Then nextRow = 2
+
+    targetWs.Cells(nextRow, 1).Value2 = customerName
+    targetWs.Cells(nextRow, 2).Value2 = projectName
+    targetWs.Cells(nextRow, 3).Value2 = ownerName
+    targetWs.Cells(nextRow, 4).Value2 = amountValue
+    targetWs.Cells(nextRow, 5).Value2 = priorityText
+    targetWs.Cells(nextRow, 6).Value2 = IIf(createSummary, "是", "否")
+    targetWs.Columns("D").NumberFormat = "#,##0.00"
+    targetWs.Columns("A:F").AutoFit
+    Exit Sub
+
+CleanFail:
+    Err.Raise Err.Number, "SaveBusinessRecord", Err.Description
+End Sub
+
+Public Sub SmokeSaveBusinessRecord()
+    SaveBusinessRecord "冒烟客户", "窗体蓝图验证", "测试负责人", 18800, "高", True
+End Sub
+
+Private Function GetTargetWorkbook() As Workbook
+    If Application.Workbooks.Count = 0 Then Exit Function
+
+    If Not Application.ActiveWorkbook Is Nothing Then
+        Set GetTargetWorkbook = Application.ActiveWorkbook
+        If LCase$(GetTargetWorkbook.Name) <> LCase$(ThisWorkbook.Name) Then
+            Exit Function
+        End If
+    End If
+
+    If Application.Workbooks.Count >= 2 Then
+        Set GetTargetWorkbook = Application.Workbooks(2)
+    End If
+End Function
+
+Private Function EnsureResultWorksheet(ByVal targetWb As Workbook) As Worksheet
+    Dim ws As Worksheet
+
+    On Error Resume Next
+    Set ws = targetWb.Worksheets(RESULT_SHEET_NAME)
+    On Error GoTo 0
+
+    If ws Is Nothing Then
+        Set ws = targetWb.Worksheets.Add(After:=targetWb.Worksheets(targetWb.Worksheets.Count))
+        ws.Name = RESULT_SHEET_NAME
+        ws.Range("A1:F1").Value = Array("客户名称", "项目名称", "负责人", "金额", "优先级", "生成汇总")
+        ws.Range("A1:F1").Font.Bold = True
+    End If
+
+    Set EnsureResultWorksheet = ws
+End Function
+
+Public Sub ReleaseDataEntryWizardReference()
+    Set gDataEntryDialog = Nothing
+End Sub

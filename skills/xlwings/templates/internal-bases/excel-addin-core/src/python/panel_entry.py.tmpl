@@ -1,0 +1,63 @@
+"""
+面板入口模板（pywebview + FastHTML 独立进程）
+- VBA 侧 RunPython 调用此模块的 open_panel()
+- 此模块启动 uvicorn 子进程 + pywebview 窗口
+- 面板与 Excel 通过 HTTP API 通信（127.0.0.1）
+"""
+import sys
+import os
+import subprocess
+import time
+import socket
+
+# sys.path 插入必须在所有 src 包 import 之前
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+import xlwings as xw
+
+
+def find_free_port():
+    """查找可用端口"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+
+def open_panel():
+    """RunPython 入口：启动面板子进程"""
+    port = find_free_port()
+    wb = xw.Book.caller()
+    workbook_name = wb.name
+
+    # 启动 uvicorn 子进程（必须 subprocess，禁止 threading）
+    proc = subprocess.Popen(
+        [sys.executable, '-m', 'uvicorn', 'src.app:app',
+         '--host', '127.0.0.1', '--port', str(port)],
+        cwd=PROJECT_ROOT,
+        creationflags=subprocess.CREATE_NO_WINDOW
+    )
+
+    # 等待服务启动
+    time.sleep(2)
+
+    # 启动 pywebview 窗口
+    try:
+        import webview
+        webview.create_window(
+            '面板标题',
+            f'http://127.0.0.1:{port}',
+            width=1000, height=700
+        )
+        webview.start()
+    finally:
+        proc.terminate()
+
+
+if __name__ == '__main__':
+    # 开发期直接运行（无需 Excel）
+    port = find_free_port()
+    print(f"Panel running at http://127.0.0.1:{port}")
+    import uvicorn
+    uvicorn.run('src.app:app', host='127.0.0.1', port=port)

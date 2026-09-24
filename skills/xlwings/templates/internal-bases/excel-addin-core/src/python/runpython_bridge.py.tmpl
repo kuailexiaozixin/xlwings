@@ -1,0 +1,41 @@
+"""
+RunPython 桥接示例模板
+- RunPython 不支持传参/返回值，参数通过单元格读写
+- VBA 侧：RunPython "import mymodule; mymodule.main()"
+- Python 侧：通过 xw.Book.caller() 获取调用工作簿
+"""
+import xlwings as xw
+
+
+def main():
+    """RunPython 入口函数（无参数、无返回值）"""
+    wb = xw.Book.caller()
+    sheet = wb.sheets[0]
+
+    # 从单元格读取参数
+    param1 = sheet['A1'].value
+    param2 = sheet['A2'].value
+
+    # 执行业务逻辑
+    result = do_something(param1, param2)
+
+    # 结果写回单元格
+    sheet['B1'].value = result
+
+
+def do_something(param1, param2):
+    """业务逻辑函数（可被 UDF 或 RunPython 复用）"""
+    return param1 + param2
+
+
+# 自测入口（开发期直接运行，无需 Excel）
+if __name__ == '__main__':
+    # 模拟调用环境
+    with xw.App(visible=False) as app:
+        wb = app.books.add()
+        wb.sheets[0]['A1'].value = 10
+        wb.sheets[0]['A2'].value = 20
+        wb.set_mock_caller()
+        main()
+        print(f"Result: {wb.sheets[0]['B1'].value}")
+        wb.close()

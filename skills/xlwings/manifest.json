@@ -1,0 +1,158 @@
+﻿{
+  "_comment": "xlwings 技能上游锁定清单。xlwings/、xlwings-server/、xlwings-lite/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；local_dir 是固定目录名，不含版本号，上游出新版不需要改路径。SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
+  "sources": [
+    {
+      "id": "xlwings",
+      "local_dir": "xlwings",
+      "repo": "xlwings/xlwings",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "f386203894760fc98129de679bd6f843c5f66c27",
+      "last_synced": "2026-09-24"
+    },
+    {
+      "id": "xlwings-server",
+      "local_dir": "xlwings-server",
+      "repo": "xlwings/xlwings-server",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "3b4450ba48a60ec73bc84c22d20880114cb545a1",
+      "last_synced": "2026-09-24"
+    },
+    {
+      "id": "mcp-server-xlwings",
+      "local_dir": "MCP-Server/geniuskey-mcp-server-xlwings-main/mcp-server-xlwings-main",
+      "repo": "geniuskey/mcp-server-xlwings",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "3869179904c6fab150d32dafdb87d7e9956285ef",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "xlwings-mcp-server",
+      "local_dir": "MCP-Server/hyunjae-labs-xlwings-mcp-server-main/xlwings-mcp-server-main",
+      "repo": "hyunjae-labs/xlwings-mcp-server",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "ff6b32c4f02cd2ecbc7051212ba62ac4ffaaf1de",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "excel-mcp",
+      "local_dir": "MCP-Server/prabodh-hydexcel-mcp-main/excel-mcp-main",
+      "repo": "ishayoyo/excel-mcp",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "0dfe4442f6d837f009f2e10abfa2d9d3d6035e60",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "Excel_MCP_Server",
+      "local_dir": "MCP-Server/vohoailinh90-Excel_MCP_Server-main/Excel_MCP_Server-main",
+      "repo": "vohoailinh90/Excel_MCP_Server",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "c03ef06dd2e876e4ad16d66834f19b726228fff1",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "Excel_udf_itus",
+      "local_dir": "examples/Excel_udf_itus-main/Excel_udf_itus-main",
+      "repo": "Kiran3002/Excel_udf_itus",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "222da195b0b096880a1408ec8a5aea52d28765a7",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "cross-check-reports",
+      "local_dir": "examples/cross-check-reports-main/cross-check-reports-main",
+      "repo": "xlwings/cross-check-reports",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "bcac62a0a255d049ecf3727e826b08ccfab62f34",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "excel-automated-testing",
+      "local_dir": "examples/excel-automated-testing-master/excel-automated-testing-master",
+      "repo": "xlwings/excel-automated-testing",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "f4b31d1c5e25e257388854f0e9b38e9bd3c4fdf9",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "python-for-excel-course",
+      "local_dir": "examples/python-for-excel-course-main/python-for-excel-course-main",
+      "repo": "xlwings/python-for-excel-course",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "acf6763638b69ee1523a7d98f97d5161d867353c",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "simulation-demo",
+      "local_dir": "examples/simulation-demo-master/simulation-demo-master",
+      "repo": "xlwings/simulation-demo",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "3473844dca8f4b1479e3707d65b25ee523fb64d0",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "static-excel-test",
+      "local_dir": "examples/static-excel-test-master/static-excel-test-master",
+      "repo": "xlwings/static-excel-test",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "f7f4877832efc08716c6be879878c9bedddfe589",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "taxi-duckdb",
+      "local_dir": "examples/taxi-duckdb-main/taxi-duckdb-main",
+      "repo": "xlwings/taxi-duckdb",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "a52af5b2acebc3e54f780ed289fba354fbd38a5c",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "xl-pq-handler",
+      "local_dir": "examples/xl-pq-handler-master/xl-pq-handler-master",
+      "repo": "tks18/xl-pq-handler",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "6b59988e72529b6a582d59b5b96a4932fb397208",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "xlwings-demo",
+      "local_dir": "examples/xlwings-demo-master/xlwings-demo-master",
+      "repo": "xlwings/xlwings-demo",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "0419d3b9fb5855efbe43c00bc3b3ad382b71cae6",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "xlwings-eikon",
+      "local_dir": "examples/xlwings-eikon-master/xlwings-eikon-master",
+      "repo": "xlwings/xlwings-eikon",
+      "ref": "master",
+      "subpath": "",
+      "pinned_sha": "86ce80052ea1e2e9bed53cdf3e45a10c234b6286",
+      "last_synced": "2026-09-14"
+    },
+    {
+      "id": "xlwings-factsheet-demo",
+      "local_dir": "examples/xlwings-factsheet-demo-main/xlwings-factsheet-demo-main",
+      "repo": "xlwings/xlwings-factsheet-demo",
+      "ref": "main",
+      "subpath": "",
+      "pinned_sha": "c52b53244604ba5d926dcd978672b6335ad44001",
+      "last_synced": "2026-09-14"
+    }
+  ]
+}

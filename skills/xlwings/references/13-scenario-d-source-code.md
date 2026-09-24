@@ -97,7 +97,7 @@ xlwings 0.37.4 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 #### 1.2.3 remote 引擎（xlwings Server）
 
-- **实现**：`pro/_xlremote.py`（4814 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
+- **实现**：`pro/_xlremote.py`（5266 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
 - **细节去向（单点原则）**：客户端"如何连 Server"的完整机制（JSON 动作协议、lazy load、计算模式映射、颜色规范化、版本校验、对象覆盖）已迁移至 `references/14-xlwings-server-guidance.md` 阶段一 1.6，本处不再展开
 - **对比要点**：与 excel/calamine/officejs 三引擎并列，属"服务端无 Excel 环境、Linux 部署、Google Sheets 支持"通道
 
@@ -561,7 +561,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 - **@xw.arg/@xw.ret 转换器**：NumPy（`np.array, ndim=2`）；DataFrame（默认 ndim=2，`index`/`header` 控制，或返回 `.values` 抑制表头索引）；`xw.Range`（"no-converter"：函数收 Range 对象操作公式）。
 - **动态数组**：`@xw.ret(expand='table')` 让函数"写到公式外"（quandl 行情例）——**注意不得覆盖既有值、不得用易变公式（`=TODAY()`）**。
 - **VBA 设置**：`UDF Modules`（分号分隔多模块；空=同目录同名 .py）；`PYTHONPATH` 保证模块可导入；`Restart UDF Server` 重载全部（改间接导入的模块时）。
-- **内置扩展**：`=sql(SQL, table_a, ...)`——公式内嵌加载项，**无需 xlsm、无需 VBA 引用**。
+- **内置扩展**：`=sql(SQL, table_a, ...)`——公式内嵌加载项，**无需 xlsm、无需 VBA 引用**（官方文档 `xlwings/docs/extensions.md`）。
 - **异步 UDF**：`@xw.func(async_mode='threading')`——立即返回 `#N/A waiting...`，后台计算完成后更新单元格，不阻塞 Excel。
 - **实战**：`end_of_month` UDF（`x.resample('M').last()` 重采样，配 `timeseries.xlsm`）。
 

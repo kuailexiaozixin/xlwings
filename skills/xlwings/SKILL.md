@@ -23,7 +23,7 @@ description: xlwings 全场景技能：自动化操作 Excel——Python 脚本�
 | `references/` | 17 份文档（00 索引 + 16 篇扩展指南：01-10 工作流各阶段深度 + 11 场景A + 12 MCP 自动化 + 13 场景D + 14 Server + 15 Lite + 16 Office.js）。进入 references 前先读 `references/00-index.md` 决策索引 | 进入对应阶段需要深度扩展时按需读取 |
 | `templates/` | 代码模板（VBA 模块、Ribbon XML、Python 桥接、UDF、面板入口、测试、安装脚本） | 编码阶段直接复制使用 |
 | `scripts/` | 可执行脚本（门禁 12 个、构建脚本、配置激活、路由校验、release_tool 分发工具链） | 工作流各步门禁与构建时调用 |
-| `docs/` | 故障排查、术语表、交付清单 | 遇到问题时查阅 |
+| `docs/` | 坑点沉淀（`troubleshooting.md`，持续追加）与 Python/面板专项排查（`troubleshooting-python.md`） | 遇到问题时查阅 |
 | `dist/` | 示例交付物（myaddin.xlam + 安装脚本） | 参考交付文件夹结构 |
 | `xlwings/` | xlwings 官方源码与文档（离线查阅）。目录名不含版本号，跟踪 `xlwings/xlwings` 的 main 分支，当前快照 commit 与最新正式版见 `manifest.json` 与 `SYNCLOG.md` | API 查证时读取 |
 | `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
@@ -117,7 +117,7 @@ import xlwings as xw
 ```
 
 1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
-2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。完整 API 文档在 `xlwings/docs/api/`（按类一页一文件，共 40 篇，上游已不设总索引页），语法总览见 `xlwings/docs/syntax_overview.md`
+2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。语法总览见 `xlwings/docs/syntax_overview.md`。各对象 API 文档（`xlwings/docs/api/`）：应用/工作簿 `app.md`/`apps.md`/`book.md`/`books.md`/`book_async.md`；工作表 `sheet.md`/`sheets.md`；单元格 `range.md`/`range_columns.md`/`range_rows.md`/`characters.md`；样式与条件 `font.md`/`border.md`/`borders.md`/`note.md`/`page_setup.md`/`autofilter.md`/`conditional_format.md`/`conditional_formats.md`/`data_validation.md`；图表 `chart.md`/`charts.md`/`chart_axis.md`/`chart_legend.md`/`chart_series.md`/`chart_series_collection.md`；图形 `shape.md`/`shapes.md`/`picture.md`/`pictures.md`；表格与名称 `table.md`/`tables.md`/`name.md`/`names.md`；透视表 `pivot_table.md`/`pivot_tables.md`/`pivot_field.md`/`pivot_fields.md`/`pivot_value_field.md`/`pivot_value_fields.md`；顶层函数与 UDF 装饰器 `top_level_functions.md`/`udf_decorators.md`；PRO `reports.md`
 3. **读取数据**：`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；数据结构与转换器见 `xlwings/docs/datastructures.md`、`converters.md`
 4. **写入数据**：指定左上角自动填充；公式分 `.formula`（普通）、`.formula2`（dynamic array）、`.formula_array`（CSE 数组）三类；写入后需 `app.calculate()` 触发计算
 5. **格式化样式**：`.number_format`/`.color`/`.font`/`.autofit()`；批注用 `.note`（创建须经 COM `api.AddComment`）；超链接用 `.add_hyperlink`；子字符串格式化用 `.characters`（macOS 不支持）
@@ -842,7 +842,7 @@ xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架
 
 **其他参考**：缺失功能 `xlwings/docs/missing_features.md`；常见问题 `xlwings/docs/troubleshooting.md`。
 
-> docs 目录中 `conf.py`/`Makefile`/`make.bat`/`requirements.txt`/`index_latex.md` 及 `locales/`/`_static/`/`_templates/`/`_ext/`/`images/` 为官方文档站构建产物、翻译与资源文件，非工作流引用对象；`pro/` 为需 PRO 许可的付费文档，本技能不依赖。
+> docs 目录中 `conf.py`/`Makefile`/`make.bat`/`requirements.txt`/`index_latex.md` 及 `locales/`/`_static/`/`_templates/`/`_ext/`/`images/` 为官方文档站构建产物、翻译与资源文件，非工作流引用对象；`pro/` 为需 PRO 许可的付费文档，本技能不依赖；`course.md`（YouTube 视频课程链接页）、`getting_started/index.md`、`advanced_features/index.md`（mkdocs toctree 导航页）为宣传/导航页，非技术参考，本技能不引用。
 
 ---
 

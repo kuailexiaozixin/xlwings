@@ -138,7 +138,7 @@
 
 ### 1.6 客户端如何连接 Server：remote 引擎（`pro/_xlremote.py`）
 
-- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，4814 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
+- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，5266 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
 - **通信方式**：HTTP REST API；对象操作经 `append_json_action` 打包为 JSON 动作（`func`/`args`/`values`/`sheet_position` 等）累积在 `_json["actions"]`，随请求一并发送服务端执行
 - **对象覆盖**：Apps/App/Books/Book/Sheets/Sheet/Range/Names/Name/Pictures/Shapes/Charts/Characters/Note/PageSetup/Border/Borders/Font/FreezePanes/Table/Tables——与桌面引擎同构的高层 API，脚本代码无需感知通道差异
 - **lazy load**：`_SHEET_VALUES_LOADED_KEY = "_xlwings_values_loaded"` 标记 sheet 值是否已加载（元数据先加载、值按需获取）；该标记仅本地读取，不序列化回 JS

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon>
+    <tabs>
+      <tab id="listObjectWorkbenchTab" label="数据工作台">
+        <group id="listObjectWorkbenchGroup" label="导入与汇总">
+          <button
+            id="importNormalizeButton"
+            label="导入并规范化"
+            imageMso="ImportTextFile"
+            size="large"
+            screentip="导入源数据并生成 ListObject"
+            supertip="优先读取当前工作簿中的导入源数据工作表；如果不存在，再允许选择外部 Excel 文件导入。"
+            onAction="__FIRST_CALLBACK_NAME__" />
+          <button
+            id="refreshSummaryButton"
+            label="刷新汇总结果"
+            imageMso="PivotTableRefresh"
+            size="large"
+            screentip="刷新客户汇总表"
+            supertip="基于导入结果表重建客户汇总，并示范保留公式列的安全重写。"
+            onAction="__SECOND_CALLBACK_NAME__" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
