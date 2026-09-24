@@ -1,4 +1,4 @@
-﻿"""
+"""
 xlwings release 复刻工具 - release 主命令
 
 复刻官方 `xlwings release`，去掉 PRO/deploy key 依赖：

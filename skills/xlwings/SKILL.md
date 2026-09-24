@@ -1,4 +1,4 @@
-﻿---
+---
 name: xlwings
 description: xlwings 全场景技能：自动化操作 Excel——Python 脚本与 MCP 两种方式（场景 A）、Web/服务化方案——xlwings Server / Lite / Office.js（场景 B）、开发 VBA 宏或 VBA 加载项（场景 C）、源码学习与二次开发（场景 D）。场景 C 提供 13 步完整工作流（需求→环境→设计→Python→VBA→Ribbon→UDF→配置→测试→交付→安装→集成验证→分发），含 12 个质量门禁、便携运行时分发、白标 xlam 构建。触发关键词：xlwings、Excel 自动化、Python 操作 Excel、Excel 加载项、xlam、UDF、RunPython、Ribbon、VBA 桥接、数据回填、面板交互、MCP、xlwings Server、xlwings Lite、Office.js。
 ---

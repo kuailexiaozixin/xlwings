@@ -1,4 +1,4 @@
-﻿{
+{
   "_comment": "xlwings 技能上游锁定清单。xlwings/、xlwings-server/、xlwings-lite/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；local_dir 是固定目录名，不含版本号，上游出新版不需要改路径。SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
   "sources": [
     {

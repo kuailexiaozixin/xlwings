@@ -1,4 +1,4 @@
-﻿# Ribbon 构建指南（6.5.6 聚合）
+# Ribbon 构建指南（6.5.6 聚合）
 
 > 本文件聚合 Ribbon 侧全部既有指南（入口规划 / 回调签名速查 / 图标原则），并补充官方 `customaddin.md` Ribbon 节导航。Ribbon 侧编码以本文档为准。
 

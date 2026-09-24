@@ -1,4 +1,4 @@
-﻿"""
+"""
 xlwings release 复刻工具 - 卸载脚本
 
 根据 release_clone.py 的安装逻辑，反向移除 MyAddin VBAProject。

@@ -1,4 +1,4 @@
-﻿# references 决策索引（先读这个）
+# references 决策索引（先读这个）
 
 本目录共 16 篇知识文档 + 本索引，**文档顺序 = 工作流顺序**（01→10 对应场景 C 6.5.1→6.5.13，11→13 对应场景 A/MCP/D，14→16 为 Web 三通道：Server / Lite / Office.js）。内容源自四个权威源：`xlwings/docs/`（官方 Python/加载项文档）、`../VBA-Docs/`（微软官方 VBA 文档）、`examples/`（xlwings 官方示例）、`MCP-Server/`（4 个社区 xlwings MCP Server 源码）。与 xlwings 无关的内容已全部去除。
 

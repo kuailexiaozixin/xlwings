@@ -1,4 +1,4 @@
-﻿# ensure_uv_env.ps1 — 检查/安装 uv、配置镜像、安装 Python
+# ensure_uv_env.ps1 — 检查/安装 uv、配置镜像、安装 Python
 # 任何新项目的第一步：检查/安装 uv、配置镜像、安装 Python
 # 可选：-ExcelChain 验证解释器在 Excel 加载项链中能否导入 xlwings（venv 链不激活拦截）
 # UTF-8 with BOM + CRLF
