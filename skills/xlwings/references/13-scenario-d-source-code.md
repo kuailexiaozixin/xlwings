@@ -97,7 +97,7 @@ xlwings 0.37.4 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 #### 1.2.3 remote 引擎（xlwings Server）
 
-- **实现**：`pro/_xlremote.py`（5266 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
+- **实现**：`pro/_xlremote.py`（5856 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信
 - **细节去向（单点原则）**：客户端"如何连 Server"的完整机制（JSON 动作协议、lazy load、计算模式映射、颜色规范化、版本校验、对象覆盖）已迁移至 `references/14-xlwings-server-guidance.md` 阶段一 1.6，本处不再展开
 - **对比要点**：与 excel/calamine/officejs 三引擎并列，属"服务端无 Excel 环境、Linux 部署、Google Sheets 支持"通道
 
@@ -155,7 +155,7 @@ xlwings 0.37.4 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 底层 Rust 层见 2.3.2 `src/`（`lib.rs`：`CellValue` 枚举逐类转 Python 对象、`get_values(used_range)` 读区域、`CalamineError` → `XlwingsError` 透传）。
 
 #### 1.2.5 officejs 引擎（Web 加载项）
-**定位**：`pro/_xlofficejs.py`（160 行，值转换层）+ `pro/udfs_officejs.py`（1254 行，UDF/脚本全链路），基于 Office.js API 的 Excel Web 加载项通道——**Server 与 Lite 共享的语义内核**。
+**定位**：`pro/_xlofficejs.py`（160 行，值转换层）+ `pro/udfs_officejs.py`（1259 行，UDF/脚本全链路），基于 Office.js API 的 Excel Web 加载项通道——**Server 与 Lite 共享的语义内核**。
 - **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开；与桌面 UDF（2.2.2）同源异路
 - **细节去向（单点原则）**：完整源码研读（值转换层 / UDF / 脚本 / socket.io 会话 / 测试）与官方教程对照已独立为 `references/16-xlwings-officejs.md`，本处不再展开
 
@@ -248,7 +248,7 @@ Reports 是 xlwings PRO 的核心增值功能，实现"Excel 模板 + 结构化�
 **与 1.2.3 的关系**：1.2.3 的客户端侧 remote 引擎细节（`pro/_xlremote.py`，如何连 Server）已一并迁移至 14 号手册阶段一 1.6；14 号手册其余章节是 Server 服务端如何工作。
 ### 1.8 Office.js 引擎（指针，详见 16 号文档）
 
-**定位**：`xlwings/pro/_xlofficejs.py`（160 行）+ `xlwings/pro/udfs_officejs.py`（1254 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**——remote 类型引擎，走 socket.io 推流（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）。
+**定位**：`xlwings/pro/_xlofficejs.py`（160 行）+ `xlwings/pro/udfs_officejs.py`（1259 行）共同实现 xlwings PRO 的 **Office.js 自定义函数（Custom Functions）与自定义脚本（Custom Scripts）**——remote 类型引擎，走 socket.io 推流（文件头注释明确 "only used in connection with Office.js UDFs, not with runPython"）。
 
 **要点**（完整源码研读 + 官方教程对照 + 工作流编排见 `references/16-xlwings-officejs.md`）：
 
@@ -284,7 +284,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **公开 API**（`__init__.py`，13KB）：`xw.App`/`Book`/`Sheet`/`Range`/`Chart`/`Shape`/`Name`/`Table` 等对象、`xw.func`/`xw.sub`/`xw.arg`/`xw.ret`/`xw.script` 装饰器、`xw.Book.caller()`（UDF/脚本内定位调用方工作簿）、`xw.view`（交互查看）。动态导入平台层（Windows `_xlwindows` / macOS `_xlmac`）。
 
-**对象模型**（`main.py`，165KB）：`App`（Excel 实例：`books`/`activate`/`quit`/`calculation`/`screen_updating`/`visible`）；`Book`（工作簿：`sheets`/`app`/`open`/`save`/`close`/`names`，UDF 模块注入 `book.set_mock_caller`）；`Sheet`（`cells`/`range`/`used_range`/`names`/`autofit`）；`Range`（`value`/`formula`/`options`/`expand`/`end`/`api`/`color`/`number_format`）；`Chart`/`Shape`/`Name`/`Table`。**`api` 属性直通 COM 原生对象**——xlwings 对象只是瘦封装，复杂操作可下探 COM。基类在 `base_classes.py`（平台无关抽象），`constants.py` 为 Excel 常量枚举（146KB）。
+**对象模型**（`main.py`，320KB）：`App`（Excel 实例：`books`/`activate`/`quit`/`calculation`/`screen_updating`/`visible`）；`Book`（工作簿：`sheets`/`app`/`open`/`save`/`close`/`names`，UDF 模块注入 `book.set_mock_caller`）；`Sheet`（`cells`/`range`/`used_range`/`names`/`autofit`）；`Range`（`value`/`formula`/`options`/`expand`/`end`/`api`/`color`/`number_format`）；`Chart`/`Shape`/`Name`/`Table`。**`api` 属性直通 COM 原生对象**——xlwings 对象只是瘦封装，复杂操作可下探 COM。基类在 `base_classes.py`（平台无关抽象），`constants.py` 为 Excel 常量枚举（146KB）。
 
 **COM 服务器**（`com_server.py`，10KB）——VBA↔Python 对象操作协议：
 
@@ -300,7 +300,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 - `standard.py`：**读取管线** `ReadValueFromRangeStage → CleanDataFromReadStage → AdjustDimensionsStage → TransposeStage → Ensure2DStage`；**写入管线** `WriteValueToRangeStage → CleanDataForWriteStage`；`RangeAccessor`/`RawValueAccessor`/`ValueAccessor`（`router` 按值类型选读写器）；`Dict`/`OrderedDict`/`Datetime`/`Date`/`Tuple`/`Json` 转换器；`_check_not_jagged` 拒绝锯齿数组；
 - `numpy_conv.py`/`pandas_conv.py`/`polars_conv.py`：numpy/pandas/polars 转换器，**按 import 成功与否条件注册**；`__init__.py` 的 `read()`/`write()`/`async_read()`/`async_write()` 为统一入口（支持 `pipeline_overrides` 替换阶段）。
 
-**UDF 系统**（`udfs.py`，29KB）：`@xw.func`（类别/异步/调用链/自动转置）、`@xw.sub`、`@xw.ret`（返回值转换）、`@xw.arg`（参数转换）；`get_udf_module`/`call_udf`（**按工作簿加载 UDF 模块并执行**）；`generate_vba_wrapper`（**自动生成 VBA 包装代码**——`import_udfs` 把 Python 函数注入 Excel 为可调 UDF）；`ComRange`（UDF 内的 Range 参数包装）；`has_dynamic_array`（动态数组检测）。**源码级研读**（装饰器/签名、ComRange 跨线程、call_udf 运行时、VBA 包装器生成、import_udfs 注入）见 **2.2.2**。
+**UDF 系统**（`udfs.py`，28KB）：`@xw.func`（类别/异步/调用链/自动转置）、`@xw.sub`、`@xw.ret`（返回值转换）、`@xw.arg`（参数转换）；`get_udf_module`/`call_udf`（**按工作簿加载 UDF 模块并执行**）；`generate_vba_wrapper`（**自动生成 VBA 包装代码**——`import_udfs` 把 Python 函数注入 Excel 为可调 UDF）；`ComRange`（UDF 内的 Range 参数包装）；`has_dynamic_array`（动态数组检测）。**源码级研读**（装饰器/签名、ComRange 跨线程、call_udf 运行时、VBA 包装器生成、import_udfs 注入）见 **2.2.2**。
 
 **平台适配层**：Windows `_xlwindows.py`（89KB，pywin32 COM 实现，见场景 A 章节与场景 D 主干导航）+ `_win32patch.py`（上游 COM 行为补丁）；macOS `_xlmac.py`（102KB）+ `mac_dict.py`（AppleScript 字典映射，258KB）+ `xlwings-dev.applescript`。平台差异汇总见 `xlwings/docs/missing_features.md`。
 
@@ -334,7 +334,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **借鉴**：① 数据通道转换器统一 `read_value(value, options)` / `write_value(value, options)` 双方法签名，options 透传决定行为——新增数据格式只需按此契约实现并注册；② 类型兜底策略（Excel 无对应类型 → 字符串化）避免写回失败；③ 条件注册让可选依赖缺失时静默降级而非导入报错。
 
-#### 2.2.2 UDF 系统源码研读（udfs.py，29KB / 838 行）
+#### 2.2.2 UDF 系统源码研读（udfs.py，28KB / 838 行）
 
 **定位**：桌面版 UDF 全链路（社区版，BSD-3-Clause）——`@xw.func`/`@xw.sub`/`@xw.ret`/`@xw.arg` 装饰器 → VBA 包装器生成 → COM 同步调用 → 异步线程与动态数组。与 1.8 的 officejs 版同源异路：桌面走 **COM 同步通道 + VBA 包装**（VBA `XLPy.CallUDF`），Web 走 socket.io + JS 包装。
 

@@ -1,6 +1,6 @@
 # xlwings Office.js 引擎深度技术分析与构建工作流
 
-> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1254 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
+> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1259 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
 
 > **三文档分工**：Office.js 引擎同时服务 xlwings Server 与 xlwings Lite/Pyodide。
 >
@@ -63,7 +63,7 @@
 ### 〇.2 引擎事实总览
 
 - `xlwings/pro/_xlofficejs.py`（160 行）：值转换层——Engine 单例（`name="officejs"`、`type="remote"`）+ 读写两侧的数据清洗/编码。
-- `xlwings/pro/udfs_officejs.py`（1254 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
+- `xlwings/pro/udfs_officejs.py`（1259 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
 - 引擎类型：`remote`（走 socket.io 推流），与 `excel`（COM）、`calamine`（只读）并列（四引擎见 `references/13-scenario-d-source-code.md` 1.2）。
 - 配套测试：`tests/test_custom_functions_officejs.py` / `test_custom_scripts_call.py` / `test_jsnull.py` / `test_streaming_*.py`。
 

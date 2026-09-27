@@ -9,8 +9,8 @@
 
 机制:
   1. 读 manifest.json 中每路上游的 repo/ref/subpath/local_dir/pinned_sha
-  2. 经 GitHub API（gh，失败降级 git ls-remote）查询 ref 最新 commit；无变化则跳过
-  3. curl 下载 codeload tarball 到临时目录，tar 解压，校验非空
+  2. 经 gh API（多候选探测 gh.exe，降级 git ls-remote）查询 ref 最新 commit；带重试；无变化则跳过
+  3. 按通道链下载 tarball：codeload 直连 → archive 直连 → ghfast 代理，tar 解压，校验非空
   4. 原子替换 local_dir（先备份 .old → 新内容就位 → 文件数校验 → 删备份），更新 manifest 并追加 SYNCLOG.md
 
 约束:
@@ -34,9 +34,34 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = SKILL_ROOT / "manifest.json"
 SYNCLOG = SKILL_ROOT / "SYNCLOG.md"
-GH = shutil.which("gh") or str(Path.home() / "AppData" / "Local" / "Programs" / "gh" / "bin" / "gh.exe")
 TIMEOUT = 120
 DOWNLOAD_TIMEOUT = 900
+RETRIES = 3
+RETRY_SLEEP = 3
+
+# 下载通道降级链：codeload 直连 → archive 直连 → ghfast 代理 archive。
+# 本机到 GitHub 直连时通时断（见 SYNCLOG 2026-09-24），通道链保证弱网下仍可同步。
+DOWNLOAD_CHANNELS = (
+    "codeload",   # https://codeload.github.com/{repo}/tar.gz/{ref_path}
+    "archive",    # https://github.com/{repo}/archive/{ref_path}.tar.gz
+    "ghfast",     # https://ghfast.top/https://github.com/{repo}/archive/{ref_path}.tar.gz
+)
+
+
+def _find_gh() -> str:
+    """多候选探测 gh.exe：PATH 命中且真实存在 → Program Files → 各用户 LOCALAPPDATA。"""
+    candidates = [shutil.which("gh")]
+    candidates.append(str(Path(r"C:\Program Files\GitHub CLI\gh.exe")))
+    drive = os.environ.get("SystemDrive", "C:")
+    candidates += [str(p) for p in Path(f"{drive}\\Users").glob(
+        r"*\AppData\Local\Programs\gh\bin\gh.exe")]
+    for c in candidates:
+        if c and os.path.isfile(c):
+            return c
+    return ""
+
+
+GH = _find_gh()
 
 
 def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
@@ -45,52 +70,59 @@ def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
 
 
 def latest_sha(repo: str, ref: str) -> str | None:
-    """ref 最新 commit SHA。优先 gh API，降级 git ls-remote（tags 取 peeled sha）。"""
-    if os.path.isfile(GH):
-        r = run([GH, "api", f"repos/{repo}/commits/{ref}", "--jq", ".sha"])
-        if r.returncode == 0 and r.stdout.strip():
-            return r.stdout.strip()
-    try:
-        r = run(["git", "ls-remote", f"https://github.com/{repo}.git",
-                 f"refs/tags/{ref}", f"refs/tags/{ref}^{{}}"])
-        for ln in r.stdout.splitlines():
-            parts = ln.split()
-            if len(parts) == 2 and parts[1].endswith("^{}"):
-                return parts[0]
-        if r.stdout.strip():
-            return r.stdout.strip().split()[0]
-    except Exception:
-        pass
+    """ref 最新 commit SHA。优先 gh API，降级 git ls-remote（tags 取 peeled sha）。
+    网络间歇性中断：带 RETRIES 次重试。"""
+    for attempt in range(RETRIES):
+        if GH:
+            r = run([GH, "api", f"repos/{repo}/commits/{ref}", "--jq", ".sha"])
+            if r.returncode == 0 and r.stdout.strip():
+                return r.stdout.strip()
+        try:
+            r = run(["git", "ls-remote", f"https://github.com/{repo}.git",
+                     f"refs/tags/{ref}", f"refs/tags/{ref}^{{}}"])
+            for ln in r.stdout.splitlines():
+                parts = ln.split()
+                if len(parts) == 2 and parts[1].endswith("^{}"):
+                    return parts[0]
+            if r.stdout.strip():
+                return r.stdout.strip().split()[0]
+        except Exception:
+            pass
+        if attempt < RETRIES - 1:
+            import time
+            time.sleep(RETRY_SLEEP)
     return None
 
 
-def download_tarball(repo: str, ref: str) -> Path | None:
-    """curl 下载 codeload tarball 并 tar 解压，返回解压根目录（含顶层目录）或 None。"""
+def download_tarball(repo: str, ref: str) -> tuple[Path | None, str]:
+    """按通道链下载 tarball 并解压。返回 (解压根目录, 通道名) 或 (None, '')。"""
     tmp = Path(tempfile.mkdtemp(prefix="xlwings_up_"))
     tarball = tmp / "src.tar.gz"
     # tag 用 refs/tags/<ref>，分支（如 main）用 refs/heads/<ref>
     for ref_path in (f"refs/tags/{ref}", f"refs/heads/{ref}", ref):
-        url = f"https://codeload.github.com/{repo}/tar.gz/{ref_path}"
-        try:
-            r = run(["curl.exe", "-sL", "-o", str(tarball), url, "-w", "%{http_code}"],
-                    timeout=DOWNLOAD_TIMEOUT)
-        except subprocess.TimeoutExpired:
-            print(f"  下载超时（{DOWNLOAD_TIMEOUT}s）：{url}")
+        urls = {
+            "codeload": f"https://codeload.github.com/{repo}/tar.gz/{ref_path}",
+            "archive": f"https://github.com/{repo}/archive/{ref_path}.tar.gz",
+            "ghfast": f"https://ghfast.top/https://github.com/{repo}/archive/{ref_path}.tar.gz",
+        }
+        for channel in DOWNLOAD_CHANNELS:
+            try:
+                r = run(["curl.exe", "-sL", "-o", str(tarball), urls[channel],
+                         "-w", "%{http_code}"], timeout=DOWNLOAD_TIMEOUT)
+            except subprocess.TimeoutExpired:
+                print(f"  下载超时（{DOWNLOAD_TIMEOUT}s）：{urls[channel]}")
+                tarball.unlink(missing_ok=True)
+                continue
+            if r.returncode == 0 and tarball.exists() and r.stdout.strip() == "200":
+                r2 = run(["tar", "-xzf", str(tarball), "-C", str(tmp)])
+                if r2.returncode != 0:
+                    tarball.unlink(missing_ok=True)
+                    continue
+                dirs = [d for d in tmp.iterdir() if d.is_dir()]
+                if len(dirs) == 1:
+                    return dirs[0], channel
             tarball.unlink(missing_ok=True)
-            return None
-        if r.returncode == 0 and tarball.exists() and r.stdout.strip() == "200":
-            break
-        tarball.unlink(missing_ok=True)
-    else:
-        return None
-    r = run(["tar", "-xzf", str(tarball), "-C", str(tmp)])
-    if r.returncode != 0:
-        return None
-    # 解压根目录：唯一顶层目录
-    dirs = [d for d in tmp.iterdir() if d.is_dir()]
-    if len(dirs) != 1:
-        return None
-    return dirs[0]
+    return None, ""
 
 
 def count_files(p: Path) -> int:
@@ -141,9 +173,9 @@ def sync_one(src: dict, force: bool = False) -> str:
         return "unchanged"
     print(f"  [{vid}] 检测到更新 {src.get('pinned_sha', '?')[:7]} → {head[:7]}")
 
-    stage = download_tarball(repo, ref)
+    stage, channel = download_tarball(repo, ref)
     if stage is None:
-        print(f"  [{vid}] 下载/解压失败")
+        print(f"  [{vid}] 下载/解压失败（三条通道均不可达）")
         return "failed"
     if count_files(stage) == 0:
         print(f"  [{vid}] 下载结果为空，放弃替换")
@@ -165,8 +197,8 @@ def sync_one(src: dict, force: bool = False) -> str:
     with open(SYNCLOG, "a", encoding="utf-8") as f:
         if f.tell() == 0:
             f.write("# xlwings 技能上游同步日志\n\n| 日期 | 来源 | 方式 | 新 commit | 规模 |\n|---|---|---|---|---|\n")
-        f.write(f"| {date.today().isoformat()} | `{vid}` | tarball | `{head[:7]}` | {n_files} 个文件 |\n")
-    print(f"  [{vid}] 已更新（tarball，{n_files} 文件）→ {target}")
+        f.write(f"| {date.today().isoformat()} | `{vid}` | {channel} | `{head[:7]}` | {n_files} 个文件 |\n")
+    print(f"  [{vid}] 已更新（{channel}，{n_files} 文件）→ {target}")
     return "updated"
 
 

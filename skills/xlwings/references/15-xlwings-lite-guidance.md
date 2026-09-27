@@ -1,4 +1,4 @@
-# 场景 D 附录：xlwings Lite 深度技术分析与开发工作流
+﻿# 场景 D 附录：xlwings Lite 深度技术分析与开发工作流
 
 > 本文件是场景 D（源码学习与二次开发）的**独立深度扩展资源**，承接 `references/13-scenario-d-source-code.md` 中分离出的 xlwings Lite 内容（原 1.6 节、4.5 节，以及 1.8 的 Lite 特有适配分支），并按**开发生命周期工作流**重新编排：认知选型 → 环境准备 → 核心开发 → 测试调试 → 应用化分发 → 自托管部署 → 案例研读。
 >
@@ -158,7 +158,7 @@ Lite 在 xlwings 生态中的位置（与本地版 / Server 的关系，`index.m
 
 在 `xlwings/xlwings/` 源码中，Lite 并非独立实现一套对象模型，而是通过三种方式"投影"到既有架构上——理解这三处投影，就理解了 Lite 与桌面版的关系：
 
-**① `BookAsync` 类型提示（`main.py` L1424-1441）——异步 API 的开关**
+**① `BookAsync` 类型提示（`main.py` L1449）——异步 API 的开关**
 
 ```python
 class BookAsync(Book):
@@ -330,7 +330,7 @@ def hello(name):
 
 **值语义的 Lite 特有细节——JsNull 空值归一**（引擎机制完整研读见 `references/16-xlwings-officejs.md` 阶段二·值转换层，Lite/Pyodide 环境才有）：引擎读侧 `clean_value_data` 逐元素 `_clean_value_data_element`——**Pyodide ≥ 0.28 的 `JsNull` 哨兵**（JS `null` 空单元格）与 `""` 均归一为 `empty_as`；data types 协议的 `dict`（`Error`/日期）取 `basicValue`；float 走 `number_builder`。**开发含义**：Lite 中空单元格在 Python 侧统一表现为 `empty_as`（默认 `None`），与桌面版一致，但实现路径不同（桌面是 COM 变体空值，Lite 是 JS 空值哨兵）——跨端迁移代码时空值语义不变。
 
-**流式函数深度**（`custom-functions.md` "Streaming functions" + 源码 `xlwings/pro/udfs_officejs.py` L530、L634）：
+**流式函数深度**（`custom-functions.md` "Streaming functions" + 源码 `xlwings/pro/udfs_officejs.py` L524、L641）：
 
 - 形态：`async def` + `yield`（异步生成器），如 `streaming_clock()` 每秒 yield 一次当前时间；支持 1d/2d 返回值（numpy 数组）。
 - 与传统 RTD 的区别：不用本地 COM 服务器；进程作为后台任务运行，**持续把更新推给 Excel**（而非 Excel 轮询）。
@@ -473,7 +473,7 @@ Excel 用法：`=SQL("SELECT ...", ["alias1"], range1, ["alias2"], range2, ...)`
 - **`flush()`**：写值后立即可见——典型场景：写 A1 后在同一单元格/脚本内读它或读依赖单元格；print 后立即在 Output pane 看到输出；调用 `to_png()` 等写文件系统方法后在同一单元格/脚本内访问文件。自动 flush 仍发生在单元格/脚本结束时。
 - **`load()`**：单元格/脚本运行前 Lite 自动执行一次，一般无需手动；中途刷新用 `await book.load()` 或 `await mysheet.load()`（sheet 级只刷该 sheet，更高效）。异步 Book 上 `load()` **不含值**（值走 `get_value()`）；同步 Book 上 `load()` 含值，可 `load(values=False)` 排除。
 
-**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings/xlwings/main.py` L1424-1441 + `pro/udfs_officejs.py`）：
+**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings/xlwings/main.py` L1449 + `pro/udfs_officejs.py`）：
 
 - `BookAsync` **运行时就是普通 `Book`**——类型提示只是信号：Lite 加载器看到该注解就**跳过整个工作簿的预加载**（`main.py` 注释原话："the annotation only signals xlwings Lite to skip loading the values of the entire book up front"）；
 - 引擎侧 `@script` 的 `lazy=` 参数已弃用，**统一由 `book: xw.BookAsync` 注解表达**（内部发 `"lazy"` wire 键）；**book 参数必须恰一个**（`_book_param_hint`），`BookAsync` 注解与 `lazy=False` 显式冲突 → 报错（注解优先）；
@@ -750,7 +750,7 @@ Lite 持续演进中，开发与分发时关注以下维度（具体版本号见
 - `xlwings-lite/`（31 篇官方文档离线镜像 + README 索引 + 34 张插图）——本文件的逐阶段语义引用源，官方教程层次（入门/进阶/分发/自托管/参考）见 README"建议阅读顺序"；
 - `xlwings/xlwings/udfs.py`——`@func`/`@arg`/`@ret`/`@script` 装饰器实现（Lite 与桌面版同源，3.1/3.2 源码验证）；
 - `xlwings/xlwings/ext/`（sql.py + __init__.py）——`=SQL()` 扩展源码（3.5）；
-- `xlwings/xlwings/main.py`（BookAsync，L1424-1441）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；
+- `xlwings/xlwings/main.py`（BookAsync，L1449）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；
 - `xlwings/xlwings/__init__.py`（ObjectHandle/ObjectCacheMissError/WithScript）——对象句柄与函数后触发脚本（3.1/3.2）；
 - `xlwings/xlwings/pro/udfs_officejs.py`（streaming_callback、Lite 流式任务分支、_inject_value 懒加载注入）——officejs 引擎侧的 Lite 适配（引擎整体研读见 `references/16-xlwings-officejs.md`，Lite 侧解读见本文件 3.1/3.7）；
 - `examples/taxi-duckdb-main/`（taxi_local.xlsx + extracted/）——阶段七案例；
