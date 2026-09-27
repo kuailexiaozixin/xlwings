@@ -29,6 +29,39 @@ description: xlwings 全场景技能：自动化操作 Excel——Python 脚本�
 | `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
 | `examples/` | 官方示例与演示项目 | 学习与参考时读取 |
 
+**上游跟踪与更新机制（技能维护）**：
+
+本地上游原文目录共 **17 路**，随官方仓库演进，由脚本统一跟踪，**禁止手改上游原文**（zip 快照）：
+
+- `xlwings/`：xlwings 核心源码包，跟踪 `main`（开发线，提交数领先最新正式版），快照 commit 见 `manifest.json` 的 `pinned_sha`；目录名不含版本号
+- `examples/`、`MCP-Server/` 与技能根目录下全部开源仓库：`xlwings-server`（跟 main，目录在技能根目录 `xlwings-server/`，由 examples/ 迁出）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
+
+**组件**：
+- `manifest.json`：上游锁定清单（repo / ref / local_dir / pinned_sha / last_synced，单一事实来源；ref 为 tag 或默认分支）
+- `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源。gh 经多候选探测，网络间歇时 latest_sha 自动重试；下载按通道链降级（codeload 直连 → archive 直连 → ghfast 代理）。原子替换并追加 SYNCLOG.md
+- `scripts/track_upstream.py`：**漂移三线检测**（见下表）
+- `references/upstream-facts.json`：**事实锚点台账**——自研文档对上游源码的全部具体断言（行数/KB/行号/文件数），每条带 docs 指针（断言出处）。新增上游断言时必须先登记台账，否则漂移无人知晓
+- `SYNCLOG.md`：同步历史（每次同步留痕）
+
+**漂移三线**（`python scripts/track_upstream.py`，参照 hermes 四线机制裁剪为三线）：
+
+| 线 | 检测内容 | 分级 | 应对 |
+|---|---|---|---|
+| ① 上游 commit | manifest 各路 pinned_sha vs 远端最新 commit（`--quick` 只查核心两路） | **提示级** | 跑 sync_upstream.py 同步即消；`--strict` 时计失败 |
+| ② 事实锚点 | upstream-facts.json 逐条对照本地快照实测 | **硬漂移**（exit 1） | 按 STALE 提示的 docs 指针修自研文档，修完重跑至全绿 |
+| ③ 版本一致性 | 快照 `__version__` 必须为 "0.0.0"（zip 快照特征） | **硬**（exit 1） | 异常说明快照被 pip 产物覆盖，需重拉 |
+
+**工作流闭环（同步后必须走完）**：
+1. `python scripts/sync_upstream.py --check` 检测（或直接同步）；
+2. 同步后跑 `python scripts/track_upstream.py --line 2`——**此刻台账 expected 仍是旧值，线②会把自研文档里的过时断言全部揪出**；
+3. 按 STALE 的 docs 指针逐条修自研文档（SKILL.md / references/13/14/15/16 等），再把台账 expected 更新为新实测值；
+4. 重跑 `track_upstream.py` 至 ②③ 全绿；
+5. 向用户汇报 SYNCLOG 变更与锚点修复摘要。
+
+**触发纪律**：用户说"同步 xlwings 技能 / 更新上游"即执行闭环；准备在回答中引用上游行数/行号/KB 断言前，可先 `track_upstream.py --quick` 确认锚点未破。
+
+**同步后注意**：全部 `local_dir` 都是固定目录名，上游出新版不需要改自研文档里的路径；需要改的是本文档与 `references/13-scenario-d-source-code.md` 等自研文件里**引用上游源码处数**（行数、文件大小、行号锚点、被上游删改的文件名）——这正是线②自动检测的对象。zip 快照无法追溯确切 commit，登记基线取登记日上游 ref 最新 commit，若实际快照更旧，`--check` 会提示漂移，按需 `--force` 重拉。
+
 ---
 
 ## 2 需求澄清与场景路由
@@ -844,40 +877,6 @@ xlwings PRO 深度技术分析（许可证机制、四引擎原理、Reports 架
 
 > docs 目录中 `conf.py`/`Makefile`/`make.bat`/`requirements.txt`/`index_latex.md` 及 `locales/`/`_static/`/`_templates/`/`_ext/`/`images/` 为官方文档站构建产物、翻译与资源文件，非工作流引用对象；`pro/` 为需 PRO 许可的付费文档，本技能不依赖；`course.md`（YouTube 视频课程链接页）、`getting_started/index.md`、`advanced_features/index.md`（mkdocs toctree 导航页）为宣传/导航页，非技术参考，本技能不引用。
 
----
-
-## 9 上游跟踪与更新机制（技能维护）
-
-本地上游原文目录共 **17 路**，随官方仓库演进，由脚本统一跟踪，**禁止手改上游原文**（zip 快照）：
-
-- `xlwings/`：xlwings 核心源码包，跟踪 `main`（开发线，提交数领先最新正式版），快照 commit 见 `manifest.json` 的 `pinned_sha`；目录名不含版本号
-- `examples/`、`MCP-Server/` 与技能根目录下全部开源仓库：`xlwings-server`（跟 main，目录在技能根目录 `xlwings-server/`，由 examples/ 迁出）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
-
-**组件**：
-- `manifest.json`：上游锁定清单（repo / ref / local_dir / pinned_sha / last_synced，单一事实来源；ref 为 tag 或默认分支）
-- `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源。gh 经多候选探测，网络间歇时 latest_sha 自动重试；下载按通道链降级（codeload 直连 → archive 直连 → ghfast 代理）。原子替换并追加 SYNCLOG.md
-- `scripts/track_upstream.py`：**漂移三线检测**（见下表）
-- `references/upstream-facts.json`：**事实锚点台账**——自研文档对上游源码的全部具体断言（行数/KB/行号/文件数），每条带 docs 指针（断言出处）。新增上游断言时必须先登记台账，否则漂移无人知晓
-- `SYNCLOG.md`：同步历史（每次同步留痕）
-
-**漂移三线**（`python scripts/track_upstream.py`，参照 hermes 四线机制裁剪为三线）：
-
-| 线 | 检测内容 | 分级 | 应对 |
-|---|---|---|---|
-| ① 上游 commit | manifest 各路 pinned_sha vs 远端最新 commit（`--quick` 只查核心两路） | **提示级** | 跑 sync_upstream.py 同步即消；`--strict` 时计失败 |
-| ② 事实锚点 | upstream-facts.json 逐条对照本地快照实测 | **硬漂移**（exit 1） | 按 STALE 提示的 docs 指针修自研文档，修完重跑至全绿 |
-| ③ 版本一致性 | 快照 `__version__` 必须为 "0.0.0"（zip 快照特征） | **硬**（exit 1） | 异常说明快照被 pip 产物覆盖，需重拉 |
-
-**工作流闭环（同步后必须走完）**：
-1. `python scripts/sync_upstream.py --check` 检测（或直接同步）；
-2. 同步后跑 `python scripts/track_upstream.py --line 2`——**此刻台账 expected 仍是旧值，线②会把自研文档里的过时断言全部揪出**；
-3. 按 STALE 的 docs 指针逐条修自研文档（SKILL.md / references/13/14/15/16 等），再把台账 expected 更新为新实测值；
-4. 重跑 `track_upstream.py` 至 ②③ 全绿；
-5. 向用户汇报 SYNCLOG 变更与锚点修复摘要。
-
-**触发纪律**：用户说"同步 xlwings 技能 / 更新上游"即执行闭环；准备在回答中引用上游行数/行号/KB 断言前，可先 `track_upstream.py --quick` 确认锚点未破。
-
-**同步后注意**：全部 `local_dir` 都是固定目录名，上游出新版不需要改自研文档里的路径；需要改的是本文档与 `references/13-scenario-d-source-code.md` 等自研文件里**引用上游源码处数**（行数、文件大小、行号锚点、被上游删改的文件名）——这正是线②自动检测的对象。zip 快照无法追溯确切 commit，登记基线取登记日上游 ref 最新 commit，若实际快照更旧，`--check` 会提示漂移，按需 `--force` 重拉。
 
 
 
