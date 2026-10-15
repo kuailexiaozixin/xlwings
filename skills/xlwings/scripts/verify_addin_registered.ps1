@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 
 # AddIns2 注册验证脚本（收敛原 SKILL.md 中门禁 C / 门禁 D 的三段重复代码）
 # 用途：按分发方式验证 .xlam 在 Excel 中的可用性。

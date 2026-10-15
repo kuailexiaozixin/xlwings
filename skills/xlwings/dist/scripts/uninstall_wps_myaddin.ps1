@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 $officeVersions = @('16.0', '15.0', '14.0', '12.0')
 $fallbackVersion = '16.0'
 $installTarget = 'wps'

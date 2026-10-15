@@ -1,4 +1,4 @@
-﻿"""
+"""
 xlwings release 复刻工具 - 代码嵌入器
 
 把工作簿所在目录的所有 .py 文件嵌入 Excel sheet（复刻 cli.py::code_embed，

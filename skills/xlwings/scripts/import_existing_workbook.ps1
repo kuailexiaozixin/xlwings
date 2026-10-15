@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 
 # 现有工作簿导入脚本：
 # - 把用户提供的 xlsx/xlsm/xlam/xltm 文件导入为标准 VBA 项目结构

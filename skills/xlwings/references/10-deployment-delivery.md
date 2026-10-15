@@ -1,4 +1,4 @@
-﻿# 部署与交付工作流（6.5.10/6.5.11/6.5.12/6.5.13 扩展）
+# 部署与交付工作流（6.5.10/6.5.11/6.5.12/6.5.13 扩展）
 
 > 本文件是工作流 6.5.10（部署与交付物整备）、6.5.11（安装）、6.5.12（安装后集成验证）、6.5.13（分发）的扩展资源，把四个步骤编排为可执行工作流。
 > **主线 = 自研 release_tool 便携运行时分发**（无需 PRO 许可证）。官方 xlwings PRO 部署机制（code embed / release）仅作附录 A 对照研读——理解其设计、借鉴其细节，但开发加载项一律按自研 release_tool 实施，不采用 PRO 机制。
@@ -375,7 +375,7 @@ End If
 - 结果：Ribbon 自定义消失，Excel 只显示默认 Ribbon
 - 解决：用 zip 级操作重新注入 customUI（直接操作 OOXML 包，补回 Override 和 Relationship）
 
-**对自研路线的启示**：`dist_release/reinject_ribbon_after_com_save.py` 即此机制的自研实现（门禁 E 验证注入结果）。
+**对自研路线的启示**：`scripts/tools/reinject_ribbon_after_com_save.py` 即此机制的自研实现（门禁 E 验证注入结果）。
 
 ### A.4 部署方式对比（官方 PRO 视角 + 自研定位）
 

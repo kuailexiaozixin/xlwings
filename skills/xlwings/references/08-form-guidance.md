@@ -1,4 +1,4 @@
-﻿# 窗体构建指南（UserForm / pywebview / tkinter）
+# 窗体构建指南（UserForm / pywebview / tkinter）
 
 > 本文件聚合窗体侧全部既有指南（UserForm UX 规范 / 布局与尺寸），并新增 pywebview 桌面面板（xlwings 语境重写）与 tkinter 形态。窗体形态统一以本文档为准。
 

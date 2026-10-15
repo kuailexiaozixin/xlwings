@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 
 # 说明：
 # - 这是加载项构建脚本，位于 skill 的 scripts/ 目录，由 AI 直接调用。

@@ -1,4 +1,4 @@
-﻿myaddin 插件安装说明
+myaddin 插件安装说明
 
 一、文件说明
 1. myaddin.xlam

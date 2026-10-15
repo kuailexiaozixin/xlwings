@@ -1,6 +1,6 @@
 # xlwings Office.js 引擎深度技术分析与构建工作流
 
-> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1259 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
+> 本文件由 `references/13-scenario-d-source-code.md` 的 1.2.5 与 1.8 节独立而来：以开发生命周期工作流重排，深度研读 Office.js 引擎源码（`xlwings/pro/_xlofficejs.py` 160 行 + `xlwings/pro/udfs_officejs.py` 1373 行），并结合官方教程（`xlwings-lite/custom-functions.md`、`custom-scripts.md`）与加载项工程实践编排成可执行工作流。
 
 > **三文档分工**：Office.js 引擎同时服务 xlwings Server 与 xlwings Lite/Pyodide。
 >
@@ -63,7 +63,7 @@
 ### 〇.2 引擎事实总览
 
 - `xlwings/pro/_xlofficejs.py`（160 行）：值转换层——Engine 单例（`name="officejs"`、`type="remote"`）+ 读写两侧的数据清洗/编码。
-- `xlwings/pro/udfs_officejs.py`（1259 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
+- `xlwings/pro/udfs_officejs.py`（1373 行）：UDF/脚本全链路——装饰器族、签名解析、类型注入、值转换、调用管线、元数据生成、socket.io 会话管理。
 - 引擎类型：`remote`（走 socket.io 推流），与 `excel`（COM）、`calamine`（只读）并列（四引擎见 `references/13-scenario-d-source-code.md` 1.2）。
 - 配套测试：`tests/test_custom_functions_officejs.py` / `test_custom_scripts_call.py` / `test_jsnull.py` / `test_streaming_*.py`。
 
@@ -229,7 +229,7 @@
 
 ### 5.2 元数据生成与注册期校验
 
-- `custom_functions_code`：从 `custom_functions_code.js` 模板注入版本/路径，为每个函数生成 JS 包装 + `CustomFunctions.associate`——**这就是"Python 函数出现在 Excel 公式里"的桥**。
+- `custom_functions_code`：从 `custom-functions-code.js` 模板注入版本/路径，为每个函数生成 JS 包装 + `CustomFunctions.associate`——**这就是"Python 函数出现在 Excel 公式里"的桥**。
 - `custom_functions_meta`：清单 JSON——`stream` / `requiresAddress` / `volatile` 选项、matrix 维度、枚举注册、**重复 Excel 名检测**。
 - **流式函数注册期拒绝**：asyncgen 带 `Caller` 注解 → 注册即报错——Office.js 中 `stream` 与 `requiresAddress` 互斥，流式函数永远拿不到调用格地址，注册期拒绝而非运行期注入 None。
 - `custom_scripts_meta`：脚本清单 JSON（与函数清单并列，供任务窗格/App Mode 渲染按钮与表单）。

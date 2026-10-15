@@ -1,4 +1,4 @@
-﻿---
+---
 name: xlwings
 description: xlwings 全场景技能：自动化操作 Excel——Python 脚本与 MCP 两种方式（场景 A）、Web/服务化方案——xlwings Server / Lite / Office.js（场景 B）、开发 VBA 宏或 VBA 加载项（场景 C）、源码学习与二次开发（场景 D）。场景 C 提供 13 步完整工作流（需求→环境→设计→Python→VBA→Ribbon→UDF→配置→测试→交付→安装→集成验证→分发），含 12 个质量门禁、便携运行时分发、白标 xlam 构建。触发关键词：xlwings、Excel 自动化、Python 操作 Excel、Excel 加载项、xlam、UDF、RunPython、Ribbon、VBA 桥接、数据回填、面板交互、MCP、xlwings Server、xlwings Lite、Office.js。
 ---
@@ -150,10 +150,10 @@ import xlwings as xw
 ```
 
 1. **连接 Excel**：`xw.Book()` 打开或创建工作簿；新实例用 `with xw.App()` 管理生命周期；多实例用 `xw.apps.keys()` 获取 PID 后精确指定；`xw.books`/`xw.sheets` 为顶层快捷方式。连接方式与 OneDrive/SharePoint 云盘见 `xlwings/docs/connect_to_workbook.md`、`onedrive_sharepoint.md`
-2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。语法总览见 `xlwings/docs/syntax_overview.md`。各对象 API 文档（`xlwings/docs/api/`）：应用/工作簿 `app.md`/`apps.md`/`book.md`/`books.md`/`book_async.md`；工作表 `sheet.md`/`sheets.md`；单元格 `range.md`/`range_columns.md`/`range_rows.md`/`characters.md`；样式与条件 `font.md`/`border.md`/`borders.md`/`note.md`/`page_setup.md`/`autofilter.md`/`conditional_format.md`/`conditional_formats.md`/`data_validation.md`；图表 `chart.md`/`charts.md`/`chart_axis.md`/`chart_legend.md`/`chart_series.md`/`chart_series_collection.md`；图形 `shape.md`/`shapes.md`/`picture.md`/`pictures.md`；表格与名称 `table.md`/`tables.md`/`name.md`/`names.md`；透视表 `pivot_table.md`/`pivot_tables.md`/`pivot_field.md`/`pivot_fields.md`/`pivot_value_field.md`/`pivot_value_fields.md`；顶层函数与 UDF 装饰器 `top_level_functions.md`/`udf_decorators.md`；PRO `reports.md`
+2. **对象导航**：`app → books → book → sheets → sheet → range/charts/shapes/pictures/tables`；反向导航 `rng.sheet → rng.sheet.book → rng.sheet.book.app`；Range 三种选择方式：A1 表示法（推荐 `sheet['A1']`）、1-based 元组、命名区域。语法总览见 `xlwings/docs/syntax_overview.md`。各对象 API 文档（`xlwings/docs/api/`）：应用/工作簿 `app.md`/`apps.md`/`book.md`/`books.md`/`book_async.md`；工作表 `sheet.md`/`sheets.md`；单元格 `range.md`/`range_columns.md`/`range_rows.md`/`characters.md`；样式与条件 `font.md`/`border.md`/`borders.md`/`note.md`/`notes.md`/`page_setup.md`/`autofilter.md`/`conditional_format.md`/`conditional_formats.md`/`data_validation.md`；批注 `comment.md`/`comments.md`/`comment_reply.md`；图表 `chart.md`/`charts.md`/`chart_axis.md`/`chart_legend.md`/`chart_series.md`/`chart_series_collection.md`；图形 `shape.md`/`shapes.md`/`picture.md`/`pictures.md`；表格与名称 `table.md`/`tables.md`/`table_row.md`/`table_rows.md`/`table_column.md`/`table_columns.md`/`name.md`/`names.md`；透视表 `pivot_table.md`/`pivot_tables.md`/`pivot_field.md`/`pivot_fields.md`/`pivot_value_field.md`/`pivot_value_fields.md`；顶层函数与 UDF 装饰器 `top_level_functions.md`/`udf_decorators.md`；PRO `reports.md`
 3. **读取数据**：`.value` 读取，`.options()` 控制转换器，大数据用 `chunksize` 分块；数据结构与转换器见 `xlwings/docs/datastructures.md`、`converters.md`
 4. **写入数据**：指定左上角自动填充；公式分 `.formula`（普通）、`.formula2`（dynamic array）、`.formula_array`（CSE 数组）三类；写入后需 `app.calculate()` 触发计算
-5. **格式化样式**：`.number_format`/`.color`/`.font`/`.autofit()`；批注用 `.note`（创建须经 COM `api.AddComment`）；超链接用 `.add_hyperlink`；子字符串格式化用 `.characters`（macOS 不支持）
+5. **格式化样式**：`.number_format`/`.color`/`.font`/`.autofit()`；线程批注用 `.add_comment(text)`（Win 桌面/remote，mac 不支持；见 `xlwings/docs/api/comments.md`）；旧式备注用 `.add_note(text)`/`.note`（Note 体系）；超链接用 `.add_hyperlink`；子字符串格式化用 `.characters`（macOS 不支持）
 6. **图表图片形状表格**：`sheet.charts.add()`、`sheet.pictures.add()`（支持文件或 Matplotlib/Plotly 对象，Matplotlib 集成见 `xlwings/docs/matplotlib.md`）、形状通过 COM `sheet.shapes.api.AddShape()`（`sheet.shapes` 无 `add()` 方法）、`sheet.tables.add()`
 7. **清理收尾**：保存退出，`tasklist | findstr EXCEL` 确认无残留进程。多线程/多进程注意事项见 `xlwings/docs/threading_and_multiprocessing.md`，Jupyter 交互见 `jupyternotebooks.md`
 
@@ -163,7 +163,7 @@ import xlwings as xw
 - 多线程/多进程不传递 xlwings 对象，在子线程内重新连接——重连模式完整代码见 `references/11-scenario-a-python-automation.md` 第五节
 - Jupyter 交互（`xw.view()`/`xw.load()`）仅限交互式工作，写脚本用标准 API
 - 形状创建必须走 COM `AddShape(type, left, top, width, height)`，type: 1=矩形, 5=圆角矩形, 9=椭圆——COM 调用细节与类型常量表见 `references/11-scenario-a-python-automation.md` 第四节
-- 批注创建必须先 `sheet['A1'].api.AddComment('内容')`，之后才能用 `.note.text` 读写——完整生命周期代码与常见错误见 `references/11-scenario-a-python-automation.md` 第三节
+- 线程批注（Comments）与旧式备注（Note）是两个体系：优先用高层 `cell.add_comment(text)`，遍历用 `book.comments`/`sheet.comments["A1"].text`；备注创建用 `cell.add_note(text)`（无需 COM）；线程回复 `comment.replies`/`add_reply` 桌面可用，macOS 线程批注整体不可用，remote 引擎读值需 `await get_*()`——三引擎精确差异见 `references/11-scenario-a-python-automation.md` 第三节
 - 公式三类型（formula/formula2/formula_array）的区别与选择——溢出行为与版本兼容性见 `references/11-scenario-a-python-automation.md` 第二节
 
 ### 4.3 实战案例参考（examples/）
@@ -188,7 +188,7 @@ import xlwings as xw
 
 `xlwings-demo-master` 社区版部分（basics/correlation/frozen/interactive/performance/simulation/testing）的文件级用途详展见 `references/11-scenario-a-python-automation.md` 七章 7.7（PRO 部分见 13-scenario-d 四章 PRO 案例研读）。
 
-完整案例索引（11 个案例按工作流环节分类）见 `references/11-scenario-a-python-automation.md` 附录。
+完整案例索引（12 个案例按工作流环节分类）见 `references/11-scenario-a-python-automation.md` 附录。
 
 ### 4.4 MCP 自动化（场景 A 的协议封装通道）
 
@@ -347,7 +347,7 @@ import xlwings as xw
 - [ ] WPS/Excel 信任中心已配置（宏启用）
 - [ ] 外部数据源可访问（如 API 需网络）
 
-**PowerShell 编码规则**：`.ps1`/`.ps1.tmpl` 必须 `UTF-8 with BOM + CRLF`，否则中文乱码。环境预检快捷命令（dot-source + 6 个关键函数调用）、COM 权限配置步骤与 PowerShell 5.1 排查见 `references/02-encoding-com-prereqs.md`。
+**PowerShell 编码规则**：`.ps1`/`.ps1.tmpl` 必须 `UTF-8 with BOM + CRLF`，否则中文乱码。环境预检快捷命令（dot-source + 4 个关键函数调用）、COM 权限配置步骤与 PowerShell 5.1 排查见 `references/02-encoding-com-prereqs.md`。
 
 ### 6.5.3 项目初始化与设计
 
@@ -838,7 +838,7 @@ Web 加载项（Lite）完整案例 `examples/taxi-duckdb-main/`（一个内嵌 
 
 ### 7.4 PRO 功能研读（仅源码研读，不部署运行）
 
-xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、ObjectHandle 自定义对象传递。深度技术分析见 `references/13-scenario-d-source-code.md`：引擎原理（含 calamine 只读引擎 `pro/_xlcalamine.py` 的 Python 适配层与 Office.js 转换层）见 1.2 节，许可证机制见 1.1，Reports 架构见 1.3，部署机制见 1.4；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）已独立为 `references/16-xlwings-officejs.md`（与官方教程对照的工作流编排）。**xlwings Lite（免费 Web 加载项）的独立参考手册（产品能力/运行机制/开发工作流/自托管/taxi-duckdb 案例 + BookAsync 等源码研读）见 `references/15-xlwings-lite-guidance.md`**。
+xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无许可调用抛 `LicenseError`；第三方开源组件许可清单见 `xlwings/docs/opensource_licenses.md`。核心能力包括四种引擎（excel/remote/calamine/officejs）、Reports 报告系统、Reader 只读引擎、code embed/release 部署、ObjectHandle 自定义对象传递。深度技术分析见 `references/13-scenario-d-source-code.md`：引擎原理（含 calamine 只读引擎 `pro/_xlcalamine.py` 的 Python 适配层与 Office.js 转换层）见 1.2 节，许可证机制见 1.1，Reports 架构见 1.3，部署机制见 1.4；Office.js 自定义函数与自定义脚本的完整源码研读（remote 引擎转换层、注入类型、流式推流、data types 协议、locale 日期归一）已独立为 `references/16-xlwings-officejs.md`（与官方教程对照的工作流编排）。**xlwings Lite（免费 Web 加载项）的独立参考手册（产品能力/运行机制/开发工作流/自托管/taxi-duckdb 案例 + BookAsync 等源码研读）见 `references/15-xlwings-lite-guidance.md`**。
 
 ### 7.5 服务端工程与部署机制
 

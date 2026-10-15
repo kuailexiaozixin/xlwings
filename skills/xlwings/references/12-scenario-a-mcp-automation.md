@@ -1,4 +1,4 @@
-﻿# 场景 A 4.4：MCP 自动化 — 深度技术展开
+# 场景 A 4.4：MCP 自动化 — 深度技术展开
 
 > 本文件是场景 A（MCP 自动化，4.4 小节）的**深度扩展资源**。主文档保留 7 步工作流与核心原则；本文件展开 4 个社区 MCP Server 的技术细节、工具清单、客户端配置模板、安全机制源码分析与故障排查。所有内容均基于 `MCP-Server/` 目录下 4 个实际项目的源码与 README 核实。
 
@@ -25,7 +25,7 @@
 | **核心特点** | DRM 保护文件支持、读取用户选区 | 功能最全（20 模块）、线程安全、图表支持 | VBA 宏执行、命名区域 | VBA 宏白名单安全、专用 COM 线程 |
 | **VBA 宏** | 支持（运行已有宏+返回值） | 未明确 | 支持（需 VBA 项目解锁） | 支持（白名单限制） |
 | **跨平台** | Windows（COM） | Windows | Windows/macOS | Windows（COM）/ 其他（Mock） |
-| **源码模块数** | 较少（src/ 下少量文件） | 20 个模块 | 2 个（main.py+server.py 35KB） | 4 个（server/base/windows_com/demo） |
+| **源码模块数** | 较少（src/ 下少量文件） | 快照 7 个（xlwings_impl 子包未随 OSS 发布） | 2 个（main.py+server.py 35KB） | 4 个（server/base/windows_com/demo） |
 | **许可** | MIT | MIT | 未明确 | 未明确 |
 | **文档语言** | 英文 | 英文 | 英文 | 越南语（注释/README） |
 
@@ -93,23 +93,17 @@ claude mcp add xlwings -- uvx mcp-server-xlwings
 - **自动资源管理**：TTL 会话清理 + LRU 淘汰策略
 - **零错误设计**：全面错误处理
 
-**源码模块**（`src/xlwings_mcp/`，共 20 个）：
+**源码模块**（开源快照 `src/xlwings_mcp/` 实际仅 7 个文件）：
 | 模块 | 职责 |
 |------|------|
 | `__main__.py` | 入口（fastmcp app） |
-| `server.py` | MCP Server 主逻辑 |
+| `server.py` | MCP Server 主逻辑（1652 行，34 个工具函数分发；`workbook_xlw`/`sheet_xlw` 等经 `xlwings_mcp.xlwings_impl.*` 导入） |
 | `session.py` | 会话管理（TTL/LRU） |
-| `workbook.py` / `workbook_xlw.py` | 工作簿操作 |
-| `sheet.py` / `sheet_xlw.py` | 工作表操作 |
-| `range_xlw.py` | 区域操作 |
-| `data_xlw.py` | 数据读写 |
-| `calculations_xlw.py` | 公式与计算 |
-| `formatting_xlw.py` | 格式化 |
-| `rows_cols_xlw.py` | 行列操作 |
-| `advanced_xlw.py` / `advanced_xlw_with_wb.py` | 高级操作 |
-| `validation_xlw.py` | 输入验证 |
-| `base.py` / `helpers.py` / `exceptions.py` | 基础工具 |
+| `workbook.py` / `sheet.py` | 工作簿/工作表操作（legacy API） |
+| `exceptions.py` | 异常体系 |
 | `force_close.py` | 强制关闭 Excel 进程 |
+
+> **注意**：`server.py` 内部引用 `xlwings_impl/` 子包（`workbook_xlw.py`、`data_xlw.py`、`calculations_xlw.py` 等"新 API"实现层），但**该子包不在开源快照内**——上游 OSS 版发布不完整，直接运行其"新 API"分支会 ImportError；legacy API 分支可用。据此，"20 个模块"的旧描述已按快照实况修正。
 
 **核心工具**（从 README 提取）：
 - `open_workbook`：打开工作簿会话（filepath, visible, read_only）

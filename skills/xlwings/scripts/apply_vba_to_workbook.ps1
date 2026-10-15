@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 
 # 现有工作簿回写脚本（与 import_existing_workbook.ps1 配对使用）：
 # - 基于 baseline/ 中的基线副本构建，绝不动原始文件

@@ -1,4 +1,4 @@
-﻿"""
+"""
 xlwings release 复刻工具 - xlam 转 xlsm
 将 xlam 加载项转换为 xlsm 宏工作簿（步骤 11.1）
 """

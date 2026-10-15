@@ -1,4 +1,4 @@
-﻿# 场景 A：Python 脚本自动化 — 深度技术展开
+# 场景 A：Python 脚本自动化 — 深度技术展开
 
 > 本文件是场景 A（Python 脚本自动化）的**深度技术扩展**。主文档保留主线工作流、关键规则与 API 文档导航；本文件展开容易踩坑的技术细节、内部机制、完整操作代码与性能对比。
 
@@ -86,39 +86,75 @@ sheet['C1'].formula2 = '=SORT(A1:B10, 2)'
 
 ## 三、批注操作的完整生命周期
 
-### 3.1 创建批注（必须经 COM）
+### 3.1 线程批注（Comments，优先用）——高层 API
 
-xlwings 的 `.note` 属性是**只读访问器**，不能直接赋值创建批注。创建必须通过底层 COM API：
+xlwings 自 0.37.x 起新增高层线程批注 API（`main.py` 的 `Comments`/`Comment`/`CommentReply`，文档见 `xlwings/docs/api/comments.md`/`comment.md`/`comment_reply.md`），**创建不再需要 COM**：
 
 ```python
-# 创建批注
-sheet['A1'].api.AddComment('这是批注内容')
+# 创建线程批注（单单元格；非文本抛 TypeError，空文本/多单元格抛 ValueError）
+sheet['A1'].add_comment('这是批注内容')
 
-# 读取批注
+# 遍历：工作簿/工作表级
+for comment in book.comments:
+    print(comment.location.address, comment.text)
+print(sheet.comments['A1'].text)
+print(len(sheet.comments), sheet.comments.count)
+
+# 删除（Comment 对象上）
+sheet.comments['A1'].delete()
+```
+
+**引擎差异**（逐行核对于 `_xlwindows.py`/`_xlmac.py`/`pro/_xlremote.py`）：
+
+| 能力 | Windows 桌面 | macOS 桌面 | remote 引擎（Server/Lite） |
+|------|------------|-----------|--------------------------|
+| `add_comment`（线程批注） | ✅（COM `AddCommentThreaded`） | ❌（AppleScript 不支持，抛 NotImplementedError） | ✅（wire `addComment`，要求 Office.js 客户端） |
+| `add_note`（备注） | ✅（COM `AddComment`） | ✅ | ✅（要求 ExcelApi 1.18） |
+| `comment`/`comments` 同步读 | ✅（`CommentThreaded`/`CommentsThreaded`） | ❌ | ❌ 同步读不支持，须 `await get_comment()`/`get_comments()`（仅 Lite/emscripten） |
+| `replies`/`add_reply` | ✅（COM `Replies`/`AddReply`） | ❌ | ✅ `add_reply`；读须 `await get_replies()`（仅 Lite） |
+| `resolved`（已解决状态） | ❌（COM 不暴露，抛 NotImplementedError） | ❌ | ✅ `set_resolved()`；读须 `await get_resolved()`（仅 Lite） |
+
+### 3.2 旧式备注（Note）——用 add_note 创建
+
+`.note` 访问的是**另一体系**的旧式备注（Note），与线程批注互不相通；上游同步新增高层 `Range.add_note(text)`（Windows 走 COM `Range.AddComment`，mac 走 `add_comment`，remote 走 wire `addNote` 且要求 Office.js 客户端 + ExcelApi 1.18）与 `Notes` 集合（`sheet.notes`/`book.notes`）：
+
+```python
+# 创建备注（高层 API，无需 COM）
+sheet['A1'].add_note('这是备注内容')
+
+# 等价的 COM 方式（add_note 的底层实现，仍可用）
+sheet['A1'].api.AddComment('这是备注内容')
+
+# 读取备注
 print(sheet['A1'].note.text)
 
-# 修改批注（note.text 可写，但前提是批注已存在）
-sheet['A1'].note.text = '更新后的批注'
+# 修改备注（note.text 可写，但前提是备注已存在）
+sheet['A1'].note.text = '更新后的备注'
 
-# 删除批注
+# 删除备注
 sheet['A1'].note.delete()
 
-# 无批注时 note 为 None
+# 无备注时 note 为 None
 assert sheet['A1'].note is None
 ```
 
-### 3.2 常见错误
+### 3.3 常见错误
 
 ```python
-# 错误：直接赋值 .note.text 创建批注（会抛异常，因为 note 为 None）
-sheet['A1'].note.text = '新批注'  # AttributeError: 'NoneType' object has no attribute 'text'
+# 错误 1：直接赋值 .note.text 创建（会抛异常，因为 note 为 None）
+sheet['A1'].note.text = '新备注'  # AttributeError: 'NoneType' object has no attribute 'text'
 
 # 正确：先 AddComment，再修改
 sheet['A1'].api.AddComment('临时')
 sheet['A1'].note.text = '最终内容'
-```
 
----
+# 错误 2：同一单元格重复 add_comment（Excel 拒绝）
+sheet['A1'].add_comment('第一条')
+sheet['A1'].add_comment('第二条')  # 报错
+
+# 错误 3：对多单元格区域 add_comment
+sheet['A1:B2'].add_comment('x')  # ValueError：只能单单元格
+```
 
 ## 四、形状创建的 COM 调用细节
 

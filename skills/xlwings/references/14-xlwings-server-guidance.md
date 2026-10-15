@@ -33,7 +33,7 @@
 | 四 核心能力开发——自定义函数 | 把 Python 函数暴露为 Excel 公式（转换/命名空间/流式/句柄/后续脚本） | 函数集 + 元数据 | `docs/custom_functions.md`、`xlwings_server/routers/xlwings.py`、`serializ | 函数经真机公式调用返回预期值；流式/句柄（若有）验证通过；元数据生成正确 |ers/`、`object_handles.py`、`custom_functions/` |
 | 五 核心能力开发——自定义脚本与任务窗格 | 写整簿操作脚本 + 构建任务窗格 UI + 产出并安装 manifest | 脚本 + 任务窗格 + manifest | `docs/custom_scripts.md`、`docs/taskpane_*.md`、`docs/jinja.md`、 | 脚本三通道至少一条真机跑通；任务窗格可渲染；manifest 安装验证记录 |`docs/htmx.md`、`docs/alpinejs.md`、`docs/bootstrap.md`、`docs/manifest.md`、`docs/install_officejs_addin.md`、`custom_scripts/`、`templates/` |
 | 六 认证、授权与安全 | 让函数/脚本受保护，分级授权，锁定任务窗格 | 认证配置 + RBAC + 安全头 | `docs/authentication.md`、`docs/authorization.md`、`docs/auth_entraid.md`、`docs/auth_provider | 未登录返回 Access Denied；角色分级生效；安全头生产生效 |s.md`、`docs/auth_taskpane.md`、`auth/`、`dependencies.py`、`security_headers.py` |
-| 七 测试、调试与性能 | 建立质量门禁，掌握调试手段，应用性能配方 | 三层测试 + 验证清单 | `tests/`（41 项）、`docs/debugging.md`、`docs/performance.md`、`docs/troubleshooting.md` | 三层测试全绿（对齐官方 41 项结构）；调试记录 + 性能基线 |
+| 七 测试、调试与性能 | 建立质量门禁，掌握调试手段，应用性能配方 | 三层测试 + 验证清单 | `tests/`（59 个文件）、`docs/debugging.md`、`docs/performance.md`、`docs/troubleshooting.md` | 三层测试全绿（对齐官方 tests/ 结构）；调试记录 + 性能基线 |
 | 八 部署、运维与升级 | 上线并持续演进 | 部署配置 + 生产环境 | `deployment/`、`nginx/`、`scripts/`、`docs/index_hosting.md` 及各托管族、`docs/migration.md`、`docs/upgrade.md`、`docs/was | 部署配置就绪；生产清单核查通过；迁移/升级执行记录 |m_*.md` |
 
 **加载项三件套 ↔ 阶段速查**（Office.js 加载项 = 壳 + 核）：
@@ -138,7 +138,7 @@
 
 ### 1.6 客户端如何连接 Server：remote 引擎（`pro/_xlremote.py`）
 
-- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，5856 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
+- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，5986 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
 - **通信方式**：HTTP REST API；对象操作经 `append_json_action` 打包为 JSON 动作（`func`/`args`/`values`/`sheet_position` 等）累积在 `_json["actions"]`，随请求一并发送服务端执行
 - **对象覆盖**：Apps/App/Books/Book/Sheets/Sheet/Range/Names/Name/Pictures/Shapes/Charts/Characters/Note/PageSetup/Border/Borders/Font/FreezePanes/Table/Tables——与桌面引擎同构的高层 API，脚本代码无需感知通道差异
 - **lazy load**：`_SHEET_VALUES_LOADED_KEY = "_xlwings_values_loaded"` 标记 sheet 值是否已加载（元数据先加载、值按需获取）；该标记仅本地读取，不序列化回 JS
@@ -399,6 +399,18 @@
 - 可选：`Office.ribbon.requestUpdate` 在请求期间禁用按钮（finally 恢复）
 - 官方 TODO：Ribbon 开发体验待改进（issue #102）
 
+### 5.2b 服务端内置 pivot 自定义脚本（2026-10 上游新增，`static/js/custom-scripts/`）
+
+xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非业务示例，属 `socket.io` wire 协议的一部分），自研任务窗格若做透视表面板可直接复用：
+
+| 脚本 | 职责 | 关键点 |
+|------|------|--------|
+| `pivot-identity.js` | 透视表身份定位：`selectPivotTable(items, index, id, name)` | **id/name 双轨解析**：优先 `id`（实时簿元数据），退化按 `name`（本地新建透视表在下次 book load 前无 id，name 即身份），再退化按 `index`（兼容旧 action payload）；找不到抛 `pivot_table_not_found` |
+| `pivot-range-read.js` | 读取透视表范围地址：`createGetPivotTableRangeAddress(run, isSupported)` 工厂 | 参数校验严格（sheetName 字符串、pivotIndex 非负整数、id/name 至少一个、kind ∈ {`report`, `data_body`}），错误带 `invalid_pivot_table_read` 等错误码；经 `unqualifiedAddress` 归一地址 |
+| `pivot-action-callbacks.js` | **Python 侧 pivot 动作的 Office.js 执行器**：`createAddPivotTable`（含选区保存/恢复）、`createSetPivotTableName`、`createAdd/RemovePivotField`（rows/columns/filters 三区）、`createAdd/Set/RemovePivotValueField`（值字段按 dataHierarchies **索引**寻址——caption 会本地化改名，索引才是稳定句柄）、`createSetPivotLayout`、`createRefreshPivotTable`、`createDeletePivotTable` + `pivotTableFromAction` 身份守卫 | 工厂模式与 chart 回调一致：接收 resolver 返回 `(context, action)` 回调，由 `dispatchActions` 按 func 名注册 |
+
+**配套变化**：`custom-scripts/index.js` 将 `getPivotTableRangeAddress` 挂入 `globalThis.xlwings` 命名空间（与 `getComments`/`getTableRowRangeAddress` 等并列）；`tests/js/pivot-*.test.js` 三个 JS 测试覆盖身份解析与范围读取。**客户端侧**仅 xlwings Lite（Pyodide/emscripten）经 `js.xlwings.getPivotTableRangeAddress` 直调（remote 引擎同步 `range`/`data_body_range` 仍不支持）；Server 场景服务端 Python 无此读取通道。两端的动作执行（建/改/删/刷新）与范围读取构成同一 wire 协议，客户端 API 见 13 号 1.2.3。
+
 ### 5.3 任务窗格前端栈（`docs/taskpane_intro.md` + jinja/htmx/alpinejs/bootstrap）
 
 - **定位**：任务窗格 = VBA UserForm 的现代替代（纯 Web 应用，最大灵活性）
@@ -515,13 +527,13 @@
 - **任务**：建立三层测试（单元/集成/端到端）；以官方 `tests/` 套件为模板；掌握服务器与 Office.js 双端调试；应用性能配方；沉淀故障排查清单。
 - **要求**：按 7.1 官方结构建测试；每轮改动后跑门禁；任何失败进入 7.3 调试闭环（复现→定位→修复→回归→沉淀）。
 - **输出物**：见 7.6。
-- **验收**：三层测试全绿（对齐官方 41 项结构）；性能基线有改造前后对比；故障排查清单已沉淀。
+- **验收**：三层测试全绿（对齐官方 tests/ 结构）；性能基线有改造前后对比；故障排查清单已沉淀。
 
-### 7.1 官方测试体系（`tests/` 41 项）
+### 7.1 官方测试体系（`tests/` 59 个文件：Python 测试 21 + JS 测试 28 + 配置/数据 10）
 
 **单元测试层（TestClient 打真实端点，mock 外部依赖如 Redis/Graph）**：
 
-- `test_router_xlwings.py`（28KB / 586 行）：custom-functions / custom-scripts 端点全行为
+- `test_router_xlwings.py`（30KB / 650 行）：custom-functions / custom-scripts 端点全行为
 - `test_object_handles.py`（14KB / 355 行）：缓存后端行为（Redis/LRU 两实现）
 - `test_serializers.py`：pandas / numpy / dict / default 四类往返
 - `test_auth_entraid.py` + `test_obo.py`：JWT 校验与 OBO 流
