@@ -158,7 +158,7 @@ Lite 在 xlwings 生态中的位置（与本地版 / Server 的关系，`index.m
 
 在 `xlwings/xlwings/` 源码中，Lite 并非独立实现一套对象模型，而是通过三种方式"投影"到既有架构上——理解这三处投影，就理解了 Lite 与桌面版的关系：
 
-**① `BookAsync` 类型提示（`main.py` L1465）——异步 API 的开关**
+**① `BookAsync` 类型提示（`main.py` L1470）——异步 API 的开关**
 
 ```python
 class BookAsync(Book):
@@ -473,7 +473,7 @@ Excel 用法：`=SQL("SELECT ...", ["alias1"], range1, ["alias2"], range2, ...)`
 - **`flush()`**：写值后立即可见——典型场景：写 A1 后在同一单元格/脚本内读它或读依赖单元格；print 后立即在 Output pane 看到输出；调用 `to_png()` 等写文件系统方法后在同一单元格/脚本内访问文件。自动 flush 仍发生在单元格/脚本结束时。
 - **`load()`**：单元格/脚本运行前 Lite 自动执行一次，一般无需手动；中途刷新用 `await book.load()` 或 `await mysheet.load()`（sheet 级只刷该 sheet，更高效）。异步 Book 上 `load()` **不含值**（值走 `get_value()`）；同步 Book 上 `load()` 含值，可 `load(values=False)` 排除。
 
-**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings/xlwings/main.py` L1465 + `pro/udfs_officejs.py`）：
+**源码研读——BookAsync 是"预加载开关"，懒加载注入在脚本管线**（引擎机制见 16 号文档阶段四·脚本全链路 懒加载注入，`xlwings/xlwings/main.py` L1470 + `pro/udfs_officejs.py`）：
 
 - `BookAsync` **运行时就是普通 `Book`**——类型提示只是信号：Lite 加载器看到该注解就**跳过整个工作簿的预加载**（`main.py` 注释原话："the annotation only signals xlwings Lite to skip loading the values of the entire book up front"）；
 - 引擎侧 `@script` 的 `lazy=` 参数已弃用，**统一由 `book: xw.BookAsync` 注解表达**（内部发 `"lazy"` wire 键）；**book 参数必须恰一个**（`_book_param_hint`），`BookAsync` 注解与 `lazy=False` 显式冲突 → 报错（注解优先）；
@@ -750,7 +750,7 @@ Lite 持续演进中，开发与分发时关注以下维度（具体版本号见
 - `xlwings-lite/`（31 篇官方文档离线镜像 + README 索引 + 34 张插图）——本文件的逐阶段语义引用源，官方教程层次（入门/进阶/分发/自托管/参考）见 README"建议阅读顺序"；
 - `xlwings/xlwings/udfs.py`——`@func`/`@arg`/`@ret`/`@script` 装饰器实现（Lite 与桌面版同源，3.1/3.2 源码验证）；
 - `xlwings/xlwings/ext/`（sql.py + __init__.py）——`=SQL()` 扩展源码（3.5）；
-- `xlwings/xlwings/main.py`（BookAsync，L1465）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；
+- `xlwings/xlwings/main.py`（BookAsync，L1470）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；
 - `xlwings/xlwings/__init__.py`（ObjectHandle/ObjectCacheMissError/WithScript）——对象句柄与函数后触发脚本（3.1/3.2）；
 - `xlwings/xlwings/pro/udfs_officejs.py`（streaming_callback、Lite 流式任务分支、_inject_value 懒加载注入）——officejs 引擎侧的 Lite 适配（引擎整体研读见 `references/16-xlwings-officejs.md`，Lite 侧解读见本文件 3.1/3.7）；
 - `examples/taxi-duckdb-main/`（taxi_local.xlsx + extracted/）——阶段七案例；

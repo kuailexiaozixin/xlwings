@@ -56,3 +56,7 @@
 | 2026-10-15 | `xlwings-server` | codeload | `617541b` | 429 个文件 |
 
 > 2026-10-15 说明：两路均经 codeload 直连（本机直连 GitHub 已恢复，代理 7897 不再需要）。xlwings 10 天窗口内 `pro/_xlremote.py` 5885→5986 行（+101）、`pro/udfs_officejs.py` 1259→1373 行（+114）、`main.py` 320KB→337KB（BookAsync 锚点 L1449→L1465、`custom_functions_call` L524→L605，references/13:100/158/251/287、14:141、15:161/333/476/753、16:3/66 已同步）；`pro/_xlcalamine.py`（561）、`pro/_xlofficejs.py`（160）、`com_server.py`（385）、`udfs.py`（838）行数未变，`docs/api/` 仍 51 篇。xlwings-server `tests/test_router_xlwings.py`（650 行）与 `static/js/custom-scripts/` 21 个脚本清单未变。track_upstream.py 复跑线② 13 条全部 OK。第三方 `Excel_MCP_Server`（vohoailinh90）检测到漂移 `c03ef06→e06b66e`，不在本次两路同步范围，未动。
+| 2026-10-20 | `xlwings` | ghfast | `f73213c` | 454 个文件 |
+| 2026-10-20 | `xlwings-server` | codeload | `26be458` | 424 个文件 |
+
+> 2026-10-20 锚点复核（线②）：上游 f73213c / 26be458 重拉后 3 条 STALE 已修——xlremote-lines 5986→6117（references/13:100、14:141）；main-size 337KB→341KB（references/13:287）；bookasync-anchor L1465→L1470（references/15:161/476/753）。台账 upstream-facts.json 同步：updated 2026-10-20、snapshot f73213c/26be458、三条 value 修正。线②复跑 14 条全绿，线③ __version__=="0.0.0" 符合预期（zip 快照特征）。第三方 Excel_MCP_Server 漂移 ee31ecd 不在本次两路范围，未动。

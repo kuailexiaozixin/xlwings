@@ -7,8 +7,8 @@
       "repo": "xlwings/xlwings",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "882fb155ea82ba23551f172825141539f4b72d25",
-      "last_synced": "2026-10-15"
+      "pinned_sha": "f73213c9fc7aa7cba354a7af8ab8827f398ad66f",
+      "last_synced": "2026-10-20"
     },
     {
       "id": "xlwings-server",
@@ -16,8 +16,8 @@
       "repo": "xlwings/xlwings-server",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "617541b2fb559e3da8ce1dec02b535639dfec121",
-      "last_synced": "2026-10-15"
+      "pinned_sha": "26be45850894475593918c57f9f0de0524bc540b",
+      "last_synced": "2026-10-20"
     },
     {
       "id": "mcp-server-xlwings",

@@ -97,7 +97,7 @@ xlwings 0.37.4 通过 `xw.engines` 管理四种引擎，引擎选择决定 `Book
 
 #### 1.2.3 remote 引擎（xlwings Server）
 
-- **实现**：`pro/_xlremote.py`（5986 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信；自 2026-10 上游起支持透视表范围读取：`PivotTable.get_range()`/`get_data_body_range()`（report/data_body 两类，**异步且仅 Lite/emscripten**，同步 `range`/`data_body_range` 在 remote 引擎不支持），经注入的 `js.xlwings.getPivotTableRangeAddress` 直调解析实时地址——JS 侧实现见 14 号 5.2b
+- **实现**：`pro/_xlremote.py`（6117 行完整客户端引擎），通过 HTTP REST API 与 xlwings Server 通信；自 2026-10 上游起支持透视表范围读取：`PivotTable.get_range()`/`get_data_body_range()`（report/data_body 两类，**异步且仅 Lite/emscripten**，同步 `range`/`data_body_range` 在 remote 引擎不支持），经注入的 `js.xlwings.getPivotTableRangeAddress` 直调解析实时地址——JS 侧实现见 14 号 5.2b
 - **细节去向（单点原则）**：客户端"如何连 Server"的完整机制（JSON 动作协议、lazy load、计算模式映射、颜色规范化、版本校验、对象覆盖）已迁移至 `references/14-xlwings-server-guidance.md` 阶段一 1.6，本处不再展开
 - **对比要点**：与 excel/calamine/officejs 三引擎并列，属"服务端无 Excel 环境、Linux 部署、Google Sheets 支持"通道
 
@@ -284,7 +284,7 @@ xlwings 社区版（开源，BSD-3-Clause）由两部分组成：**C++ 原生 DL
 
 **公开 API**（`__init__.py`，13KB）：`xw.App`/`Book`/`Sheet`/`Range`/`Chart`/`Shape`/`Name`/`Table` 等对象、`xw.func`/`xw.sub`/`xw.arg`/`xw.ret`/`xw.script` 装饰器、`xw.Book.caller()`（UDF/脚本内定位调用方工作簿）、`xw.view`（交互查看）。动态导入平台层（Windows `_xlwindows` / macOS `_xlmac`）。
 
-**对象模型**（`main.py`，337KB）：`App`（Excel 实例：`books`/`activate`/`quit`/`calculation`/`screen_updating`/`visible`）；`Book`（工作簿：`sheets`/`app`/`open`/`save`/`close`/`names`，UDF 模块注入 `book.set_mock_caller`）；`Sheet`（`cells`/`range`/`used_range`/`names`/`autofit`）；`Range`（`value`/`formula`/`options`/`expand`/`end`/`api`/`color`/`number_format`）；`Chart`/`Shape`/`Name`/`Table`。**`api` 属性直通 COM 原生对象**——xlwings 对象只是瘦封装，复杂操作可下探 COM。基类在 `base_classes.py`（平台无关抽象），`constants.py` 为 Excel 常量枚举（143KB）。
+**对象模型**（`main.py`，341KB）：`App`（Excel 实例：`books`/`activate`/`quit`/`calculation`/`screen_updating`/`visible`）；`Book`（工作簿：`sheets`/`app`/`open`/`save`/`close`/`names`，UDF 模块注入 `book.set_mock_caller`）；`Sheet`（`cells`/`range`/`used_range`/`names`/`autofit`）；`Range`（`value`/`formula`/`options`/`expand`/`end`/`api`/`color`/`number_format`）；`Chart`/`Shape`/`Name`/`Table`。**`api` 属性直通 COM 原生对象**——xlwings 对象只是瘦封装，复杂操作可下探 COM。基类在 `base_classes.py`（平台无关抽象），`constants.py` 为 Excel 常量枚举（143KB）。
 
 **COM 服务器**（`com_server.py`，10KB）——VBA↔Python 对象操作协议：
 
