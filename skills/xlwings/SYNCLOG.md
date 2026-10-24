@@ -60,3 +60,21 @@
 | 2026-10-20 | `xlwings-server` | codeload | `26be458` | 424 个文件 |
 
 > 2026-10-20 锚点复核（线②）：上游 f73213c / 26be458 重拉后 3 条 STALE 已修——xlremote-lines 5986→6117（references/13:100、14:141）；main-size 337KB→341KB（references/13:287）；bookasync-anchor L1465→L1470（references/15:161/476/753）。台账 upstream-facts.json 同步：updated 2026-10-20、snapshot f73213c/26be458、三条 value 修正。线②复跑 14 条全绿，线③ __version__=="0.0.0" 符合预期（zip 快照特征）。第三方 Excel_MCP_Server 漂移 ee31ecd 不在本次两路范围，未动。
+| 2026-10-24 | `xlwings` | requests/codeload | `5b38a61` | 454 个文件 |
+| 2026-10-24 | `xlwings-server` | requests/codeload | `627d244` | 425 个文件 |
+
+> 2026-10-24 说明：本会话沙箱内 `curl.exe`/`git` 经系统 schannel 建立 TLS 时被拒（`SEC_E_NO_CREDENTIALS`，直连与 Clash 代理 7897 均失败），`sync_upstream.py` 的 `latest_sha`（gh/git ls-remote）与 `curl` 下载两环均不可用。改用 Python requests（certifi CA + 显式 `127.0.0.1:7897` 代理）下载 codeload tar.gz、经 `commits/main.atom` 取 head（绕开 GitHub API 匿名限流 403），并复用 `sync_upstream.replace_dir`/`count_files` 的原子替换 + 文件数校验 + 回滚逻辑，只替换两路 local_dir，不触碰 SKILL.md/references；manifest 已写回。
+>
+> 锚点复核（线②③）：线③ `__version__=="0.0.0"` 符合预期。线② 14 条锚点中 1 条 STALE——`xlwings/pro/_xlremote.py` 6117→6137 行（区间内 Lite 透视表/Range.move/get_expanded_range/autofit 等提交），已修 references/13:100、references/14:141 及台账 `xlremote-lines`。其余（`_xlcalamine.py`561、`_xlofficejs.py`160、`udfs_officejs.py`1373、`udfs.py`838、`com_server.py`385、main.py 341KB、docs/api 51 篇、BookAsync L1470、cfc L605、server cli 64KB）均未变；台账 snapshot 更新为 5b38a61/627d244、updated 2026-10-24。复跑线②③全绿。
+>
+> 存量缺陷登记（非本次引入，旧快照 26be458 即已悬空，raw 接口对 26be458 返回 404 核实，待用户决定是否清理）：references/14 仍引用上游已移除的 `docs/repo_setup.md`（L31/158/732，上游并入 quickstart.md）、`docs/upgrade.md`（L63/674/740，现仅存 migration.md）、`docs/dependencies.md`（L740，快照 docs 无此页），及 `python run.py deps compile`（L690，run.py 现存子命令仅 init/wasm）。这些均不在 `upstream-facts.json` 台账覆盖范围（线②只核行数/KB/行号/文件数/存在性，不核正文 docs 链接），故 track_upstream 未报。
+
+> 2026-10-24 内容改写（更新内容·新增内容·移除过时内容）：承接同日快照同步，对自研文档做语义层审计改写（区别于仅数值锚点）。
+>
+> A. 移除/改指过时内容——根因：xlwings-server 自 v1.0 起改为标准 Python 包分发，废除"仓库即项目"工作流（`docs/migration.md` 实证：*"instead of requiring you to work directly in the xlwings-server Git repository"*）；本次区间 commit #445/#446 进一步删 `docs/repo_setup.md`、`docs/upgrade.md` 与 `run.py deps` 子命令（raw 对旧快照 26be458 即 404，属历史存量，台账线②不核正文链接故未报）。逐项去向：① `repo_setup.md`（ref14 L31/158/732）→ 拆入 `quickstart.md`「5. Set up Version Control」+ `local_development.md`，已改指；② `upgrade.md`（L63/674/740，含补漏的 L37 阶段表）→ 去向 `migration.md`，已删引用；③ `dependencies.md`（L740）→ 快照 docs 无此页（pre-1.0 遗留），已删；④ `python run.py deps compile`（L690）→ 现 run.py 子命令仅 init/wasm，升级改 `uv sync`，2.1 与 8.7 两节按包形态重写（去 fork/merge/merge.ours 等仓库形态流程）。全局复核：references 全部 docs/*.md 悬空引用 0。
+>
+> B. 新增内容——本次上游新 API，三引擎支持经源码实证（main.py 定义 + 五引擎实现 grep）：`Range.move(dest)`(0.37.7,main.py L3512) 与 `Sheet.move(before/after)`(L1846) 为**同步**，桌面 COM(Win/mac)+Lite remote 支持、Office.js/Calamine 不支持 → 补入 ref13 对象模型 L287 + 区域操作节新 bullet；`Range.get_expanded_range()`(L3341) 与 `Chart.get_title()`/`ChartAxis.get_title()`(0.37.8,L6596/7048) 为**异步仅 Lite**（与既有透视表/PivotTable.get_range 同类，docstring "Requires xlwings Lite"）→ 补入 ref15 §base_classes get_\* 族列举 + ref13 L100 remote 能力语义延续。上游 docs/api 未为此新增专页（仍 51 篇，api-doc-count 锚点不变）。
+>
+> C. 台账 upstream-facts.json——新增 3 条 symbol_line 锚点（range-move-line L3512 / get-expanded-range-line L3341 / chart-get-title-line L6596），纳入线②跟踪，锚点总数 14→17。版本基准 ref14 L63 修正：tag 1.14.0 → 跟踪 main、对应 changelog 1.20.0。
+>
+> 验证：线② 17 条全 OK、线③ PASS；悬空引用 0。改写前二次备份 `D:\WPS灵犀过程文件\20261024-08-46-44-248\backup2-content\`（含 6137 修正态）。

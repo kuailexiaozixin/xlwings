@@ -177,7 +177,7 @@ class BookAsync(Book):
 
 **② `base_classes.py` 的异步方法族——能力边界在源码中的哨兵**
 
-`base_classes.py` 定义了平台无关的异步读取方法（`get_value()` / `get_formula()` / `get_number_format()` / `get_color()` / `get_current_region()` 等 40+ 个 `get_*`），每个方法在非 Lite 环境抛：
+`base_classes.py` 定义了平台无关的异步读取方法（`get_value()` / `get_formula()` / `get_number_format()` / `get_color()` / `get_current_region()`，以及本次上游新增的 `get_expanded_range()`（区域扩展）/ Chart·ChartAxis 的 `get_title()` 等 40+ 个 `get_*`），每个方法在非 Lite 环境抛：
 
 ```python
 raise NotImplementedError("get_value() is only supported in xlwings Lite")

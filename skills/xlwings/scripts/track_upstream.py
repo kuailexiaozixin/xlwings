@@ -68,6 +68,53 @@ def line1_commit(quick: bool) -> tuple[list[str], int]:
 
 
 # ---------------------------------------------------------------- 线② 锚点
+
+# ---------------------------------------------------------------- 线②b docs 正文链接悬空
+DOCS_INDEX_DIRS = ("xlwings/docs", "xlwings-server/docs", "xlwings-lite",
+                   "docs", "examples", "MCP-Server")
+
+def _collect_docs_index() -> set:
+    """候选上游/自研 docs 页面文件名并集（basename，递归含子目录）。"""
+    known: set[str] = set()
+    for d in DOCS_INDEX_DIRS:
+        dd = SKILL_ROOT / d
+        if dd.is_dir():
+            for p in dd.rglob("*.md"):
+                known.add(p.name)
+    return known
+
+def line2_docs_links() -> tuple[list[str], int]:
+    """docs/<单段>.md 正文链接悬空检测（硬漂移）。
+
+    自研文档（SKILL.md + references/*.md）里引用的 `docs/xxx.md` 顶层页面，
+    若在本技能快照候选 docs 目录中已查无同名文件，判为 STALE——典型成因是
+    上游重构删除/更名了文档页而自研文档未跟随（如 xlwings-server v1.0 移除
+    repo_setup.md、upgrade.md）。口径与手工审计一致：仅核 `docs/<单段>.md`
+    顶层链接，靠 basename 存在性判定；带通配（docs/wasm_*.md）与子目录引用
+    （docs/api/）天然不匹配，子目录页面另由 filecount 类锚点覆盖。
+    """
+    known = _collect_docs_index()
+    pat = re.compile(r'docs/([A-Za-z0-9_\-]+\.md)')
+    lines: list[str] = []
+    bad = 0
+    docs = [SKILL_ROOT / "SKILL.md"] + sorted((SKILL_ROOT / "references").glob("*.md"))
+    for doc in docs:
+        if not doc.is_file():
+            continue
+        text = doc.read_text(encoding="utf-8", errors="replace")
+        rel = doc.relative_to(SKILL_ROOT).as_posix()
+        seen: set[str] = set()
+        for m in pat.finditer(text):
+            name = m.group(1)
+            if name in seen:
+                continue
+            seen.add(name)
+            if name not in known:
+                ln = text[:m.start()].count("\n") + 1
+                lines.append(f"    [{rel}:{ln}] STALE 悬空 docs 链接 `docs/{name}`（快照已无该页 → 查上游去向并改指）")
+                bad += 1
+    return lines, bad
+
 def _check_fact(root: Path, fact: dict) -> str | None:
     """单条锚点检测。返回 None=OK，否则返回问题描述。"""
     src_dir = SKILL_ROOT / fact["source"]
@@ -115,6 +162,9 @@ def line2_facts() -> tuple[list[str], int]:
             stale += 1
             docs = ", ".join(fact.get("docs", [])) or "（无文档指针）"
             lines.append(f"    [{fact['id']}] STALE {err} → 修: {docs}")
+    dl, dbad = line2_docs_links()
+    lines += dl
+    stale += dbad
     return lines, stale
 
 

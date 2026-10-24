@@ -1,9 +1,9 @@
 {
   "_comment": "自研文档引用的上游事实锚点台账（track_upstream.py 第②线检测对象）。每条 = 自研文档对上游快照的一个具体断言（行数/KB/行号/文件数），同步上游后跑 track_upstream.py 核对，STALE 即需修对应 docs 处。kind 语义：lines=文件行数；sizekb=文件大小//1024；filecount=目录下 *.md 数；exists=文件存在；symbol_line=value.line 行(1-based) strip 后以 value.symbol 开头。docs=断言出处（自研文档:行号），修复时按此定位。",
-  "updated": "2026-10-20",
+  "updated": "2026-10-24",
   "snapshot": {
-    "xlwings": "f73213c",
-    "xlwings-server": "26be458"
+    "xlwings": "5b38a61",
+    "xlwings-server": "627d244"
   },
   "facts": [
     {
@@ -11,7 +11,7 @@
       "source": "xlwings",
       "file": "xlwings/pro/_xlremote.py",
       "kind": "lines",
-      "value": 6117,
+      "value": 6137,
       "docs": [
         "references/13-scenario-d-source-code.md:100",
         "references/14-xlwings-server-guidance.md:141"
@@ -157,6 +157,45 @@
       "value": 64,
       "docs": [
         "references/14-xlwings-server-guidance.md:263"
+      ]
+    },
+    {
+      "id": "range-move-line",
+      "source": "xlwings",
+      "file": "xlwings/main.py",
+      "kind": "symbol_line",
+      "value": {
+        "line": 3512,
+        "symbol": "def move(self, destination: Range) -> None:"
+      },
+      "docs": [
+        "references/13-scenario-d-source-code.md:513"
+      ]
+    },
+    {
+      "id": "get-expanded-range-line",
+      "source": "xlwings",
+      "file": "xlwings/main.py",
+      "kind": "symbol_line",
+      "value": {
+        "line": 3341,
+        "symbol": "async def get_expanded_range("
+      },
+      "docs": [
+        "references/15-xlwings-lite-guidance.md:180"
+      ]
+    },
+    {
+      "id": "chart-get-title-line",
+      "source": "xlwings",
+      "file": "xlwings/main.py",
+      "kind": "symbol_line",
+      "value": {
+        "line": 6596,
+        "symbol": "async def get_title("
+      },
+      "docs": [
+        "references/15-xlwings-lite-guidance.md:180"
       ]
     }
   ]

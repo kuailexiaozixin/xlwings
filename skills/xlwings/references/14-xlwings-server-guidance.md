@@ -28,13 +28,13 @@
 | 阶段 | 目标 | 关键产出 | 对应仓库位置 | 验收要点 |
 |------|------|---------|--------------|------|
 | 一 预研与选型 | 判断是否该用 Server、选哪种集成方式 | 选型决策 | `docs/integrations.md`、`docs/index_*.md` | 选型决策表完整（方式+理由+排除项）；Server vs Wasm 取舍有结论 |
-| 二 初始化与本地开发环境 | 跑起可热重载的本地 HTTPS 开发服务器 | 仓库 + .env + 本地 manifest | `docs/repo_setup.md`、`docs/quickstart.md`、`docs/server_config.md`、`docs/dev_certifi | 仓库可提交；HTTPS 开发服务器可启动；manifest 可 sideload；配置分工表明确 |cates.md`、`docs/dev_docker.md`、`docs/devcontainers.md`、`docs/github_codespaces.md`、`run.py` |
+| 二 初始化与本地开发环境 | 跑起可热重载的本地 HTTPS 开发服务器 | 仓库 + .env + 本地 manifest | `docs/quickstart.md`、`docs/local_development.md`、`docs/server_config.md`、`docs/dev_certifi | 仓库可提交；HTTPS 开发服务器可启动；manifest 可 sideload；配置分工表明确 |cates.md`、`docs/dev_docker.md`、`docs/devcontainers.md`、`docs/github_codespaces.md`、`run.py` |
 | 三 应用装配与扩展机制（服务骨架） | 理解服务骨架与用户扩展三通道，挂自己的路由/lifespan/静态资源 | 骨架认知 + 扩展文件 | `xlwings_server/main.py`、`config.py`、`cli.py`、`hotreload.py`、`templates.py`、 | 骨架装配图正确；自定义路由/lifespan/静态覆盖真实生效 |`utils.py`、`databases.py` |
 | 四 核心能力开发——自定义函数 | 把 Python 函数暴露为 Excel 公式（转换/命名空间/流式/句柄/后续脚本） | 函数集 + 元数据 | `docs/custom_functions.md`、`xlwings_server/routers/xlwings.py`、`serializ | 函数经真机公式调用返回预期值；流式/句柄（若有）验证通过；元数据生成正确 |ers/`、`object_handles.py`、`custom_functions/` |
 | 五 核心能力开发——自定义脚本与任务窗格 | 写整簿操作脚本 + 构建任务窗格 UI + 产出并安装 manifest | 脚本 + 任务窗格 + manifest | `docs/custom_scripts.md`、`docs/taskpane_*.md`、`docs/jinja.md`、 | 脚本三通道至少一条真机跑通；任务窗格可渲染；manifest 安装验证记录 |`docs/htmx.md`、`docs/alpinejs.md`、`docs/bootstrap.md`、`docs/manifest.md`、`docs/install_officejs_addin.md`、`custom_scripts/`、`templates/` |
 | 六 认证、授权与安全 | 让函数/脚本受保护，分级授权，锁定任务窗格 | 认证配置 + RBAC + 安全头 | `docs/authentication.md`、`docs/authorization.md`、`docs/auth_entraid.md`、`docs/auth_provider | 未登录返回 Access Denied；角色分级生效；安全头生产生效 |s.md`、`docs/auth_taskpane.md`、`auth/`、`dependencies.py`、`security_headers.py` |
 | 七 测试、调试与性能 | 建立质量门禁，掌握调试手段，应用性能配方 | 三层测试 + 验证清单 | `tests/`（59 个文件）、`docs/debugging.md`、`docs/performance.md`、`docs/troubleshooting.md` | 三层测试全绿（对齐官方 tests/ 结构）；调试记录 + 性能基线 |
-| 八 部署、运维与升级 | 上线并持续演进 | 部署配置 + 生产环境 | `deployment/`、`nginx/`、`scripts/`、`docs/index_hosting.md` 及各托管族、`docs/migration.md`、`docs/upgrade.md`、`docs/was | 部署配置就绪；生产清单核查通过；迁移/升级执行记录 |m_*.md` |
+| 八 部署、运维与升级 | 上线并持续演进 | 部署配置 + 生产环境 | `deployment/`、`nginx/`、`scripts/`、`docs/index_hosting.md` 及各托管族、`docs/migration.md`、`docs/was | 部署配置就绪；生产清单核查通过；迁移/升级执行记录 |m_*.md` |
 
 **加载项三件套 ↔ 阶段速查**（Office.js 加载项 = 壳 + 核）：
 
@@ -60,7 +60,7 @@
 
 选型判据：目标机无 Python 且多人 / 浏览器 / 在线协作 → Server 路线（本手册）；单机离线、VBA 生态、需要桌面 UDF/Ribbon 体验 → 场景 C。二者都涉及 UDF（本地 vs Server 自定义函数）、Ribbon（本地 vs manifest 命令）、安装（XLSTART vs 加载项分发），但实现通道完全不同，互不替代。
 
-**版本基准**：本手册对应上游 tag `1.14.0`（`docs/changelog.md` 最新条目 2026-09-09；技能 17 路上游 manifest 锁定该 tag）。`xlwings_server/__init__.py` 从 `_version` 读取版本号，`docs/changelog.md`、`docs/upgrade.md` 是版本事实的唯一权威。
+**版本基准**：本手册跟踪上游 `main` 分支（技能 manifest 锁定 `main`，本快照对应 `docs/changelog.md` 最新条目 1.20.0（2026-10-23））。`xlwings_server/__init__.py` 的 `__version__` 在 zip 快照中为 `0.0.0`（真实版本以 `docs/changelog.md` 为准），`docs/changelog.md`、`docs/migration.md` 是版本与升级事实的唯一权威。
 
 **许可提示**：source-available 双许可（PolyForm Noncommercial / PRO EULA，见 `LICENSE.md`）——仅供源码研读借鉴设计，不部署、不抄码。
 **加载项三件套就绪检查（发布前门禁）**：
@@ -138,7 +138,7 @@
 
 ### 1.6 客户端如何连接 Server：remote 引擎（`pro/_xlremote.py`）
 
-- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，6117 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
+- **定位**：xlwings 客户端侧连接 Server 的引擎（`xlwings/xlwings/pro/_xlremote.py`，6137 行完整实现），与 excel/calamine/officejs 并列为 PRO 四引擎；13-d 1.2.3 已压缩为指针，细节在此展开
 - **通信方式**：HTTP REST API；对象操作经 `append_json_action` 打包为 JSON 动作（`func`/`args`/`values`/`sheet_position` 等）累积在 `_json["actions"]`，随请求一并发送服务端执行
 - **对象覆盖**：Apps/App/Books/Book/Sheets/Sheet/Range/Names/Name/Pictures/Shapes/Charts/Characters/Note/PageSetup/Border/Borders/Font/FreezePanes/Table/Tables——与桌面引擎同构的高层 API，脚本代码无需感知通道差异
 - **lazy load**：`_SHEET_VALUES_LOADED_KEY = "_xlwings_values_loaded"` 标记 sheet 值是否已加载（元数据先加载、值按需获取）；该标记仅本地读取，不序列化回 JS
@@ -155,14 +155,13 @@
 - **输出物**：见 2.6。
 - **验收**：仓库可提交；本地 HTTPS 开发服务器可启动且热重载生效；manifest 可 sideload；配置分工表明确。
 
-### 2.1 步骤：仓库设置与项目初始化（`docs/repo_setup.md`、`docs/quickstart.md`）
+### 2.1 步骤：项目初始化（`docs/quickstart.md`、`docs/local_development.md`）
 
-- 克隆官方仓库改名项目；`git remote rename origin upstream`，另加自己的 `origin`（保留上游便于升级）
-- 配 `.gitattributes` 并执行 `git config --local merge.ours.driver true` 减少日后 merge 冲突
-- 安装 uv（`pip install uv`），同步依赖：仓库形态 `uv pip sync requirements-dev.txt`；v1.0+ 包形态 `uv sync`
-- 初始化：仓库形态 `python run.py init`；v1.0+ `uv run xlwings-server init .`——生成 `.env` 并创建各环境 UUID
+- 自 v1.0 起 Server 以标准 Python 包分发，不再“克隆官方仓库当项目”（仓库形态已废，pre-1.0 迁移见 8.7 与 `docs/migration.md`）；新项目直接 `uv init --python=<版本> myproject` → `cd myproject`
+- 安装依赖：`uv add xlwings-server`，再 `uv add watchfiles --dev`（热重载）；不再用仓库形态的 `uv pip sync requirements-dev.txt`
+- 初始化：`uv run xlwings-server init .`——生成 `.env` 并创建各环境 UUID；运行：`uv run xlwings-server`（替代旧 `python run.py`）
 - 在 `.env` 顶部填 `XLWINGS_LICENSE_KEY`（试用 key 取自 xlwings.org/trial）；`.env` 不入 Git，需备份到安全处
-- 只想本地玩可不建 origin（repo_setup 第 7 步注释）
+- 非敏感且跨环境一致的配置可改用 `pyproject.toml`（与 `.env`、环境变量并列，见 `docs/server_config.md`）
 
 ### 2.2 步骤：开发证书（`docs/dev_certificates.md`）
 
@@ -671,7 +670,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 - 开发侧（`docs/wasm_development.md`）：`XLWINGS_ENABLE_WASM=true` 用 Server 作开发环境；`app/wasm/requirements.txt` 独立依赖（Pyodide 先查 PyPI 纯 Python wheel，再查 Pyodide 官方包库）；Python 版本由 Pyodide 决定；`app/wasm/.env` 自动从 `.env` 同步但**会随产物公开**（敏感项勿放）
 - 限制复盘：全公开、无认证、2GB 内存、无 TCP（SQLite 可用）、无调试器、函数/脚本 Server/Wasm 二选一、仅 Office.js（`docs/wasm_limitations.md`）
 
-### 8.7 迁移与升级（`docs/migration.md` + `docs/upgrade.md`）
+### 8.7 迁移与升级（`docs/migration.md`）
 
 **pre-1.0 → v1.0 迁移**：
 
@@ -685,10 +684,11 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
   - 自定义 config / auth / router / lifespan / jwks：分别 `add` 后迁回
   - 导入统一：`from xlwings_server.models import CurrentUser`、`from xlwings_server.dependencies import User`、`from xlwings_server.templates import TemplateResponse`、`from xlwings_server import settings`
 
-**升级（仓库形态）**：
+**升级（v1.0+ 包形态）**：
 
-- `git fetch upstream` + `git merge --no-edit <VERSION>`；冲突解决后 `python run.py deps compile`；`uv pip sync requirements-dev.txt` 或 `docker compose build`
-- 官方推荐 merge 而非 rebase（冲突单步解决、无需 force push、保留自己的提交历史）
+- 依赖升级走包管理器：`uv sync`（升特定包用 `uv add <pkg>@<ver>`）；Docker 部署则 `docker compose build`
+- 不再“fork 官方仓库 + merge upstream”，故无 `git fetch upstream`/`git merge`/`python run.py deps compile` 这套仓库形态流程（已随 v1.0 移除，`run.py` 现存子命令仅 `init`/`wasm`）
+- pre-1.0 仓库形态 → v1.0 包形态迁移按 `docs/migration.md`：新目录 `uv add xlwings-server` + `uv run xlwings-server init .` + `uv run xlwings-server migrate <旧项目路径>`，逐项迁回依赖/静态文件/config/auth/router/jwks
 
 **版本事实**：`docs/changelog.md` 为版本权威（本手册基准 1.14.0，2026-09-09）；技能侧 17 路上游 manifest 锁定 tag `1.14.0`，升级时同步刷新本手册与 13-d 中的版本引用。
 
@@ -729,7 +729,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 | 文档族 | 文档（docs/） | 对应阶段 |
 |--------|--------------|---------|
 | 导航族（11 篇） | `index.md`、`index_authentication.md`、`index_dev_prerequisites.md`、`index_development_environment.md`、`index_hosting.md`、`index_officejs_addins.md`、`index_other_integrations.md`、`index_server.md`、`index_taskpane.md`、`index_tutorials.md`、`index_wasm.md` | 全阶段入口 |
-| 快速上手 | `quickstart.md`、`repo_setup.md`、`local_development.md`、`server_config.md` | 阶段二 |
+| 快速上手 | `quickstart.md`、`local_development.md`、`server_config.md` | 阶段二 |
 | 功能 | `custom_functions.md`、`custom_scripts.md`、`manifest.md`、`install_officejs_addin.md`、`examples.md` | 阶段四/五 |
 | 任务窗格 | `taskpane_intro.md`、`jinja.md`、`bootstrap.md`、`htmx.md`、`alpinejs.md` | 阶段五 |
 | 认证 | `authentication.md`、`authorization.md`、`auth_entraid.md`、`auth_providers.md`、`auth_taskpane.md` | 阶段六 |
@@ -737,7 +737,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 | 性能调试 | `performance.md`、`debugging.md`、`troubleshooting.md` | 阶段七 |
 | 部署托管 | `docker_compose.md`、`dev_docker.md`、`devcontainers.md`、`dev_certificates.md`、`github_codespaces.md`、`aws_app_runner.md`、`azure_container_apps.md`、`azure_functions.md`、`render.md`、`windows_server.md` | 阶段二/八 |
 | WASM | `wasm_development.md`、`wasm_deployment.md`、`wasm_limitations.md` | 阶段一/八 |
-| 迁移限制 | `migration.md`、`upgrade.md`、`limitations.md`、`missing_features.md`、`alternatives.md`、`dependencies.md`、`changelog.md`、`versioning-implementation-plan.md`、`license.md` | 阶段八 |
+| 迁移限制 | `migration.md`、`limitations.md`、`missing_features.md`、`alternatives.md`、`changelog.md`、`versioning-implementation-plan.md`、`license.md` | 阶段八 |
 
 ## 附录 C 与 13-d 的分工
 
