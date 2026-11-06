@@ -20,7 +20,7 @@
 | 11 | `11-scenario-a-python-automation.md` | 场景 A 主线 | 连接/导航/读写/格式化/图表图片形状表格 + API 参考导航 + 社区版案例详展（quickstart/自动化测试/质检/双端/PQ/Eikon） |
 | 12 | `12-scenario-a-mcp-automation.md` | 场景 A 4.4（MCP 自动化）深度扩展 | 4 个社区 xlwings MCP Server 逐一详解 + 工具清单 + 安装配置 + 安全注意 + 故障排查 |
 | 13 | `13-scenario-d-source-code.md` | 场景 D 深度扩展 | xlwings PRO 深度技术分析（许可证/四引擎/Reports/部署）、入门学习执行步骤、案例总览与 PRO 案例研读（社区版案例详展在 11 场景 A references；1.7 已指针化） |
-| 14 | `14-xlwings-server-guidance.md` | 场景 B（Web/服务化）· xlwings Server | xlwings Server 独立参考手册：开发生命周期工作流（预研选型→初始化→扩展机制→自定义函数/脚本→认证安全→测试调试→部署运维升级），六块全覆盖（docs 61 篇教程 / xlwings_server 包 / deployment / nginx / scripts / tests） |
+| 14 | `14-xlwings-server-guidance.md` | 场景 B（Web/服务化）· xlwings Server | xlwings Server 独立参考手册：开发生命周期工作流（预研选型→初始化→扩展机制→自定义函数/脚本→认证安全→测试调试→部署运维升级），六块全覆盖（docs 58 篇教程 / xlwings_server 包 / deployment / nginx / scripts / tests） |
 | 15 | `15-xlwings-lite-guidance.md` | 场景 B（Web/服务化）· xlwings Lite | xlwings Lite 独立参考手册：开发生命周期工作流（认知选型→环境准备→核心开发→测试调试→应用化分发→自托管部署→案例研读），开发节按官方教程层次编排（入门组：函数/脚本/Notebooks；进阶组：依赖/数据库/Web/异步/绘图；个人模块收尾），每节含"源码验证"块；覆盖官方文档镜像 xlwings-lite 语义引用 + Lite 相关源码研读（ext/sql.py、BookAsync、base_classes 异步方法族、ObjectHandle/WithScript、udfs_officejs Lite 分支：JsNull/streaming_callback/_lazy）+ taxi-duckdb 完整案例（原 13-d 1.6/4.5 与 1.8 Lite 适配分支均已迁入并指针化） |
 | 16 | `16-xlwings-officejs.md` | 场景 B（Web/服务化）· Office.js 引擎 | Office.js 引擎深度技术分析与开发工作流：值转换层（`_xlofficejs.py`）+ UDF/脚本全链路（`udfs_officejs.py`）+ socket.io 会话 + 测试，官方教程对照（lite custom-functions/custom-scripts + whatsnew 演进），Server 与 Lite 共享的语义内核（原 13-d 1.2.5/1.8 独立而来） |
 

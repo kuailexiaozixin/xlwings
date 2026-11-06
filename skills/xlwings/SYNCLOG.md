@@ -30,6 +30,9 @@
 ## 2026-10-05 全量审计与内容补齐
 
 > 审计方法：脚本化提取自研文档（SKILL.md + 16 篇 references）全部可验证锚点（行数声明 13 处、路径 884 处、行号锚点 4 处）与上游快照逐一比对；覆盖性扫描 xlwings/docs 全部 131 篇 md（43+8 api 篇除外）、pro/ 模块、main.py 全部类、xlwings-lite 31 篇、xlwings-server docs 61 篇。
+| 2026-11-06 | `xlwings-lite` | web（+3 页 wingman/settings/beta，+5 图 wingman_*） | `1.0.0.105` | 34 页 / 39 图 |
+
+> 2026-11-06 上游机制扩展：xlwings-lite 纳入上游跟踪。manifest 新增 `xlwings-lite` web 源（`type:"web"`，llms_url/index_url/base_url/pinned_version/pinned_full_sha/pinned_pages）；`scripts/sync_upstream.py` 增加 web 分支（urllib 抓取 llms-full.txt → `scripts/web_mirror.py` 分页/排版归一/合并缺失图片 → 原子替换、保留自研 README/_images），`track_upstream.py` 线① web 源改用「顶层 changelog 版本 + 页面集合」判据，`upstream-facts.json` 增 `lite-page-count` 锚点与 `xlwings-lite` 快照版本。下次执行 `sync_upstream.py`/`track_upstream.py` 将自动同时更新 xlwings-lite。
 >
 > 修复清单：
 > - SKILL.md L156/L166 + references/11 第三节：批注表述重写——桌面/remote 高层 `add_comment`、`book.comments`/`sheet.comments`、`CommentReply`（桌面 COM 不支持回复）；`.note` 仍限旧式备注（创建须 COM）
@@ -78,3 +81,11 @@
 > C. 台账 upstream-facts.json——新增 3 条 symbol_line 锚点（range-move-line L3512 / get-expanded-range-line L3341 / chart-get-title-line L6596），纳入线②跟踪，锚点总数 14→17。版本基准 ref14 L63 修正：tag 1.14.0 → 跟踪 main、对应 changelog 1.20.0。
 >
 > 验证：线② 17 条全 OK、线③ PASS；悬空引用 0。改写前二次备份 `D:\WPS灵犀过程文件\20261024-08-46-44-248\backup2-content\`（含 6137 修正态）。
+| 2026-11-06 | `xlwings-server` | codeload | `00f3388` | 425 个文件 |
+| 2026-11-06 | `Excel_MCP_Server` | codeload | `ee31ecd` | 13 个文件 |
+
+> 2026-11-06 锚点复核（线②）：快照 00f3388 重拉后修 2 条过时版本表述——references/14 L63 版本基准 1.20.0（2026-10-23）→1.20.1（2026-11-04，区间仅 1 个 bug fix：Excel 表当前行简写 `[@Column]` 公式）；L693 版本事实"基准 1.14.0 / manifest 锁定 tag 1.14.0"→"基准 1.20.1 / manifest 锁定 main"（1.14.0 为 2026-10-24 内容改写时的漏改存量）。台账 upstream-facts.json snapshot 更新 627d244→00f3388、updated 2026-11-06。线②③复跑全绿；templates/、scripts/ 无需变更；垃圾扫描无 .old/.bak 残留。备份：技能内 .backup_20261106/。
+> 2026-11-06 实质内容审计（文件级 diff：旧 627d244 tarball vs 新 00f3388 快照，仅 3 文件差异、无增删文件）：
+> - 上游实质变更 = 1.20.1 行为增强：`range-action-callbacks.js` 新增 `bracketCurrentRowReferences()`（`setFormula` 写入前把 Excel 表当前行简写 `[@Column]` 归一为 `[@[Column]]`，Office.js 拒绝该简写），配套 `tests/js/range-action-callbacks.test.js` 与 changelog 条目。17 条台账锚点均未命中。
+> - 自研修复（已备份 .backup_20261106/）：① 14 号 5.2b 补入 range-action-callbacks.js 行（原只枚举 pivot 三脚本），节标题改"range/pivot 自定义脚本（现 22 个 .js）"；② 既有数字偏差纠偏（非本次更新引入，旧快照实测值相同）：docs 61→58 篇（14 L3/L17/L727、13 L243、00-index L23、SKILL L224/L846）；tests 59→63 个文件（7.1 拆分按实测 23 py + 32 js + 8 配置/数据，14 L36）；③ 版本基准 L63/L693 已于同日修正 1.20.1/main。
+> - 全库残留「61 篇 / 59 个文件」清零复检 0 处；track_upstream 三线复跑全绿。审计物证保留于 `D:\WPS灵犀过程文件\20261106-10-02-58-090\`（xlwings-server-old-627d244.tar.gz + 展开目录）。

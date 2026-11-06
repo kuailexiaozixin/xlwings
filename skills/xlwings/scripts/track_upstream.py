@@ -54,6 +54,21 @@ def line1_commit(quick: bool) -> tuple[list[str], int]:
     for src in manifest["sources"]:
         if quick and src["id"] not in CORE_SOURCES:
             continue
+        if src.get("type") == "web":
+            # web 源（官网镜像）：漂移判据 = 顶层 changelog 版本号 + 页面集合（非 git sha）
+            vid = src["id"]
+            info = sync.web_latest(src)
+            if info is None:
+                lines.append(f"    [{vid}] UNREACHABLE（web 源抓取失败，网络间歇，稍后重试）")
+                continue
+            pin_ver = src.get("pinned_version", "")
+            pin_pages = set(src.get("pinned_pages", []))
+            if info["top_version"] != pin_ver or info["page_names"] != pin_pages:
+                drifted += 1
+                lines.append(f"    [{vid}] DRIFT web {pin_ver or '?'} → {info['top_version']}（页面 {len(pin_pages) or '?'} → {len(info['page_names'])}，跑 sync_upstream.py 同步）")
+            else:
+                lines.append(f"    [{vid}] OK web {info['top_version']}（{len(info['page_names'])} 页）")
+            continue
         vid, ref = src["id"], src["ref"]
         head = sync.latest_sha(src["repo"], ref)
         pinned = src.get("pinned_sha", "")

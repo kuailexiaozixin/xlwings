@@ -1,6 +1,6 @@
 # 场景 D 附录：xlwings Server 参考手册（开发生命周期工作流）
 
-> 本手册由 `references/13-scenario-d-source-code.md` 1.7 节独立并大幅扩展而来：以开发生命周期工作流重排，深度研读官方仓库 `xlwings-server/` 的六块内容——`docs/`（61 篇官方教程）、`xlwings_server/`（服务端 Python 包）、`deployment/`、`nginx/`、`scripts/`、`tests/`。单点原则：xlwings Server 的一切细节只在本手册展开，13-d 1.7 只保留指针，本手册与 13-d 之间为单向导航。
+> 本手册由 `references/13-scenario-d-source-code.md` 1.7 节独立并大幅扩展而来：以开发生命周期工作流重排，深度研读官方仓库 `xlwings-server/` 的六块内容——`docs/`（58 篇官方教程）、`xlwings_server/`（服务端 Python 包）、`deployment/`、`nginx/`、`scripts/`、`tests/`。单点原则：xlwings Server 的一切细节只在本手册展开，13-d 1.7 只保留指针，本手册与 13-d 之间为单向导航。
 
 ## 目录
 
@@ -14,7 +14,7 @@
 - [阶段七 测试、调试与性能](#阶段七-测试调试与性能)
 - [阶段八 部署、运维与升级](#阶段八-部署运维与升级)
 - [附录 A 源码级工程借鉴](#附录-a-源码级工程借鉴)
-- [附录 B 官方文档族地图（61 篇 → 阶段）](#附录-b-官方文档族地图61-篇-阶段)
+- [附录 B 官方文档族地图（58 篇 → 阶段）](#附录-b-官方文档族地图58-篇-阶段)
 - [附录 C 与 13-d 的分工](#附录-c-与-13-d-的分工)
 
 ## 0 本手册的定位与使用方式
@@ -33,7 +33,7 @@
 | 四 核心能力开发——自定义函数 | 把 Python 函数暴露为 Excel 公式（转换/命名空间/流式/句柄/后续脚本） | 函数集 + 元数据 | `docs/custom_functions.md`、`xlwings_server/routers/xlwings.py`、`serializ | 函数经真机公式调用返回预期值；流式/句柄（若有）验证通过；元数据生成正确 |ers/`、`object_handles.py`、`custom_functions/` |
 | 五 核心能力开发——自定义脚本与任务窗格 | 写整簿操作脚本 + 构建任务窗格 UI + 产出并安装 manifest | 脚本 + 任务窗格 + manifest | `docs/custom_scripts.md`、`docs/taskpane_*.md`、`docs/jinja.md`、 | 脚本三通道至少一条真机跑通；任务窗格可渲染；manifest 安装验证记录 |`docs/htmx.md`、`docs/alpinejs.md`、`docs/bootstrap.md`、`docs/manifest.md`、`docs/install_officejs_addin.md`、`custom_scripts/`、`templates/` |
 | 六 认证、授权与安全 | 让函数/脚本受保护，分级授权，锁定任务窗格 | 认证配置 + RBAC + 安全头 | `docs/authentication.md`、`docs/authorization.md`、`docs/auth_entraid.md`、`docs/auth_provider | 未登录返回 Access Denied；角色分级生效；安全头生产生效 |s.md`、`docs/auth_taskpane.md`、`auth/`、`dependencies.py`、`security_headers.py` |
-| 七 测试、调试与性能 | 建立质量门禁，掌握调试手段，应用性能配方 | 三层测试 + 验证清单 | `tests/`（59 个文件）、`docs/debugging.md`、`docs/performance.md`、`docs/troubleshooting.md` | 三层测试全绿（对齐官方 tests/ 结构）；调试记录 + 性能基线 |
+| 七 测试、调试与性能 | 建立质量门禁，掌握调试手段，应用性能配方 | 三层测试 + 验证清单 | `tests/`（63 个文件）、`docs/debugging.md`、`docs/performance.md`、`docs/troubleshooting.md` | 三层测试全绿（对齐官方 tests/ 结构）；调试记录 + 性能基线 |
 | 八 部署、运维与升级 | 上线并持续演进 | 部署配置 + 生产环境 | `deployment/`、`nginx/`、`scripts/`、`docs/index_hosting.md` 及各托管族、`docs/migration.md`、`docs/was | 部署配置就绪；生产清单核查通过；迁移/升级执行记录 |m_*.md` |
 
 **加载项三件套 ↔ 阶段速查**（Office.js 加载项 = 壳 + 核）：
@@ -60,7 +60,7 @@
 
 选型判据：目标机无 Python 且多人 / 浏览器 / 在线协作 → Server 路线（本手册）；单机离线、VBA 生态、需要桌面 UDF/Ribbon 体验 → 场景 C。二者都涉及 UDF（本地 vs Server 自定义函数）、Ribbon（本地 vs manifest 命令）、安装（XLSTART vs 加载项分发），但实现通道完全不同，互不替代。
 
-**版本基准**：本手册跟踪上游 `main` 分支（技能 manifest 锁定 `main`，本快照对应 `docs/changelog.md` 最新条目 1.20.0（2026-10-23））。`xlwings_server/__init__.py` 的 `__version__` 在 zip 快照中为 `0.0.0`（真实版本以 `docs/changelog.md` 为准），`docs/changelog.md`、`docs/migration.md` 是版本与升级事实的唯一权威。
+**版本基准**：本手册跟踪上游 `main` 分支（技能 manifest 锁定 `main`，本快照对应 `docs/changelog.md` 最新条目 1.20.1（2026-11-04））。`xlwings_server/__init__.py` 的 `__version__` 在 zip 快照中为 `0.0.0`（真实版本以 `docs/changelog.md` 为准），`docs/changelog.md`、`docs/migration.md` 是版本与升级事实的唯一权威。
 
 **许可提示**：source-available 双许可（PolyForm Noncommercial / PRO EULA，见 `LICENSE.md`）——仅供源码研读借鉴设计，不部署、不抄码。
 **加载项三件套就绪检查（发布前门禁）**：
@@ -398,7 +398,7 @@
 - 可选：`Office.ribbon.requestUpdate` 在请求期间禁用按钮（finally 恢复）
 - 官方 TODO：Ribbon 开发体验待改进（issue #102）
 
-### 5.2b 服务端内置 pivot 自定义脚本（2026-10 上游新增，`static/js/custom-scripts/`）
+### 5.2b 服务端内置 range/pivot 自定义脚本（`static/js/custom-scripts/`，现 22 个 .js）
 
 xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非业务示例，属 `socket.io` wire 协议的一部分），自研任务窗格若做透视表面板可直接复用：
 
@@ -406,9 +406,10 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 |------|------|--------|
 | `pivot-identity.js` | 透视表身份定位：`selectPivotTable(items, index, id, name)` | **id/name 双轨解析**：优先 `id`（实时簿元数据），退化按 `name`（本地新建透视表在下次 book load 前无 id，name 即身份），再退化按 `index`（兼容旧 action payload）；找不到抛 `pivot_table_not_found` |
 | `pivot-range-read.js` | 读取透视表范围地址：`createGetPivotTableRangeAddress(run, isSupported)` 工厂 | 参数校验严格（sheetName 字符串、pivotIndex 非负整数、id/name 至少一个、kind ∈ {`report`, `data_body`}），错误带 `invalid_pivot_table_read` 等错误码；经 `unqualifiedAddress` 归一地址 |
+| `range-action-callbacks.js` | **range 动作的 Office.js 执行器**：`createSetValues`、`createSetFormula`（1.20.1 起内置 `bracketCurrentRowReferences()`：公式中 Excel 表当前行简写 `[@Column]` 会被 Office.js 拒绝，写入前自动改写为等价的 `[@[Column]]`；字符串字面量/带引号表名/显式 `[@[Column]]` 及 `#This Row` 等结构引用原样透传）、`createSetFormulaArray`/条件格式/边框等 range 动作回调 | 公式归一化是 1.20.1 的实质行为变更：任务窗格写含 `[@列名]` 简写的公式不会再触发 Office.js 拒绝 |
 | `pivot-action-callbacks.js` | **Python 侧 pivot 动作的 Office.js 执行器**：`createAddPivotTable`（含选区保存/恢复）、`createSetPivotTableName`、`createAdd/RemovePivotField`（rows/columns/filters 三区）、`createAdd/Set/RemovePivotValueField`（值字段按 dataHierarchies **索引**寻址——caption 会本地化改名，索引才是稳定句柄）、`createSetPivotLayout`、`createRefreshPivotTable`、`createDeletePivotTable` + `pivotTableFromAction` 身份守卫 | 工厂模式与 chart 回调一致：接收 resolver 返回 `(context, action)` 回调，由 `dispatchActions` 按 func 名注册 |
 
-**配套变化**：`custom-scripts/index.js` 将 `getPivotTableRangeAddress` 挂入 `globalThis.xlwings` 命名空间（与 `getComments`/`getTableRowRangeAddress` 等并列）；`tests/js/pivot-*.test.js` 三个 JS 测试覆盖身份解析与范围读取。**客户端侧**仅 xlwings Lite（Pyodide/emscripten）经 `js.xlwings.getPivotTableRangeAddress` 直调（remote 引擎同步 `range`/`data_body_range` 仍不支持）；Server 场景服务端 Python 无此读取通道。两端的动作执行（建/改/删/刷新）与范围读取构成同一 wire 协议，客户端 API 见 13 号 1.2.3。
+**配套变化**：`custom-scripts/index.js` 将 `getPivotTableRangeAddress` 等挂入 `globalThis.xlwings` 命名空间（与 `getComments`/`getTableRowRangeAddress` 等并列）；`tests/js/pivot-*.test.js` 三个 JS 测试覆盖身份解析与范围读取。**客户端侧**仅 xlwings Lite（Pyodide/emscripten）经 `js.xlwings.getPivotTableRangeAddress` 直调（remote 引擎同步 `range`/`data_body_range` 仍不支持）；Server 场景服务端 Python 无此读取通道。两端的动作执行（建/改/删/刷新）与范围读取构成同一 wire 协议，客户端 API 见 13 号 1.2.3。
 
 ### 5.3 任务窗格前端栈（`docs/taskpane_intro.md` + jinja/htmx/alpinejs/bootstrap）
 
@@ -528,7 +529,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 - **输出物**：见 7.6。
 - **验收**：三层测试全绿（对齐官方 tests/ 结构）；性能基线有改造前后对比；故障排查清单已沉淀。
 
-### 7.1 官方测试体系（`tests/` 59 个文件：Python 测试 21 + JS 测试 28 + 配置/数据 10）
+### 7.1 官方测试体系（`tests/` 63 个文件：Python 测试 23 + JS 测试 32 + 配置/数据 8）
 
 **单元测试层（TestClient 打真实端点，mock 外部依赖如 Redis/Graph）**：
 
@@ -690,7 +691,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 - 不再“fork 官方仓库 + merge upstream”，故无 `git fetch upstream`/`git merge`/`python run.py deps compile` 这套仓库形态流程（已随 v1.0 移除，`run.py` 现存子命令仅 `init`/`wasm`）
 - pre-1.0 仓库形态 → v1.0 包形态迁移按 `docs/migration.md`：新目录 `uv add xlwings-server` + `uv run xlwings-server init .` + `uv run xlwings-server migrate <旧项目路径>`，逐项迁回依赖/静态文件/config/auth/router/jwks
 
-**版本事实**：`docs/changelog.md` 为版本权威（本手册基准 1.14.0，2026-09-09）；技能侧 17 路上游 manifest 锁定 tag `1.14.0`，升级时同步刷新本手册与 13-d 中的版本引用。
+**版本事实**：`docs/changelog.md` 为版本权威（本手册基准 1.20.1，2026-11-04，快照 commit 00f3388）；技能侧 18 路上游 manifest 锁定 `main`（其中 xlwings-lite 为 web 源），升级时同步刷新本手册与 13-d 中的版本引用。
 
 **平台维护责任**：Azure Functions 的 host 运行时版本与 Python EOL 需人工跟踪（`docs/azure_functions.md` 明确列出跟踪项）。
 
@@ -724,7 +725,7 @@ xlwings Server 在前端集成层内置了一组**透视表支撑脚本**（非�
 - **构建脚本**：前端资产版本化目录 + 引用回写 + 指纹缓存破坏——`scripts/`
 - **测试分层**：单元（TestClient 打真实端点）/ 集成（docker-compose 变体矩阵）/ e2e（真实 Excel + xlsx 断言）/ 手工清单（对象句柄 7 类行为）——`tests/`
 
-## 附录 B 官方文档族地图（61 篇 → 阶段）
+## 附录 B 官方文档族地图（58 篇 → 阶段）
 
 | 文档族 | 文档（docs/） | 对应阶段 |
 |--------|--------------|---------|

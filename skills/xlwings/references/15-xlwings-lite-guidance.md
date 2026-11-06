@@ -5,14 +5,14 @@
 > **与 13/16 号文档的分工**：13 号文档保留 PRO 许可证机制、四引擎原理、Reports 架构、code embed/release 部署等 PRO 专有内容；Office.js 引擎**整体**源码研读（`pro/_xlofficejs.py` + `pro/udfs_officejs.py` 全链路）已独立为 `references/16-xlwings-officejs.md`（值转换层 / UDF 全链路 / 脚本全链路 / socket.io 会话，Server 与 Lite 共享的语义内核）；凡属 **Lite 特有**的适配分支（Pyodide 环境的 JsNull 空值归一、流式函数 `streaming_callback` 直推与 Lite 侧任务重启、`BookAsync` 注解的懒加载注入）由本文件对应小节承接（机制细节处指向 16 号），13 号 1.8 仅保留指针。本文件聚焦 xlwings Lite 的**产品能力、运行机制、开发工作流与全部 Lite 相关源码研读**。
 >
 > **官方教程的层次结构**（lite.xlwings.org 文档体系，本文件按此组织叙述顺序，各节均标注对应官方文档）：
-> 1. **入门**：index → quickstart → custom-functions → custom-scripts → notebooks；
+> 1. **入门**：index → quickstart → custom-functions → custom-scripts → notebooks → wingman（1.0.0.105 编码智能体）；
 > 2. **进阶（数据与集成）**：dependencies → databases → web-requests → async-api → plotting；
 > 3. **分发（应用化与共享）**：app-mode → personal-modules → files → security → limitations；
 > 4. **自托管**：self-hosting → hosting-solutions → linux-vm / azure-container-apps / aws-ecs-express / migrating-to-self-hosted；
-> 5. **参考**：editor → tests → configuration → environment-variables → troubleshooting → faq → changelog / about。
+> 5. **参考**：editor → tests → configuration → environment-variables → troubleshooting → faq → changelog / about / settings / beta。
 > 开发时按"入门 → 进阶 → 分发 → 自托管"的官方路径推进；本文件阶段一/二承载选型与准备，阶段三按"入门组 → 进阶组"展开，阶段四/五/六对应参考/分发/自托管组，阶段七以完整案例收束。
 >
-> **内容来源**：① `xlwings-lite/`（lite.xlwings.org 官方文档 31 篇离线镜像，本文件按阶段语义引用，不重复全文）；② `xlwings/xlwings/` 源码（ext 包、main.py、base_classes.py、__init__.py、udfs.py、pro/udfs_officejs.py 的 Lite 分支）——每节"源码验证"块给出官方教程结论对应的实现位置；③ `examples/taxi-duckdb-main/`（Lite 完整案例）。
+> **内容来源**：① `xlwings-lite/`（lite.xlwings.org 官方文档 34 篇离线镜像（至 1.0.0.105，含 wingman/settings/beta 三页），本文件按阶段语义引用，不重复全文）；② `xlwings/xlwings/` 源码（ext 包、main.py、base_classes.py、__init__.py、udfs.py、pro/udfs_officejs.py 的 Lite 分支）——每节"源码验证"块给出官方教程结论对应的实现位置；③ `examples/taxi-duckdb-main/`（Lite 完整案例）。
 
 ## 目录
 
@@ -71,7 +71,7 @@
 - **"Install the free add-in from Excel's add-in store"**：Lite **本身就是加载项**（Office Web Add-in，应用商店 ID `WA200008175`，见阶段七 7.2 的 OMEX 引用）——它是**成品**，不是让你开发的开发框架；安装动作发生在 Excel 的 `Add-ins` 入口内。
 - **"and you're done"**：安装即完成——**无需安装 Python、无需配置解释器、无需命令行**。Python 运行时随加载项从 Pyodide CDN 拉取（阶段二 2.2），编辑器里 `main.py` 已含 `=HELLO("World")` 示例，安装后即可写出并运行第一个自定义函数。
 - **"VS Code-like editor"**：加载项内置 Monaco 内核编辑器（`editor.md`），写 `.py` 模块的代码编辑体验与 VS Code 一致（快捷键/自动补全/输出窗格）。
-- **"Wingman"**：内置 AI 助手（聊天 + `=WINGMAN()` 函数），自带 API key 接入 Claude/Gemini/OpenAI/自托管模型。
+- **"Wingman"**：内置 AI 助手（聊天 + `=WINGMAN()` 函数，可连 Claude/Gemini/OpenAI/自托管模型）；1.0.0.105 起升级为**编码智能体**（`wingman.md`/`beta.md`）——可直接改写工作簿并产出可复用的 Python 脚本/函数/笔记本，无需为每次复用消耗 AI token。
 
 **Lite 与"开发 Excel 加载项"的关系——三种语境必须分清**：
 
@@ -104,7 +104,7 @@ Lite 提供六类核心能力（`index.md` "What you can do"，各自详展于�
 | **Web API 访问** | `httpx` 等 | 浏览器内发 HTTP 请求拉外部 API 数据 | 浏览器 fetch 通道（`web-requests.md`） |
 | **App Mode** | Ctrl+Shift+M | 隐藏代码编辑器、脚本按钮化、自动生成表单字段，工作簿变成终端用户应用 | 加载项 UI 层（`app-mode.md`） |
 
-**开发者体验**（`index.md` "Developer experience"）：VS Code 内核编辑器（快捷键/自动补全/输出窗格）、内置 pytest 运行器、个人模块（跨工作簿共享代码，类似 `Personal.xlsb`，可用 Git 管理）、Wingman AI 助手（自带 API key 接入 Claude/Gemini/OpenAI）。
+**开发者体验**（`index.md` "Developer experience"）：VS Code 内核编辑器（快捷键/自动补全/输出窗格）、内置 pytest 运行器、个人模块（跨工作簿共享代码，类似 `Personal.xlsb`，可用 Git 管理）、Wingman AI 助手与编码智能体（`wingman.md`/`beta.md`，1.0.0.105 起可直改工作簿并生成可复用 Python）。
 
 ### 1.3 适用场景与边界
 
@@ -739,7 +739,8 @@ Lite 持续演进中，开发与分发时关注以下维度（具体版本号见
 
 - **运行时与包管理**：Pyodide 版本升级（内存、兼容包列表变化）、requirements-pinned.txt 机制引入（锁定可复现性）、包安装 UI 演进；
 - **API 能力**：Object handles（≥0.36.5）、异步 API（`get_value`/`flush`/`load`）、流式函数、`WithScript`、绘图与图片缓存机制；
-- **应用形态**：App Mode 表单字段扩展（更多类型提示 → 控件映射）、Notebooks 能力（Markdown 单元格、顶层 await）、测试运行器（pytest 集成）；
+- **应用形态**：App Mode 表单字段扩展（更多类型提示 → 控件映射）、Notebooks 能力（Markdown 单元格、LaTeX、顶层 await）、测试运行器（pytest 集成）；
+- **AI 编码智能体（Wingman，1.0.0.105 起）**：由「聊天 + `=WINGMAN()`」升级为可直接改写工作簿的编码智能体（`wingman.md`/`beta.md`）——产出可复用的 Python 脚本/函数/笔记本、本地处理大数据集、可连自托管 LLM；
 - **安全与合规**：信任提示策略、CSP/SRI 加固、Wingman 隐私边界、图片缓存自托管化；
 - **自托管**：xlwings-lite CLI、容器化方案（Azure Container Apps / AWS ECS Express）、内网包镜像支持。
 
@@ -747,7 +748,7 @@ Lite 持续演进中，开发与分发时关注以下维度（具体版本号见
 
 ## 可配套阅读
 
-- `xlwings-lite/`（31 篇官方文档离线镜像 + README 索引 + 34 张插图）——本文件的逐阶段语义引用源，官方教程层次（入门/进阶/分发/自托管/参考）见 README"建议阅读顺序"；
+- `xlwings-lite/`（34 篇官方文档离线镜像 + README 索引 + 39 张插图，至 1.0.0.105，含 wingman/settings/beta）——本文件的逐阶段语义引用源，官方教程层次（入门/进阶/分发/自托管/参考）见 README"建议阅读顺序"；
 - `xlwings/xlwings/udfs.py`——`@func`/`@arg`/`@ret`/`@script` 装饰器实现（Lite 与桌面版同源，3.1/3.2 源码验证）；
 - `xlwings/xlwings/ext/`（sql.py + __init__.py）——`=SQL()` 扩展源码（3.5）；
 - `xlwings/xlwings/main.py`（BookAsync，L1470）与 `base_classes.py`（异步 get_* 方法族）——异步 API 源码（3.7）；API 文档见 `xlwings/docs/api/book_async.md`；

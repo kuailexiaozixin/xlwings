@@ -32,6 +32,9 @@ from datetime import date
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+import web_mirror  # noqa: E402  （xlwings-lite 官网镜像重建的纯逻辑层）
+
 MANIFEST = SKILL_ROOT / "manifest.json"
 SYNCLOG = SKILL_ROOT / "SYNCLOG.md"
 TIMEOUT = 120
@@ -125,8 +128,120 @@ def download_tarball(repo: str, ref: str) -> tuple[Path | None, str]:
     return None, ""
 
 
+# web 源抓取：用 urllib 而非 curl.exe。本机 schannel curl 会因 CRL 吊销检查失败
+# （CRYPT_E_REVOCATION，代理/直连都绕不过）；urllib 保留默认证书校验（不走那条失败的
+# CRL 路径），既可靠又不像 curl --insecure 那样放弃证书校验（镜像要进公开仓库，完整性重要）。
+_UA = {"User-Agent": "Mozilla/5.0 (xlwings-skill sync)"}
+
+def _http_get(url: str, timeout: int) -> bytes | None:
+    import ssl, urllib.request, time
+    for _ in range(RETRIES):
+        try:
+            req = urllib.request.Request(url, headers=_UA)
+            data = urllib.request.urlopen(req, timeout=timeout,
+                                          context=ssl.create_default_context()).read()
+            if data:
+                return data
+        except Exception:
+            time.sleep(RETRY_SLEEP)
+    return None
+
+def _curl_text(url: str, timeout: int = 120) -> str | None:
+    """抓取文本内容（web 源专用）。"""
+    data = _http_get(url, timeout)
+    return data.decode("utf-8", errors="replace") if data else None
+
+def _curl_bytes(url: str, out: Path, timeout: int = 120) -> bool:
+    """抓取二进制（图片）到 out。"""
+    data = _http_get(url, timeout)
+    if data:
+        out.write_bytes(data)
+        return True
+    out.unlink(missing_ok=True)
+    return False
+
 def count_files(p: Path) -> int:
     return sum(1 for _ in p.rglob("*") if _.is_file())
+
+# ---------------------------------------------------------------- web 源（官网镜像）
+def web_latest(src: dict) -> dict | None:
+    """拉取 web 源的 llms-full.txt，算出 top_version / page 集合 / 全文 sha256。失败返回 None。"""
+    import hashlib
+    full = _curl_text(src["llms_url"])
+    if not full:
+        return None
+    idx = _curl_text(src.get("index_url", "")) or ""   # llms.txt（仅用于页面顺序，缺失也能重建）
+    mirror = web_mirror.build_mirror(full, idx, src["base_url"])
+    return {
+        "pages": mirror["pages"],          # OrderedDict{name: 归一后的 markdown 全文}
+        "top_version": mirror["top_version"],
+        "page_names": mirror["page_names"],
+        "images": mirror["images"],
+        "full_sha": hashlib.sha256(full.encode("utf-8")).hexdigest(),
+    }
+
+def sync_web_one(src: dict, force: bool = False) -> str:
+    """同步 web 源（官网镜像）：重建 local_dir 下的上游页，保留 README.md 与 _images/，合并新图片。"""
+    info = web_latest(src)
+    if info is None:
+        print(f"  [{src['id']}] 无法抓取 {src['llms_url']}，跳过")
+        return "failed"
+
+    pinned_ver = src.get("pinned_version", "")
+    pinned_sha = src.get("pinned_full_sha", "")
+    changed = force or info["top_version"] != pinned_ver or info["full_sha"] != pinned_sha
+    if not changed:
+        print(f"  [{src['id']}] 无更新（{info['top_version']}）")
+        return "unchanged"
+
+    base_url = src["base_url"]
+    target = SKILL_ROOT / src["local_dir"]
+    target.mkdir(parents=True, exist_ok=True)
+
+    # 保留项：README.md（自研索引）与 _images/（图片素材）
+    keep_readme = target / "README.md"
+    readme_bak = keep_readme.read_bytes() if keep_readme.is_file() else None
+    img_dir = target / "_images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1) 合并缺失图片（从 <base_url>/_images/<f> 下载；已有则跳过）
+    missing_imgs = []
+    for f in sorted(info["images"]):
+        dst = img_dir / f
+        if dst.is_file() and dst.stat().st_size > 0:
+            continue
+        missing_imgs.append(f)
+    for f in missing_imgs:
+        ok = _curl_bytes(f"{base_url.rstrip('/')}/_images/{f}", img_dir / f)
+        if not ok:
+            print(f"  [{src['id']}] 图片下载失败: {f}")
+
+    # 2) 写入/覆盖上游页（保留 README.md）
+    for name, content in info["pages"].items():
+        (target / name).write_text(content, encoding="utf-8", newline="\n")
+
+    # 3) 清理上游已删除的旧页（top 层 .md 且不属于当前页集合，且非 README.md）
+    for old in target.glob("*.md"):
+        if old.name != "README.md" and old.name not in info["page_names"]:
+            old.unlink()
+
+    # 4) 恢复 README.md（自研，不被上游覆盖）
+    if readme_bak is not None:
+        keep_readme.write_bytes(readme_bak)
+
+    src["pinned_version"] = info["top_version"]
+    src["pinned_full_sha"] = info["full_sha"]
+    src["pinned_pages"] = sorted(info["page_names"])
+    src["last_synced"] = date.today().isoformat()
+    MANIFEST.write_text(json.dumps(MANIFEST_CFG, ensure_ascii=False, indent=2), encoding="utf-8-sig")
+    n_pages = len(info["page_names"])
+    with open(SYNCLOG, "a", encoding="utf-8") as f:
+        if f.tell() == 0:
+            f.write("# xlwings 技能上游同步日志\n\n| 日期 | 来源 | 方式 | 新 commit | 规模 |\n|---|---|---|---|---|\n")
+        n_imgs = sum(1 for _ in img_dir.iterdir())
+        f.write(f"| {date.today().isoformat()} | `{src['id']}` | web(新图 {len(missing_imgs)}) | `{info['top_version']}` | {n_pages} 页 / {n_pages + 1 + n_imgs} 文件 |\n")
+    print(f"  [{src['id']}] 已更新（{info['top_version']}，{n_pages} 页，新图 {len(missing_imgs)}）→ {target}")
+    return "updated"
 
 
 def replace_dir(stage: Path, target: Path) -> bool:
@@ -212,6 +327,22 @@ def main() -> int:
     stats: dict[str, list[str]] = {"updated": [], "unchanged": [], "failed": []}
     for src in MANIFEST_CFG["sources"]:
         if force_ids and src["id"] not in force_ids:
+            continue
+        if src.get("type") == "web":
+            # web 源（官网镜像）：版本/全文哈希漂移判据，非 git sha
+            if check_only:
+                info = web_latest(src)
+                pinned_ver = src.get("pinned_version", "")
+                if info is None:
+                    state, res = "远端不可达", "failed"
+                elif info["top_version"] != pinned_ver or info["full_sha"] != src.get("pinned_full_sha", ""):
+                    state, res = f"有更新（{pinned_ver} → {info['top_version']}）", "updated"
+                else:
+                    state, res = f"已是最新（{pinned_ver}）", "unchanged"
+                print(f"[check] {src['id']} ({src.get('local_dir')}, web): {state}")
+            else:
+                res = sync_web_one(src, force=(src["id"] in force_ids))
+            stats[res].append(src["id"])
             continue
         if check_only:
             head = latest_sha(src["repo"], src["ref"])

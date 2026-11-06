@@ -1,4 +1,4 @@
-{
+﻿{
   "_comment": "xlwings 技能上游锁定清单。xlwings/、xlwings-server/、xlwings-lite/、examples/ 与 MCP-Server/ 下所有开源仓库为上游原文目录（zip 快照，禁止手改），scripts/sync_upstream.py 依据本文件检测并整体替换；local_dir 是固定目录名，不含版本号，上游出新版不需要改路径。SKILL.md / references/ 为自研编排文件，绝不随上游替换。subpath 为空表示拉取整个仓库。",
   "sources": [
     {
@@ -16,8 +16,57 @@
       "repo": "xlwings/xlwings-server",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "627d2447f26585072fbef49542e546769af748a0",
-      "last_synced": "2026-10-24"
+      "pinned_sha": "00f33885fe56290d3945dc524e2c29389e82fccd",
+      "last_synced": "2026-11-06"
+    },
+    {
+      "id": "xlwings-lite",
+      "type": "web",
+      "local_dir": "xlwings-lite",
+      "repo": "xlwings/xlwings-lite",
+      "_provenance": "文档源为私有 Sphinx 构建，公开仓库仅 issue 跟踪；镜像以站点暴露的 llms.txt/llms-full.txt 为上游工件。web 源漂移判据=pinned_version/pinned_full_sha（非 git pinned_sha）。",
+      "base_url": "https://lite.xlwings.org/",
+      "llms_url": "https://lite.xlwings.org/llms-full.txt",
+      "index_url": "https://lite.xlwings.org/llms.txt",
+      "pinned_version": "1.0.0.105",
+      "pinned_full_sha": "82f4198f547787564ed1def47d531e2bd84e1c81c25895377b9288f938d501e1",
+      "last_synced": "2026-11-06",
+      "pinned_pages": [
+        "about.md",
+        "app-mode.md",
+        "async-api.md",
+        "aws-ecs-express.md",
+        "azure-container-apps-cli.md",
+        "azure-container-apps.md",
+        "beta.md",
+        "changelog.md",
+        "cleanup-missing-addin-refs.md",
+        "configuration.md",
+        "custom-functions.md",
+        "custom-scripts.md",
+        "databases.md",
+        "dependencies.md",
+        "editor.md",
+        "environment-variables.md",
+        "faq.md",
+        "files.md",
+        "hosting-solutions.md",
+        "index.md",
+        "limitations.md",
+        "linux-vm.md",
+        "migrating-to-self-hosted.md",
+        "notebooks.md",
+        "personal-modules.md",
+        "plotting.md",
+        "quickstart.md",
+        "security.md",
+        "self-hosting.md",
+        "settings.md",
+        "tests.md",
+        "troubleshooting.md",
+        "web-requests.md",
+        "wingman.md"
+      ]
     },
     {
       "id": "mcp-server-xlwings",
@@ -52,8 +101,8 @@
       "repo": "vohoailinh90/Excel_MCP_Server",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "c03ef06dd2e876e4ad16d66834f19b726228fff1",
-      "last_synced": "2026-09-14"
+      "pinned_sha": "ee31ecd168089932ecd7344e14ff2d882a1923f6",
+      "last_synced": "2026-11-06"
     },
     {
       "id": "Excel_udf_itus",

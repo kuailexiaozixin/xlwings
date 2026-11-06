@@ -32,14 +32,16 @@ license: MIT
 
 **上游跟踪与更新机制（技能维护）**：
 
-本地上游原文目录共 **17 路**，随官方仓库演进，由脚本统一跟踪，**禁止手改上游原文**（zip 快照）：
+本地上游原文目录共 **18 路**（17 路 git 快照 + 1 路官网镜像 `xlwings-lite/`），随官方仓库/官网演进，由脚本统一跟踪，**禁止手改上游原文**（git 为 zip 快照；官网镜像由 llms-full 重建）：
 
 - `xlwings/`：xlwings 核心源码包，跟踪 `main`（开发线，提交数领先最新正式版），快照 commit 见 `manifest.json` 的 `pinned_sha`；目录名不含版本号
 - `examples/`、`MCP-Server/` 与技能根目录下全部开源仓库：`xlwings-server`（跟 main，目录在技能根目录 `xlwings-server/`，由 examples/ 迁出）、`mcp-server-xlwings`、`xlwings-mcp-server`、`excel-mcp`、`Excel_MCP_Server`、`Excel_udf_itus`、`cross-check-reports`、`excel-automated-testing`、`python-for-excel-course`、`simulation-demo`、`static-excel-test`、`taxi-duckdb`、`xl-pq-handler`、`xlwings-demo`、`xlwings-eikon`、`xlwings-factsheet-demo`——后 15 个跟踪默认分支（main/master）
+- `xlwings-lite/`：lite.xlwings.org 官方文档离线镜像（**web 源，非 git 快照**）——文档源为私有 Sphinx 构建、公开仓库 `xlwings/xlwings-lite` 仅做 issue 跟踪，故漂移判据改用站点暴露的 `llms.txt`/`llms-full.txt`（顶层 changelog 版本号 + 页面集合）；`scripts/sync_upstream.py` 对其走 web 分支，重建算法在 `scripts/web_mirror.py`（分页 + 排版归一 + 合并缺失图片，保留自研 README/`_images/`）
 
 **组件**：
-- `manifest.json`：上游锁定清单（repo / ref / local_dir / pinned_sha / last_synced，单一事实来源；ref 为 tag 或默认分支）
+- `manifest.json`：上游锁定清单（git 源：repo / ref / local_dir / pinned_sha / last_synced；web 源额外含 `type:"web"` / base_url / llms_url / index_url / pinned_version / pinned_full_sha / pinned_pages，单一事实来源）
 - `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源。gh 经多候选探测，网络间歇时 latest_sha 自动重试；下载按通道链降级（codeload 直连 → archive 直连 → ghfast 代理）。原子替换并追加 SYNCLOG.md
+- `scripts/web_mirror.py`：xlwings-lite 官网镜像的**纯逻辑生成层**（llms-full.txt 分页 → 排版归一 → 图片引用/顶层版本枚举），被 sync_upstream.py 的 web 分支调用；不碰网络不落盘，便于单测
 - `scripts/track_upstream.py`：**漂移三线检测**（见下表）
 - `references/upstream-facts.json`：**事实锚点台账**——自研文档对上游源码的全部具体断言（行数/KB/行号/文件数），每条带 docs 指针（断言出处）。新增上游断言时必须先登记台账，否则漂移无人知晓
 - `SYNCLOG.md`：同步历史（每次同步留痕）
@@ -48,7 +50,7 @@ license: MIT
 
 | 线 | 检测内容 | 分级 | 应对 |
 |---|---|---|---|
-| ① 上游 commit | manifest 各路 pinned_sha vs 远端最新 commit（`--quick` 只查核心两路） | **提示级** | 跑 sync_upstream.py 同步即消；`--strict` 时计失败 |
+| ① 上游 commit | manifest 各路 pinned_sha vs 远端最新 commit（`--quick` 只查核心两路）；web 源（xlwings-lite）改用「顶层 changelog 版本号 + 页面集合」判据 | **提示级** | 跑 sync_upstream.py 同步即消；`--strict` 时计失败 |
 | ② 事实锚点 | upstream-facts.json 逐条对照本地快照实测 | **硬漂移**（exit 1） | 按 STALE 提示的 docs 指针修自研文档，修完重跑至全绿 |
 | ③ 版本一致性 | 快照 `__version__` 必须为 "0.0.0"（zip 快照特征） | **硬**（exit 1） | 异常说明快照被 pip 产物覆盖，需重拉 |
 
@@ -221,8 +223,8 @@ import xlwings as xw
 
 | 通道 | 定位 | 参考文档 | 关键资源 |
 |------|------|---------|---------|
-| xlwings Server | 服务端运行时（FastAPI + Socket.IO + Redis），Office.js 加载项后端 | `references/14-xlwings-server-guidance.md` | `xlwings-server/`（docs 61 篇 + xlwings_server 包 + deployment/nginx/scripts/tests） |
-| xlwings Lite | 浏览器端运行时（Pyodide/WASM），免费自包含 | `references/15-xlwings-lite-guidance.md` | `xlwings-lite/`（官方文档 31 篇镜像）+ taxi-duckdb 案例 |
+| xlwings Server | 服务端运行时（FastAPI + Socket.IO + Redis），Office.js 加载项后端 | `references/14-xlwings-server-guidance.md` | `xlwings-server/`（docs 58 篇 + xlwings_server 包 + deployment/nginx/scripts/tests） |
+| xlwings Lite | 浏览器端运行时（Pyodide/WASM），免费自包含 | `references/15-xlwings-lite-guidance.md` | `xlwings-lite/`（官方文档 34 篇镜像，至 1.0.0.105，含 wingman/settings/beta）+ taxi-duckdb 案例 |
 | Office.js 引擎 | 客户端引擎（值转换层 + UDF/脚本全链路），Server 与 Lite 共享的语义内核 | `references/16-xlwings-officejs.md` | `xlwings/xlwings/pro/_xlofficejs.py` + `udfs_officejs.py` |
 
 **工作流**：
@@ -843,7 +845,7 @@ xlwings PRO 为双许可（PolyForm Noncommercial 1.0.0 / 商业许可），无�
 
 ### 7.5 服务端工程与部署机制
 
-官方 xlwings Server 实现位于 `xlwings-server/`（与源码包独立，source-available 双许可），为 Excel 与 Google Sheets 提供 Python 支持，可自托管于裸机/Linux VM/Docker Compose/Kubernetes/Serverless。**其完整六块研读（docs 61 篇教程 / xlwings_server 包 / deployment / nginx / scripts / tests）与开发生命周期工作流（预研选型→初始化→扩展机制→自定义函数/脚本→认证安全→测试调试→部署运维升级）见 `references/14-xlwings-server-guidance.md`（Office.js Excel 加载项的后端运行时，8 阶段工作流，13-d 1.7 已压缩为指针）；Office.js 客户端引擎（值转换层 + UDF/脚本全链路，Server 与 Lite 共享的语义内核）见 `references/16-xlwings-officejs.md`**。Python 代码部署三种方式：ZIP 打包（与工作簿同名，xlwings 自动识别）、RunFrozenPython（PyInstaller 冻结 .exe，仅 Windows 不支持 UDF）、PRO 部署（`code embed`/`release`，需许可）。
+官方 xlwings Server 实现位于 `xlwings-server/`（与源码包独立，source-available 双许可），为 Excel 与 Google Sheets 提供 Python 支持，可自托管于裸机/Linux VM/Docker Compose/Kubernetes/Serverless。**其完整六块研读（docs 58 篇教程 / xlwings_server 包 / deployment / nginx / scripts / tests）与开发生命周期工作流（预研选型→初始化→扩展机制→自定义函数/脚本→认证安全→测试调试→部署运维升级）见 `references/14-xlwings-server-guidance.md`（Office.js Excel 加载项的后端运行时，8 阶段工作流，13-d 1.7 已压缩为指针）；Office.js 客户端引擎（值转换层 + UDF/脚本全链路，Server 与 Lite 共享的语义内核）见 `references/16-xlwings-officejs.md`**。Python 代码部署三种方式：ZIP 打包（与工作簿同名，xlwings 自动识别）、RunFrozenPython（PyInstaller 冻结 .exe，仅 Windows 不支持 UDF）、PRO 部署（`code embed`/`release`，需许可）。
 
 ### 7.6 产物质检
 

@@ -1,9 +1,10 @@
-{
+﻿{
   "_comment": "自研文档引用的上游事实锚点台账（track_upstream.py 第②线检测对象）。每条 = 自研文档对上游快照的一个具体断言（行数/KB/行号/文件数），同步上游后跑 track_upstream.py 核对，STALE 即需修对应 docs 处。kind 语义：lines=文件行数；sizekb=文件大小//1024；filecount=目录下 *.md 数；exists=文件存在；symbol_line=value.line 行(1-based) strip 后以 value.symbol 开头。docs=断言出处（自研文档:行号），修复时按此定位。",
-  "updated": "2026-10-24",
+  "updated": "2026-11-06",
   "snapshot": {
     "xlwings": "5b38a61",
-    "xlwings-server": "627d244"
+    "xlwings-server": "00f3388",
+    "xlwings-lite": "1.0.0.105"
   },
   "facts": [
     {
@@ -196,6 +197,17 @@
       },
       "docs": [
         "references/15-xlwings-lite-guidance.md:180"
+      ]
+    },
+    {
+      "id": "lite-page-count",
+      "source": "xlwings-lite",
+      "file": "",
+      "kind": "filecount",
+      "value": 35,
+      "docs": [
+        "references/15-xlwings-lite-guidance.md:15",
+        "xlwings-lite/README.md"
       ]
     }
   ]

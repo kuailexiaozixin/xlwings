@@ -240,7 +240,7 @@ Reports 是 xlwings PRO 的核心增值功能，实现"Excel 模板 + 结构化�
 
 **定位**：把 xlwings 能力服务化的官方开源参考工程——Excel 与 Google Sheets（含 Excel on the web）经浏览器调用服务端 Python（FastAPI + Socket.IO + Redis + Office.js + 可选 WASM/Pyodide），目标机无需安装 Python。与桌面版（场景 A/C）互补；source-available 双许可（PolyForm Noncommercial / PRO EULA，见 `LICENSE.md`），**仅供源码研读借鉴设计，不部署、不抄码**。
 
-**细节去向（单点原则）**：xlwings Server 的完整六块研读（`docs/` 61 篇官方教程、`xlwings_server/` 服务端包、`deployment/`、`nginx/`、`scripts/`、`tests/`）已独立为以**开发生命周期工作流**编排的参考手册：
+**细节去向（单点原则）**：xlwings Server 的完整六块研读（`docs/` 58 篇官方教程、`xlwings_server/` 服务端包、`deployment/`、`nginx/`、`scripts/`、`tests/`）已独立为以**开发生命周期工作流**编排的参考手册：
 
 - 定位与选型、初始化与本地开发环境、应用装配与扩展机制、自定义函数、自定义脚本与任务窗格、认证授权与安全、测试调试与性能、部署运维与升级——**全部分阶段详展见 `references/14-xlwings-server-guidance.md`**
 - 本处不再重复任何 server 细节；读 server 相关内容一律进入 14 号手册
