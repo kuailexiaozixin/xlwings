@@ -15,7 +15,7 @@
 
 ## 一、四个社区 MCP Server 深度对比
 
-| 维度 | geniuskey/mcp-server-xlwings | hyunjae-labs/xlwings-mcp-server | prabodh-hydexcel/excel-mcp | vohoailinh90/Excel_MCP_Server |
+| 维度 | geniuskey/mcp-server-xlwings | hyunjae-labs/xlwings-mcp-server | prabodh-hyd/excel-mcp | vohoailinh90/Excel_MCP_Server |
 |------|------------------------------|--------------------------------|---------------------------|-------------------------------|
 | **版本** | 0.4.1 | 1.0.4 | 0.1.0 | 未标注（v1） |
 | **PyPI 可安装** | 是（`mcp-server-xlwings`） | 是（`xlwings-mcp-server`） | 否（源码运行） | 否（源码运行） |
@@ -145,7 +145,7 @@ client.call_tool("apply_formula", {
 })
 ```
 
-### 3.3 prabodh-hydexcel/excel-mcp
+### 3.3 prabodh-hyd/excel-mcp
 
 **源码位置**：`MCP-Server/prabodh-hydexcel-mcp-main/excel-mcp-main/`
 

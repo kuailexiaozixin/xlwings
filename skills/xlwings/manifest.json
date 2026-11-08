@@ -7,8 +7,8 @@
       "repo": "xlwings/xlwings",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "5b38a61c81d0730e23828d6de812a0da54cecb49",
-      "last_synced": "2026-10-24"
+      "pinned_sha": "e6a4185015498cfb661ed6b896681a81a503cc44",
+      "last_synced": "2026-11-08"
     },
     {
       "id": "xlwings-server",
@@ -16,8 +16,8 @@
       "repo": "xlwings/xlwings-server",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "00f33885fe56290d3945dc524e2c29389e82fccd",
-      "last_synced": "2026-11-06"
+      "pinned_sha": "6a00cc48f24db76103935b0118cc12cc59b2aae6",
+      "last_synced": "2026-11-08"
     },
     {
       "id": "xlwings-lite",
@@ -29,8 +29,8 @@
       "llms_url": "https://lite.xlwings.org/llms-full.txt",
       "index_url": "https://lite.xlwings.org/llms.txt",
       "pinned_version": "1.0.0.105",
-      "pinned_full_sha": "82f4198f547787564ed1def47d531e2bd84e1c81c25895377b9288f938d501e1",
-      "last_synced": "2026-11-06",
+      "pinned_full_sha": "72fd2183290ff89f77581eac21e11d7f62060b9f7d8838af23094385824e67f5",
+      "last_synced": "2026-11-08",
       "pinned_pages": [
         "about.md",
         "app-mode.md",
@@ -75,7 +75,7 @@
       "ref": "main",
       "subpath": "",
       "pinned_sha": "3869179904c6fab150d32dafdb87d7e9956285ef",
-      "last_synced": "2026-09-14"
+      "last_synced": "2026-11-08"
     },
     {
       "id": "xlwings-mcp-server",
@@ -84,16 +84,16 @@
       "ref": "main",
       "subpath": "",
       "pinned_sha": "ff6b32c4f02cd2ecbc7051212ba62ac4ffaaf1de",
-      "last_synced": "2026-09-14"
+      "last_synced": "2026-11-08"
     },
     {
       "id": "excel-mcp",
       "local_dir": "MCP-Server/prabodh-hydexcel-mcp-main/excel-mcp-main",
-      "repo": "ishayoyo/excel-mcp",
+      "repo": "prabodh-hyd/excel-mcp",
       "ref": "main",
       "subpath": "",
-      "pinned_sha": "0dfe4442f6d837f009f2e10abfa2d9d3d6035e60",
-      "last_synced": "2026-09-14"
+      "pinned_sha": "9b9fe7f1544f28c788892b2f06bfb197d351309e",
+      "last_synced": "2026-11-08"
     },
     {
       "id": "Excel_MCP_Server",
@@ -161,11 +161,15 @@
     {
       "id": "taxi-duckdb",
       "local_dir": "examples/taxi-duckdb-main/taxi-duckdb-main",
+      "keep": [
+        "extract_webextension.py",
+        "extracted"
+      ],
       "repo": "xlwings/taxi-duckdb",
       "ref": "main",
       "subpath": "",
       "pinned_sha": "a52af5b2acebc3e54f780ed289fba354fbd38a5c",
-      "last_synced": "2026-09-14"
+      "last_synced": "2026-11-08"
     },
     {
       "id": "xl-pq-handler",

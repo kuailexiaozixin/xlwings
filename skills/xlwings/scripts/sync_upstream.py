@@ -163,6 +163,42 @@ def _curl_bytes(url: str, out: Path, timeout: int = 120) -> bool:
 def count_files(p: Path) -> int:
     return sum(1 for _ in p.rglob("*") if _.is_file())
 
+
+def _keep_rel(target: Path, keep) -> set:
+    """展开 keep 白名单（相对 local_dir 的路径片段）为 target 下需保留的文件相对路径集合。
+
+    keep 项按「路径任一层级名命中」判定，故 `extracted` 会保留其整棵子树。
+    """
+    keep = set(keep or ())
+    if not keep or not target.exists():
+        return set()
+    return {p.relative_to(target) for p in target.rglob("*")
+            if p.is_file() and any(part in keep for part in p.relative_to(target).parts)}
+
+
+def _restore_keep(bak: Path, target: Path, keep_rel) -> None:
+    for rel in keep_rel:
+        srcf = bak / rel
+        if srcf.is_file():
+            dst = target / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(srcf, dst)
+
+
+def _run_extractor(target: Path) -> None:
+    """local_dir 内若有 extract_webextension.py，同步后运行它刷新 extracted/ 明文产物。"""
+    exe = target / "extract_webextension.py"
+    if exe.is_file():
+        try:
+            r = subprocess.run([sys.executable, str(exe)], cwd=str(target),
+                                capture_output=True, text=True, timeout=TIMEOUT)
+            tag = "已刷新 extracted/" if r.returncode == 0 else f"退出码 {r.returncode}"
+            print(f"  [{target.name}] extract_webextension.py {tag}")
+            if r.returncode != 0:
+                print(f"    stderr: {r.stderr.strip()[:200]}")
+        except Exception as e:
+            print(f"  [{target.name}] extract_webextension.py 运行失败（不影响同步）：{e}")
+
 # ---------------------------------------------------------------- web 源（官网镜像）
 def web_latest(src: dict) -> dict | None:
     """拉取 web 源的 llms-full.txt，算出 top_version / page 集合 / 全文 sha256。失败返回 None。"""
@@ -244,8 +280,161 @@ def sync_web_one(src: dict, force: bool = False) -> str:
     return "updated"
 
 
-def replace_dir(stage: Path, target: Path) -> bool:
-    """原子替换：备份 .old → 复制 → 文件数校验 → 删备份。失败回滚。"""
+# ---------------------------------------------------------------- 增量同步（git 源）
+# 全量 tarball 动辄 17~18MB，而一次上游提交常只改 1~2 个文件；本机到 GitHub 直连约
+# 26KB/s，一次全量要 10 分钟以上。增量路径改走 API + raw 单文件：
+#   - compare API（~1.4s）拿到变更清单（added/modified/removed/renamed）
+#   - trees API（1 次请求）拿到全树 blob size，用于逐文件字节数校验
+#   - raw 单文件（~1s/个）仅下载真正变动的文件
+# 任一步异常（非 git 源、compare 截断、变更过多、下载或校验不符）自动回退全量 tarball，
+# 绝不留下半新半旧的快照。
+
+INCR_MAX_FILES = 120          # 变更文件超此值不建议增量，直接全量（省往返）
+RAW_BASE = "https://raw.githubusercontent.com"
+
+
+def _gh_api(path: str, timeout: int = 60):
+    """调用 GitHub API（复用 gh CLI 凭据，带重试）。返回 dict 或 None。"""
+    import time
+    for attempt in range(RETRIES):
+        if GH:
+            r = run([GH, "api", path], timeout=timeout)
+            if r.returncode == 0 and r.stdout.strip():
+                try:
+                    return json.loads(r.stdout)
+                except json.JSONDecodeError:
+                    pass
+        if attempt < RETRIES - 1:
+            time.sleep(RETRY_SLEEP)
+    return None
+
+
+def index_tree(repo: str, sha: str):
+    """仓库全树 {path: size}。trees 返回 truncated 时返回 None（触发回退全量）。"""
+    data = _gh_api(f"repos/{repo}/git/trees/{sha}?recursive=1")
+    if not data or data.get("truncated"):
+        return None
+    return {n["path"]: n.get("size", 0)
+            for n in data.get("tree", []) if n.get("type") == "blob"}
+
+
+def compare_changes(repo: str, old: str, new: str):
+    """compare old...new 的变更清单。清单不完整（300 条上限）或失败返回 None。"""
+    data = _gh_api(f"repos/{repo}/compare/{old}...{new}")
+    if not data or data.get("files") is None:
+        return None
+    files = data["files"]
+    if len(files) >= 300:          # GitHub compare 的文件清单上限，达到即视为不完整
+        return None
+    return [{"path": f.get("filename", ""), "status": f.get("status", ""),
+             "previous_path": f.get("previous_filename", "")}
+            for f in files if f.get("filename")]
+
+
+def fetch_raw(repo: str, sha: str, path: str, timeout: int = 60):
+    """从 raw.githubusercontent 取单文件（公开仓库免 token，保留证书校验）。"""
+    import ssl, time, urllib.parse, urllib.request
+    url = f"{RAW_BASE}/{repo}/{sha}/{urllib.parse.quote(path)}"
+    for attempt in range(RETRIES):
+        try:
+            req = urllib.request.Request(url, headers=_UA)
+            return urllib.request.urlopen(req, timeout=timeout,
+                                          context=ssl.create_default_context()).read()
+        except Exception:
+            if attempt < RETRIES - 1:
+                time.sleep(RETRY_SLEEP)
+    return None
+
+
+def sync_incremental(src, old_sha, new_sha):
+    """增量更新 local_dir。返回 (是否成功, 描述, 变更文件数)。
+
+    只落真正变化的文件；成功条件 = 每个变更文件字节数与 trees 一致。先全部下载并校验，
+    再统一写盘，任一步失败即返回 False 交给调用方回退全量，不产生中间态快照。
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    repo, subpath = src["repo"], src.get("subpath", "")
+    changes = compare_changes(repo, old_sha, new_sha)
+    if changes is None:
+        return False, "compare 不可用或清单截断", 0
+    pre = subpath.rstrip("/") + "/" if subpath else ""
+    if pre:
+        changes = [c for c in changes if c["path"].startswith(pre)]
+    if not changes:
+        return True, "无文件变化", 0
+    if len(changes) > INCR_MAX_FILES:
+        return False, f"变更 {len(changes)} 文件超过阈值 {INCR_MAX_FILES}", len(changes)
+
+    sizes = index_tree(repo, new_sha)
+    if sizes is None:
+        return False, "trees 截断", len(changes)
+
+    # 完整性护栏：增量只在「本地 == old_sha 的完整快照」时安全。用 old_sha 的 trees 做基线，
+    # 本地文件数与它不一致（残缺 / 过旧 / 被手动改过）就回退全量重建，避免增量只补 diff
+    # 而留下缺文件或多出的旧文件（实测 excel-mcp 本地缺 37、taxi-duckdb 多 16，均需全量）。
+    target = SKILL_ROOT / src["local_dir"]
+    keep = src.get("keep", ())
+    old_trees = index_tree(repo, old_sha)
+    if old_trees is None:
+        return False, f"old {old_sha[:7]} 不可比对（可能 force-push），基线未知", len(changes)
+    if target.exists():
+        kn = len(_keep_rel(target, keep))
+        local_n = count_files(target) - kn
+        if local_n != len(old_trees):
+            return False, f"本地(除 keep {kn} 项) {local_n} ≠ 基线 {len(old_trees)}，快照与 {old_sha[:7]} 不符", len(changes)
+
+    downloads = []      # [(新路径, 期望字节数)]
+    deletes = []        # 待删路径
+    for c in changes:
+        st, path = c["status"], c["path"]
+        if st == "renamed" and c["previous_path"]:
+            old_p = c["previous_path"]
+            if not pre or old_p.startswith(pre):
+                deletes.append(old_p)
+        if st == "removed":
+            deletes.append(path)
+        else:
+            downloads.append((path, sizes.get(path)))
+
+    missing = [p for p, sz in downloads if sz is None]
+    if missing:
+        return False, f"trees 缺少 {missing[0]}", len(changes)
+
+    blobs = {}
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        futs = {ex.submit(fetch_raw, repo, new_sha, p): (p, sz) for p, sz in downloads}
+        for fut in as_completed(futs):
+            path, want = futs[fut]
+            data = fut.result()
+            if data is None:
+                return False, f"下载失败 {path}", len(changes)
+            if want is not None and len(data) != want:
+                return False, f"字节数不符 {path}（期望 {want} 实得 {len(data)}）", len(changes)
+            blobs[path] = data
+
+    target.mkdir(parents=True, exist_ok=True)
+
+    def _local(p):
+        return target / (p[len(pre):] if pre else p)
+
+    for p in deletes:
+        fp = _local(p)
+        if fp.is_file():
+            fp.unlink()
+        elif fp.is_dir():
+            shutil.rmtree(fp, ignore_errors=True)
+    for p, data in blobs.items():
+        fp = _local(p)
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_bytes(data)
+    return True, f"增量 {len(blobs)} 改 / {len(deletes)} 删", len(changes)
+
+def replace_dir(stage: Path, target: Path, keep=()) -> bool:
+    """原子替换：备份 .old → 复制 → 恢复 keep 白名单 → 文件数校验 → 删备份。失败回滚。
+
+    keep 项（如本地提取脚本/产物）不在上游 tarball 里，替换后从 .old 拷回，避免被清掉。
+    """
+    keep_rel = _keep_rel(target, keep)
     if target.exists():
         bak = target.with_name(target.name + ".old")
         shutil.rmtree(bak, ignore_errors=True)
@@ -254,6 +443,7 @@ def replace_dir(stage: Path, target: Path) -> bool:
         except OSError:
             # 目录被占用（云同步等）时逐文件删除后重建
             shutil.rmtree(target, ignore_errors=True)
+            keep_rel = set()
         if target.exists():
             return False
     else:
@@ -266,7 +456,9 @@ def replace_dir(stage: Path, target: Path) -> bool:
             shutil.rmtree(target, ignore_errors=True)
             bak.rename(target)
         return False
-    if count_files(target) != count_files(stage):
+    if bak and bak.exists() and keep_rel:
+        _restore_keep(bak, target, keep_rel)
+    if count_files(target) != count_files(stage) + len(keep_rel):
         shutil.rmtree(target, ignore_errors=True)
         if bak and bak.exists():
             bak.rename(target)
@@ -288,22 +480,34 @@ def sync_one(src: dict, force: bool = False) -> str:
         return "unchanged"
     print(f"  [{vid}] 检测到更新 {src.get('pinned_sha', '?')[:7]} → {head[:7]}")
 
-    stage, channel = download_tarball(repo, ref)
-    if stage is None:
-        print(f"  [{vid}] 下载/解压失败（三条通道均不可达）")
-        return "failed"
-    if count_files(stage) == 0:
-        print(f"  [{vid}] 下载结果为空，放弃替换")
-        return "failed"
-
     # local_dir 是固定目录名，不随上游版本变化：上游出新版只改 manifest 的 ref，
     # 自研文档里引用的路径（如 xlwings/xlwings/cli.py）因此长期有效。
     target = SKILL_ROOT / src["local_dir"]
-    ok = replace_dir(stage, target)
-    if not ok:
-        print(f"  [{vid}] 替换失败（可能被占用，已回滚）")
-        return "failed"
+    old_sha = src.get("pinned_sha", "")
+    keep = src.get("keep", ())
+    channel, n_changed = "incremental", 0
 
+    # 优先增量：只下载 compare 出的变更文件，避免为 1~2 个文件重拉 17MB 全量包。
+    # force / 首次同步（无旧 sha 或本地无快照）时无从比对，直接走全量。
+    inc_ok = False
+    if not force and old_sha and target.exists():
+        inc_ok, desc, n_changed = sync_incremental(src, old_sha, head)
+        print(f"  [{vid}] {'增量成功：' if inc_ok else '增量不适用（回退全量）：'}{desc}")
+
+    if not inc_ok:
+        stage, channel = download_tarball(repo, ref)
+        if stage is None:
+            print(f"  [{vid}] 全量下载/解压失败（三条通道均不可达）")
+            return "failed"
+        if count_files(stage) == 0:
+            print(f"  [{vid}] 全量下载结果为空，放弃替换")
+            return "failed"
+        if not replace_dir(stage, target, keep):
+            print(f"  [{vid}] 替换失败（可能被占用，已回滚）")
+            return "failed"
+
+    if target.exists() and (target / "extract_webextension.py").is_file():
+        _run_extractor(target)
     n_files = count_files(target)
     src["pinned_sha"] = head
     src["last_synced"] = date.today().isoformat()
@@ -312,7 +516,8 @@ def sync_one(src: dict, force: bool = False) -> str:
     with open(SYNCLOG, "a", encoding="utf-8") as f:
         if f.tell() == 0:
             f.write("# xlwings 技能上游同步日志\n\n| 日期 | 来源 | 方式 | 新 commit | 规模 |\n|---|---|---|---|---|\n")
-        f.write(f"| {date.today().isoformat()} | `{vid}` | {channel} | `{head[:7]}` | {n_files} 个文件 |\n")
+        chan = f"{channel}（{n_changed} 处变更）" if channel == "incremental" else channel
+        f.write(f"| {date.today().isoformat()} | `{vid}` | {chan} | `{head[:7]}` | {n_files} 个文件 |\n")
     print(f"  [{vid}] 已更新（{channel}，{n_files} 文件）→ {target}")
     return "updated"
 

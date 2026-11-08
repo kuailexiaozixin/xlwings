@@ -89,3 +89,25 @@
 > - 上游实质变更 = 1.20.1 行为增强：`range-action-callbacks.js` 新增 `bracketCurrentRowReferences()`（`setFormula` 写入前把 Excel 表当前行简写 `[@Column]` 归一为 `[@[Column]]`，Office.js 拒绝该简写），配套 `tests/js/range-action-callbacks.test.js` 与 changelog 条目。17 条台账锚点均未命中。
 > - 自研修复（已备份 .backup_20261106/）：① 14 号 5.2b 补入 range-action-callbacks.js 行（原只枚举 pivot 三脚本），节标题改"range/pivot 自定义脚本（现 22 个 .js）"；② 既有数字偏差纠偏（非本次更新引入，旧快照实测值相同）：docs 61→58 篇（14 L3/L17/L727、13 L243、00-index L23、SKILL L224/L846）；tests 59→63 个文件（7.1 拆分按实测 23 py + 32 js + 8 配置/数据，14 L36）；③ 版本基准 L63/L693 已于同日修正 1.20.1/main。
 > - 全库残留「61 篇 / 59 个文件」清零复检 0 处；track_upstream 三线复跑全绿。审计物证保留于 `D:\WPS灵犀过程文件\20261106-10-02-58-090\`（xlwings-server-old-627d244.tar.gz + 展开目录）。
+| 2026-11-08 | `xlwings` | archive | `e6a4185` | 454 个文件 |
+| 2026-11-08 | `xlwings-server` | incremental（1 处变更） | `6a00cc4` | 425 个文件 |
+| 2026-11-08 | `xlwings-lite` | web(新图 0) | `1.0.0.105` | 34 页 / 74 文件 |
+| 2026-11-08 | `mcp-server-xlwings` | codeload | `3869179` | 48 个文件 |
+| 2026-11-08 | `xlwings-mcp-server` | codeload | `ff6b32c` | 30 个文件 |
+| 2026-11-08 | `excel-mcp` | codeload | `0dfe444` | 46 个文件 |
+| 2026-11-08 | `taxi-duckdb` | codeload | `a52af5b` | 2 个文件 |
+| 2026-11-08 | `excel-mcp` | codeload | `9b9fe7f` | 9 个文件 |
+| 2026-11-08 | `excel-mcp` | 修复错配（全量重建） | `9b9fe7f` | 9 个文件（Python/xlwings/VBA） |
+> 2026-11-08 错配修复：manifest 里 `excel-mcp` 一路的 `repo` 曾误填为 `ishayoyo/excel-mcp`（TypeScript），
+> 与 local_dir 目录名 `prabodh-hydexcel-mcp-main` 及 references/12 的 `prabodh-hyd` 指向不一致；`--force` 全量同步时
+> 会按错误的 repo 拉 TS 版、覆盖掉本地真正的 prabodh-hyd Python/xlwings 版。已把 manifest `repo` 改回
+> `prabodh-hyd/excel-mcp`、`pinned_sha`→`9b9fe7f`，重拉恢复 9 文件 Python 版（server.py `import xlwings`）；
+> 同步更正 references/12 中 2 处仓库引用 `prabodh-hydexcel`→`prabodh-hyd`（物理目录名保留）。三线复核全绿。
+| 2026-11-08 | `taxi-duckdb` | codeload | `a52af5b` | 17 个文件 |
+| 2026-11-08 | `taxi-duckdb` | keep 保留机制 + extract_webextension.py | `a52af5b` | 上游 2 + 本地 keep 15 |
+> 2026-11-08 提取与保留机制：`examples/taxi-duckdb-main/taxi-duckdb-main/` 新增 `extract_webextension.py`，
+> 把 taxi_local.xlsx 内嵌的 xlwings Web 加载项解包并解码为明文（`extracted/full/`，`main.py` 98 行 explore/report
+> 两个 @script + requirements.txt）。manifest 该源加 `keep=[extract_webextension.py, extracted]`；`sync_upstream.py` 新增
+> keep 白名单——全量 replace_dir 从 .old 拷回 keep 项不删、增量护栏按「核心文件数(=总数-keep)」比基线、每次同步
+> 成功后自动运行 extract_webextension.py 刷新 extracted/。由此 SKILL/references 原「已提取至 extracted/」的声明
+> 首次成为事实（此前该目录与脚本缺失，疑被早先全量同步清掉）。三线复核全绿。备份 .backup_20261108/。
