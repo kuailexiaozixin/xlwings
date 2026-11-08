@@ -7,4 +7,4 @@
 | `geniuskey-mcp-server-xlwings-main` | <https://github.com/geniuskey/mcp-server-xlwings> · <https://pypi.org/project/mcp-server-xlwings/> |
 | `hyunjae-labs-xlwings-mcp-server-main` | <https://github.com/hyunjae-labs/xlwings-mcp-server> |
 | `vohoailinh90-Excel_MCP_Server-main` | <https://github.com/vohoailinh90/Excel_MCP_Server> |
-| `prabodh-hydexcel-mcp-main` | 本地克隆（GitHub 搜索 `excel-mcp` 可定位） |
+| `prabodh-hydexcel-mcp-main` | <https://github.com/prabodh-hyd/excel-mcp> · Python（`import xlwings` + VBA 宏，见 references/12 §3.3） |
