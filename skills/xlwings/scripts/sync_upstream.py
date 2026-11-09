@@ -346,6 +346,25 @@ def fetch_raw(repo: str, sha: str, path: str, timeout: int = 60):
     return None
 
 
+def local_incomplete(src: dict) -> bool:
+    """本地快照是否缺失/不完整（需全量重建）。keep 白名单项不计入核心文件数。
+
+    用于 --ensure 前置检测：git 源以 pinned_sha 的 trees 文件数为「应得」基线，
+    本地核心文件数（总数 − keep）少于它即判不完整；web 源以「有 .md 页」为准。
+    基线取不到（trees 不可达）时返回 False，交给增量护栏兜底。
+    """
+    target = SKILL_ROOT / src["local_dir"]
+    if src.get("type") == "web":
+        return not (target.exists() and any(target.glob("*.md")))
+    if not target.exists() or count_files(target) == 0:
+        return True
+    trees = index_tree(src["repo"], src.get("pinned_sha", ""))
+    if trees is None:
+        return False
+    core = count_files(target) - len(_keep_rel(target, src.get("keep", ())))
+    return core < len(trees)
+
+
 def sync_incremental(src, old_sha, new_sha):
     """增量更新 local_dir。返回 (是否成功, 描述, 变更文件数)。
 
@@ -525,13 +544,19 @@ def sync_one(src: dict, force: bool = False) -> str:
 def main() -> int:
     args = sys.argv[1:]
     check_only = "--check" in args
+    ensure = "--ensure" in args
     force_ids = [a for a in args[args.index("--force") + 1:] if not a.startswith("--")] \
         if "--force" in args else []
     global MANIFEST_CFG
     MANIFEST_CFG = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))
     stats: dict[str, list[str]] = {"updated": [], "unchanged": [], "failed": []}
+    if ensure:
+        need = [s_["id"] for s_ in MANIFEST_CFG["sources"] if local_incomplete(s_)]
+        force_ids = list(dict.fromkeys(force_ids + need))
+        print(f"[ensure] 本地缺失/不完整、需全量重建的源：{need or '无（本地均已就绪）'}")
+        print(f"[ensure] 其余源将按增量追新或跳过；完整且最新则不动。")
     for src in MANIFEST_CFG["sources"]:
-        if force_ids and src["id"] not in force_ids:
+        if force_ids and not ensure and src["id"] not in force_ids:
             continue
         if src.get("type") == "web":
             # web 源（官网镜像）：版本/全文哈希漂移判据，非 git sha

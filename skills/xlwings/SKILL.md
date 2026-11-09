@@ -6,6 +6,22 @@ license: MIT
 
 # xlwings 全场景技能
 
+## 0 使用前置：先确保上游快照已就绪（首次安装必做）
+
+本技能经 GitHub 仓库分发时，`xlwings/`、`xlwings-server/`、`MCP-Server/`、`examples/`、`xlwings-lite/`
+等大快照目录**只保留占位 README**（避免仓库膨胀）；安装后这些目录是**缺失/不完整**的。
+
+**首次使用本技能前（或发现任一上游目录只剩占位 README 时），先运行：**
+
+    python scripts/sync_upstream.py --ensure
+
+它会逐个检测上游源本地快照是否缺失/不完整，缺失或不完整的**自动克隆/下载到本地**
+（同步位置即本技能目录、与既有文件结构完全一致，等价于把上游仓库 clone 下来），
+落后的增量追新，已就绪的跳过。跑一次即可把技能从「占位缺失」变为「完整可用」，
+再进入下方 §1–§5 的各场景工作流。
+
+> 幂等：本地已完整且最新时不下载、直接报告「均已就绪」。详见 §1「上游跟踪与更新机制」。
+
 ## 1 技能定位与资源地图
 
 本技能覆盖 xlwings 的四类使用场景，按「需求路由 → 场景执行 → 质量门禁 → 交付分发」组织。
@@ -40,7 +56,7 @@ license: MIT
 
 **组件**：
 - `manifest.json`：上游锁定清单（git 源：repo / ref / local_dir / pinned_sha / last_synced；web 源额外含 `type:"web"` / base_url / llms_url / index_url / pinned_version / pinned_full_sha / pinned_pages，单一事实来源）
-- `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源。git 源默认走**增量**：compare API 取变更清单 → trees API 全树校验 → raw 单文件仅下载真正变动的文件（一次 1 文件改动约 3s，无需重拉 17~18MB 全量包）；变更超 120 文件、compare/trees 截断、`--force` 或首次同步时自动回退全量通道链降级（codeload 直连 → archive 直连 → ghfast 代理）原子替换。gh 经多候选探测，网络间歇时 latest_sha 自动重试；每次同步追加 SYNCLOG.md
+- `scripts/sync_upstream.py`：检测与同步——`--check` 仅检测；默认检测并同步有更新的上游；`--force <id>` 强制重拉指定来源；`--ensure` 使用前前置检测——先判断各源本地快照是否缺失/不完整（git 源以 pinned 的 trees 文件数为基线、web 源以 .md 页为据），缺失/不完整者自动全量重建、落后者增量追新（**使用本 SKILL 前先跑一次 `python scripts/sync_upstream.py --ensure` 确保上游已同步到本地，位置即本技能目录、与既有文件结构一致**）。git 源默认走**增量**：compare API 取变更清单 → trees API 全树校验 → raw 单文件仅下载真正变动的文件（一次 1 文件改动约 3s，无需重拉 17~18MB 全量包）；变更超 120 文件、compare/trees 截断、`--force` 或首次同步时自动回退全量通道链降级（codeload 直连 → archive 直连 → ghfast 代理）原子替换。gh 经多候选探测，网络间歇时 latest_sha 自动重试；每次同步追加 SYNCLOG.md
 - `scripts/web_mirror.py`：xlwings-lite 官网镜像的**纯逻辑生成层**（llms-full.txt 分页 → 排版归一 → 图片引用/顶层版本枚举），被 sync_upstream.py 的 web 分支调用；不碰网络不落盘，便于单测
 - `scripts/track_upstream.py`：**漂移三线检测**（见下表）
 - `references/upstream-facts.json`：**事实锚点台账**——自研文档对上游源码的全部具体断言（行数/KB/行号/文件数），每条带 docs 指针（断言出处）。新增上游断言时必须先登记台账，否则漂移无人知晓

@@ -111,3 +111,9 @@
 > keep 白名单——全量 replace_dir 从 .old 拷回 keep 项不删、增量护栏按「核心文件数(=总数-keep)」比基线、每次同步
 > 成功后自动运行 extract_webextension.py 刷新 extracted/。由此 SKILL/references 原「已提取至 extracted/」的声明
 > 首次成为事实（此前该目录与脚本缺失，疑被早先全量同步清掉）。三线复核全绿。备份 .backup_20261108/。
+> 2026-11-09 机制升级：新增 `sync_upstream.py --ensure` 前置检测——按「本地快照是否缺失/不完整」判断
+> （git 源以 pinned 的 trees 文件数为基线、web 源以 .md 页为据；keep 白名单项不计入核心文件数）：
+> 缺失/不完整者自动全量重建、落后者增量追新、完整且最新者跳过。使用本 SKILL 前先跑一次
+> `python scripts/sync_upstream.py --ensure` 确保上游已同步到本地（位置即技能目录、与既有文件结构一致）。实测本地
+> 均已就绪（18 源 unchanged），灵敏度验证：缺失目录→需重建、完整源→不动，三线复核 PASS。SKILL.md §1 已注明。
+| 2026-11-09 | `taxi-duckdb` | codeload | `a52af5b` | 17 个文件 |

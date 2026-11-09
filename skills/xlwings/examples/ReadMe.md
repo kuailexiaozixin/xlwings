@@ -293,4 +293,4 @@ in
 | `taxi_local.xlsx` | 内嵌 Web 加载项的空白工作簿（全部应用逻辑在此） |
 | `extracted/` | 本技能一步到位提取产物：`extract_webextension.py`（解包 + 解码脚本）、`full/`（12 个 zip 条目原样 + `main.py` 98 行 explore/report 两个 `@script`、`requirements.txt` 解码明文就地生成于 `full/xl/webextensions/`） |
 
-**使用方式**（见 SKILL.md 7.1 与 13-scenario-d 4.5）：研读 `full/xl/webextensions/main.py` 的 `explore` / `report` 两个 `@script` 函数与依赖策略（可运行 `extract_webextension.py` 一步重新生成），借鉴"空 xlsx 壳 + 内嵌加载项"的自包含交付形态，以及"DuckDB 查询 → pandas 转换 → matplotlib 图表 → Excel 表格 / 图片回写"四层管线。
+**使用方式**（见 SKILL.md 7.1 与 13-scenario-d 4.5）：研读 `full/xl/webextensions/main.py` 的 `explore` / `report` 两个 `@script` 函数与依赖策略（`extract_webextension.py` 与 `extracted/` 已纳入 manifest 同步的 keep 白名单，每次上游同步后会自动运行该脚本刷新明文；也可手动运行重新生成），借鉴"空 xlsx 壳 + 内嵌加载项"的自包含交付形态，以及"DuckDB 查询 → pandas 转换 → matplotlib 图表 → Excel 表格 / 图片回写"四层管线。
