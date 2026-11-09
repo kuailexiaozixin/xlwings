@@ -20,31 +20,8 @@ license: MIT
 落后的增量追新，已就绪的跳过。跑一次即可把技能从「占位缺失」变为「完整可用」，
 再进入下方 §1–§5 的各场景工作流。
 
-> 幂等：本地已完整且最新时不下载、直接报告「均已就绪」。详见 §1「上游跟踪与更新机制」。
+> 幂等：本地已完整且最新时不下载、直接报告「均已就绪」。详见下方「上游跟踪与更新机制」。
 
-## 1 技能定位与资源地图
-
-本技能覆盖 xlwings 的四类使用场景，按「需求路由 → 场景执行 → 质量门禁 → 交付分发」组织。
-
-**核心原则**：
-- 场景 C（VBA 宏 / VBA 加载项开发）是本技能的主干，提供 13 步完整工作流与 12 个质量门禁
-- 场景 A/B/D 为支线：A（自动化，含 MCP）、B（Web/服务化：Server/Lite/Office.js）、D（源码研读），提供主线步骤与资源导航
-- 坑点优先沉淀 `docs/troubleshooting.md`，只有核心主干规则才进本 SKILL.md
-- 禁止绝对路径；技能外发后所有路径基于技能根目录相对计算
-- **references 文档为独立扩展参考，内容节点间不做内容级互引**（仅案例详展位置等路由指针例外）；SKILL.md 承载完成工作流所需的全部核心规则
-
-**资源目录**：
-
-| 目录 | 用途 | 加载时机 |
-|------|------|---------|
-| `references/` | 17 份文档（00 索引 + 16 篇扩展指南：01-10 工作流各阶段深度 + 11 场景A + 12 MCP 自动化 + 13 场景D + 14 Server + 15 Lite + 16 Office.js）。进入 references 前先读 `references/00-index.md` 决策索引 | 进入对应阶段需要深度扩展时按需读取 |
-| `templates/` | 代码模板（VBA 模块、Ribbon XML、Python 桥接、UDF、面板入口、测试、安装脚本） | 编码阶段直接复制使用 |
-| `scripts/` | 可执行脚本（门禁 12 个、构建脚本、配置激活、路由校验、release_tool 分发工具链） | 工作流各步门禁与构建时调用 |
-| `docs/` | 坑点沉淀（`troubleshooting.md`，持续追加）与 Python/面板专项排查（`troubleshooting-python.md`） | 遇到问题时查阅 |
-| `dist/` | 示例交付物（myaddin.xlam + 安装脚本） | 参考交付文件夹结构 |
-| `xlwings/` | xlwings 官方源码与文档（离线查阅）。目录名不含版本号，跟踪 `xlwings/xlwings` 的 main 分支，当前快照 commit 与最新正式版见 `manifest.json` 与 `SYNCLOG.md` | API 查证时读取 |
-| `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
-| `examples/` | 官方示例与演示项目 | 学习与参考时读取 |
 
 **上游跟踪与更新机制（技能维护）**：
 
@@ -80,6 +57,31 @@ license: MIT
 **触发纪律**：用户说"同步 xlwings 技能 / 更新上游"即执行闭环；准备在回答中引用上游行数/行号/KB 断言前，可先 `track_upstream.py --quick` 确认锚点未破。
 
 **同步后注意**：全部 `local_dir` 都是固定目录名，上游出新版不需要改自研文档里的路径；需要改的是本文档与 `references/13-scenario-d-source-code.md` 等自研文件里**引用上游源码处数**（行数、文件大小、行号锚点、被上游删改的文件名）——这正是线②自动检测的对象。zip 快照无法追溯确切 commit，登记基线取登记日上游 ref 最新 commit，若实际快照更旧，`--check` 会提示漂移，按需 `--force` 重拉。
+
+## 1 技能定位与资源地图
+
+本技能覆盖 xlwings 的四类使用场景，按「需求路由 → 场景执行 → 质量门禁 → 交付分发」组织。
+
+**核心原则**：
+- 场景 C（VBA 宏 / VBA 加载项开发）是本技能的主干，提供 13 步完整工作流与 12 个质量门禁
+- 场景 A/B/D 为支线：A（自动化，含 MCP）、B（Web/服务化：Server/Lite/Office.js）、D（源码研读），提供主线步骤与资源导航
+- 坑点优先沉淀 `docs/troubleshooting.md`，只有核心主干规则才进本 SKILL.md
+- 禁止绝对路径；技能外发后所有路径基于技能根目录相对计算
+- **references 文档为独立扩展参考，内容节点间不做内容级互引**（仅案例详展位置等路由指针例外）；SKILL.md 承载完成工作流所需的全部核心规则
+
+**资源目录**：
+
+| 目录 | 用途 | 加载时机 |
+|------|------|---------|
+| `references/` | 17 份文档（00 索引 + 16 篇扩展指南：01-10 工作流各阶段深度 + 11 场景A + 12 MCP 自动化 + 13 场景D + 14 Server + 15 Lite + 16 Office.js）。进入 references 前先读 `references/00-index.md` 决策索引 | 进入对应阶段需要深度扩展时按需读取 |
+| `templates/` | 代码模板（VBA 模块、Ribbon XML、Python 桥接、UDF、面板入口、测试、安装脚本） | 编码阶段直接复制使用 |
+| `scripts/` | 可执行脚本（门禁 12 个、构建脚本、配置激活、路由校验、release_tool 分发工具链） | 工作流各步门禁与构建时调用 |
+| `docs/` | 坑点沉淀（`troubleshooting.md`，持续追加）与 Python/面板专项排查（`troubleshooting-python.md`） | 遇到问题时查阅 |
+| `dist/` | 示例交付物（myaddin.xlam + 安装脚本） | 参考交付文件夹结构 |
+| `xlwings/` | xlwings 官方源码与文档（离线查阅）。目录名不含版本号，跟踪 `xlwings/xlwings` 的 main 分支，当前快照 commit 与最新正式版见 `manifest.json` 与 `SYNCLOG.md` | API 查证时读取 |
+| `../VBA-Docs/` | 微软 VBA 官方文档（离线查阅） | VBA 编码时查证 |
+| `examples/` | 官方示例与演示项目 | 学习与参考时读取 |
+
 
 ---
 
